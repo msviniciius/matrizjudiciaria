@@ -1,0 +1,26 @@
+<div id="<%= dom_id case_event %>">
+  <div>
+    <strong><%= CaseEvent.human_attribute_name(:legal_case_id) %>:</strong>
+    <%= case_event.legal_case&.internal_number %>
+  </div>
+
+  <div>
+    <strong><%= CaseEvent.human_attribute_name(:event_type) %>:</strong>
+    <%= enum_label(CaseEvent, :event_type, case_event.event_type) %>
+  </div>
+
+  <div>
+    <strong><%= CaseEvent.human_attribute_name(:occurred_at) %>:</strong>
+    <%= case_event.occurred_at %>
+  </div>
+
+  <div>
+    <strong><%= CaseEvent.human_attribute_name(:description) %>:</strong>
+    <%= case_event.description %>
+  </div>
+
+  <div>
+    <strong><%= CaseEvent.human_attribute_name(:responsible_name) %>:</strong>
+    <%= case_event.responsible_name %>
+  </div>
+</div>

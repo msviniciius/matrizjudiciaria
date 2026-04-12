@@ -1,0 +1,14 @@
+<% content_for :title, "Processos" %>
+
+<h1>Processos</h1>
+
+<div id="legal_cases">
+  <% @legal_cases.each do |legal_case| %>
+    <%= render legal_case %>
+    <p>
+      <%= link_to "Ver processo", legal_case %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "Novo processo", new_legal_case_path %>

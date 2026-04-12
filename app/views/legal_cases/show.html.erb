@@ -1,0 +1,172 @@
+<% content_for :title, "Processo #{@legal_case.internal_number}" %>
+
+<section class="case-summary">
+  <div class="case-summary__header">
+    <div>
+      <p class="case-kicker">Processo</p>
+      <h1><%= @legal_case.internal_number %></h1>
+    </div>
+    <div class="case-actions">
+      <%= link_to "Editar processo", edit_legal_case_path(@legal_case), class: "btn btn-secondary" %>
+      <%= link_to "Voltar para processos", legal_cases_path, class: "btn btn-secondary" %>
+      <%= button_to "Excluir processo", @legal_case, method: :delete, form: { data: { turbo_confirm: "Tem certeza que deseja excluir este processo?" } } %>
+    </div>
+  </div>
+
+  <div class="case-summary__grid">
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:external_number) %>:</strong>
+      <span><%= @legal_case.external_number.presence || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:process_type_id) %>:</strong>
+      <span><%= @legal_case.process_type&.name || @legal_case.process_type.presence || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:legal_area_id) %>:</strong>
+      <span><%= @legal_case.legal_area&.name || @legal_case.legal_area.presence || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:court_id) %>:</strong>
+      <span><%= @legal_case.court&.name.presence || @legal_case.court.presence || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:district_id) %>:</strong>
+      <span><%= @legal_case.district&.name.presence || @legal_case.district.presence || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:phase) %>:</strong>
+      <span><%= enum_label(LegalCase, :phase, @legal_case.phase) %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:status) %>:</strong>
+      <span><%= enum_label(LegalCase, :status, @legal_case.status) %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:priority) %>:</strong>
+      <span><%= enum_label(LegalCase, :priority, @legal_case.priority) %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:entry_date) %>:</strong>
+      <span><%= @legal_case.entry_date || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:protocol_date) %>:</strong>
+      <span><%= @legal_case.protocol_date || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:responsible_name) %>:</strong>
+      <span><%= @legal_case.responsible_name.presence || "-" %></span>
+    </div>
+    <div>
+      <strong><%= LegalCase.human_attribute_name(:client_id) %>:</strong>
+      <span><%= @legal_case.client&.full_name || "-" %></span>
+    </div>
+  </div>
+</section>
+
+<section class="case-section">
+  <div class="section-head">
+    <h3>Andamentos</h3>
+    <%= link_to "Novo andamento", new_case_event_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
+  </div>
+
+  <% if @case_events.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Data</th>
+            <th>Responsavel</th>
+            <th>Descricao</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @case_events.each do |event| %>
+            <tr>
+              <td><%= enum_label(CaseEvent, :event_type, event.event_type) %></td>
+              <td><%= event.occurred_at %></td>
+              <td><%= event.responsible_name.presence || "-" %></td>
+              <td><%= event.description %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="empty-state">Nenhum andamento cadastrado.</p>
+  <% end %>
+</section>
+
+<section class="case-section">
+  <div class="section-head">
+    <h3>Prazos</h3>
+    <%= link_to "Novo prazo", new_deadline_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
+  </div>
+
+  <% if @deadlines.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Titulo</th>
+            <th>Tipo</th>
+            <th>Data final</th>
+            <th>Status</th>
+            <th>Prioridade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @deadlines.each do |deadline| %>
+            <tr>
+              <td><%= deadline.title %></td>
+              <td><%= enum_label(Deadline, :deadline_type, deadline.deadline_type) %></td>
+              <td><%= deadline.due_date %></td>
+              <td><%= enum_label(Deadline, :status, deadline.status) %></td>
+              <td><%= enum_label(Deadline, :priority, deadline.priority) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="empty-state">Nenhum prazo cadastrado.</p>
+  <% end %>
+</section>
+
+<section class="case-section">
+  <div class="section-head">
+    <h3>Tarefas</h3>
+    <%= link_to "Nova tarefa", new_task_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
+  </div>
+
+  <% if @tasks.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Titulo</th>
+            <th>Responsavel</th>
+            <th>Data limite</th>
+            <th>Status</th>
+            <th>Prioridade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @tasks.each do |task| %>
+            <tr>
+              <td><%= task.title %></td>
+              <td><%= task.responsible_name.presence || "-" %></td>
+              <td><%= task.due_date %></td>
+              <td><%= enum_label(Task, :status, task.status) %></td>
+              <td><%= enum_label(Task, :priority, task.priority) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="empty-state">Nenhuma tarefa cadastrada.</p>
+  <% end %>
+</section>

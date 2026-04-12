@@ -1,0 +1,156 @@
+pt-BR:
+  activerecord:
+    models:
+      client: Cliente
+      court: Órgão/Vara/Tribunal
+      district: Comarca
+      legal_case: Processo
+      deadline: Prazo
+      task: Tarefa
+      case_event: Andamento
+    attributes:
+      client:
+        full_name: Nome completo
+        cpf_cnpj: CPF/CNPJ
+        rg: RG
+        birth_date: Data de nascimento
+        marital_status: Estado civil
+        profession: Profissão
+        phone: Telefone
+        whatsapp: WhatsApp
+        email: E-mail
+        address: Endereço
+        city: Cidade
+        state: UF
+        mother_name: Nome da mãe
+        father_name: Nome do pai
+        notes: Observações
+      court:
+        name: Nome
+      district:
+        name: Nome
+      legal_case:
+        internal_number: Número interno
+        external_number: Número do processo
+        entry_date: Data de entrada
+        protocol_date: Data do protocolo
+        process_type: Tipo de processo
+        process_type_id: Tipo de processo
+        legal_area: Área do direito
+        legal_area_id: Área do direito
+        subarea: Subárea
+        main_subject: Assunto principal
+        court: Órgão/Vara/Tribunal
+        court_id: Órgão/Vara/Tribunal
+        district: Comarca
+        district_id: Comarca
+        phase: Fase
+        status: Status
+        responsible_name: Responsável
+        support_team: Equipe de apoio
+        opposing_party: Parte contrária
+        claim_value: Valor da causa
+        priority: Prioridade
+        strategic_notes: Observações estratégicas
+        client_id: Cliente
+        statuses:
+          active: Ativo
+          on_hold: Em espera
+          completed: Concluído
+          archived: Arquivado
+        priorities:
+          low: Baixa
+          medium: Média
+          high: Alta
+          urgent: Urgente
+        phases:
+          intake: Atendimento inicial
+          analysis: Análise
+          filing: Protocolo
+          instruction: Instrução
+          judgment: Julgamento
+          appeal: Recurso
+          enforcement: Cumprimento de sentença
+          closed: Encerrado
+      deadline:
+        legal_case_id: Processo
+        title: Título
+        deadline_type: Tipo de prazo
+        start_date: Data inicial
+        due_date: Data final
+        status: Status
+        priority: Prioridade
+        completed_at: Concluído em
+        delay_reason: Justificativa de atraso
+        responsible_name: Responsável
+        statuses:
+          pending: Pendente
+          in_progress: Em andamento
+          completed: Concluído
+          overdue: Vencido
+        priorities:
+          low: Baixa
+          medium: Média
+          high: Alta
+          urgent: Urgente
+        deadline_types:
+          judicial: Judicial
+          administrative: Administrativo
+          internal: Interno
+          hearing: Audiência
+          expert_exam: Perícia
+          appeal: Recurso
+          manifestation: Manifestação
+          compliance: Cumprimento de exigência
+          documentary: Documental
+          contractual: Contratual
+      task:
+        legal_case_id: Processo
+        title: Título
+        description: Descrição
+        status: Status
+        priority: Prioridade
+        due_date: Data limite
+        responsible_name: Responsável
+        statuses:
+          pending: Pendente
+          in_progress: Em andamento
+          completed: Concluída
+          canceled: Cancelada
+        priorities:
+          low: Baixa
+          medium: Média
+          high: Alta
+          urgent: Urgente
+      case_event:
+        legal_case_id: Processo
+        event_type: Tipo de evento
+        occurred_at: Data e hora
+        description: Descrição
+        responsible_name: Responsável
+        event_types:
+          initial_contact: Atendimento inicial
+          documents_received: Recebimento de documentos
+          legal_analysis: Análise jurídica
+          filing: Protocolo
+          hearing: Audiência
+          decision: Decisão
+          appeal: Recurso
+          client_contact: Contato com cliente
+          phase_changed: Alteração de fase
+          status_changed: Alteração de status
+          case_closed: Encerramento
+
+  helpers:
+    submit:
+      create: Cadastrar %{model}
+      update: Atualizar %{model}
+      submit: Salvar %{model}
+
+  views:
+    actions:
+      show: Ver
+      edit: Editar
+      back: Voltar
+      destroy: Excluir
+      new: Novo

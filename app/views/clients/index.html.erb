@@ -1,0 +1,14 @@
+<% content_for :title, "Clientes" %>
+
+<h1>Clientes</h1>
+
+<div id="clients">
+  <% @clients.each do |client| %>
+    <%= render client %>
+    <p>
+      <%= link_to "Ver cliente", client %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "Novo cliente", new_client_path %>

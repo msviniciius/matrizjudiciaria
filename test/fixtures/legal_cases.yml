@@ -1,0 +1,43 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  internal_number: MyString
+  external_number: MyString
+  entry_date: 2026-04-12
+  protocol_date: 2026-04-12
+  process_type: MyString
+  legal_area: MyString
+  subarea: MyString
+  main_subject: MyString
+  court: MyString
+  district: MyString
+  phase: MyString
+  status: MyString
+  responsible_name: MyString
+  support_team: MyString
+  opposing_party: MyString
+  claim_value: 9.99
+  priority: MyString
+  strategic_notes: MyText
+  client: one
+
+two:
+  internal_number: MyString
+  external_number: MyString
+  entry_date: 2026-04-12
+  protocol_date: 2026-04-12
+  process_type: MyString
+  legal_area: MyString
+  subarea: MyString
+  main_subject: MyString
+  court: MyString
+  district: MyString
+  phase: MyString
+  status: MyString
+  responsible_name: MyString
+  support_team: MyString
+  opposing_party: MyString
+  claim_value: 9.99
+  priority: MyString
+  strategic_notes: MyText
+  client: two

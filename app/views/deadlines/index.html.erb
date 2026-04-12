@@ -1,0 +1,14 @@
+<% content_for :title, "Prazos" %>
+
+<h1>Prazos</h1>
+
+<div id="deadlines">
+  <% @deadlines.each do |deadline| %>
+    <%= render deadline %>
+    <p>
+      <%= link_to "Ver prazo", deadline %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "Novo prazo", new_deadline_path %>

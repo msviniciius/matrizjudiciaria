@@ -1,0 +1,76 @@
+<%= form_with(model: deadline, class: "app-form") do |form| %>
+  <% if deadline.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(deadline.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% deadline.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados do Prazo</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :legal_case_id %>
+        <%= form.collection_select :legal_case_id, LegalCase.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+      </div>
+
+      <div>
+        <%= form.label :title %>
+        <%= form.text_field :title %>
+      </div>
+
+      <div>
+        <%= form.label :deadline_type %>
+        <%= form.select :deadline_type, enum_options_for(Deadline, :deadline_type), include_blank: true %>
+      </div>
+
+      <div>
+        <%= form.label :status %>
+        <%= form.select :status, enum_options_for(Deadline, :status) %>
+      </div>
+
+      <div>
+        <%= form.label :priority %>
+        <%= form.select :priority, enum_options_for(Deadline, :priority), include_blank: true %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Datas e Observações</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :start_date %>
+        <%= form.date_field :start_date %>
+      </div>
+
+      <div>
+        <%= form.label :due_date %>
+        <%= form.date_field :due_date %>
+      </div>
+
+      <div>
+        <%= form.label :completed_at %>
+        <%= form.datetime_field :completed_at %>
+      </div>
+
+      <div>
+        <%= form.label :responsible_name %>
+        <%= form.text_field :responsible_name %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :delay_reason %>
+        <%= form.textarea :delay_reason %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

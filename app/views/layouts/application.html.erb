@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Matrizjuridica" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Matrizjuridica">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_include_tag :app, "data-turbo-track": "reload", defer: true %>
+  </head>
+
+  <body>
+    <div class="app-background"></div>
+
+    <div class="app-layout">
+      <aside class="app-sidebar">
+        <div class="brand">
+          <p class="brand-eyebrow">Matriz Jurídica</p>
+          <h1>Gestão Processual</h1>
+        </div>
+
+        <nav class="sidebar-nav">
+          <%= link_to "Painel", root_path, class: "nav-link #{'is-active' if current_page?(root_path)}" %>
+          <%= link_to "Clientes", clients_path, class: "nav-link #{'is-active' if controller_name == 'clients'}" %>
+          <%= link_to "Processos", legal_cases_path, class: "nav-link #{'is-active' if controller_name == 'legal_cases'}" %>
+          <%= link_to "Andamentos", case_events_path, class: "nav-link #{'is-active' if controller_name == 'case_events'}" %>
+          <%= link_to "Prazos", deadlines_path, class: "nav-link #{'is-active' if controller_name == 'deadlines'}" %>
+          <%= link_to "Tarefas", tasks_path, class: "nav-link #{'is-active' if controller_name == 'tasks'}" %>
+          <div class="nav-divider">Configurações</div>
+          <%= link_to "Órgãos/Varas", courts_path, class: "nav-link #{'is-active' if controller_name == 'courts'}" %>
+          <%= link_to "Comarcas", districts_path, class: "nav-link #{'is-active' if controller_name == 'districts'}" %>
+        </nav>
+      </aside>
+
+      <main class="app-main">
+        <header class="topbar">
+          <div>
+            <p class="topbar-kicker">Plataforma operacional</p>
+            <h2><%= content_for?(:title) ? content_for(:title) : "Painel Geral" %></h2>
+          </div>
+
+          <div class="topbar-actions">
+            <%= link_to "Novo Cliente", new_client_path, class: "btn btn-secondary" %>
+            <%= link_to "Novo Processo", new_legal_case_path, class: "btn btn-primary" %>
+          </div>
+        </header>
+
+        <% flash.each do |type, message| %>
+          <div class="flash <%= type %>"><%= message %></div>
+        <% end %>
+
+        <section class="content-surface">
+          <%= yield %>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

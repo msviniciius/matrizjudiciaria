@@ -1,0 +1,12 @@
+<% content_for :title, "Editar processo" %>
+
+<h1>Editar processo</h1>
+
+<%= render "form", legal_case: @legal_case %>
+
+<br>
+
+<div>
+  <%= link_to "Ver processo", @legal_case %> |
+  <%= link_to "Voltar para processos", legal_cases_path %>
+</div>

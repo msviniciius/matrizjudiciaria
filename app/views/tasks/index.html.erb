@@ -1,0 +1,14 @@
+<% content_for :title, "Tarefas" %>
+
+<h1>Tarefas</h1>
+
+<div id="tasks">
+  <% @tasks.each do |task| %>
+    <%= render task %>
+    <p>
+      <%= link_to "Ver tarefa", task %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "Nova tarefa", new_task_path %>

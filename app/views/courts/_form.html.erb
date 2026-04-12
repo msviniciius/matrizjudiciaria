@@ -1,0 +1,31 @@
+<%= form_with(model: court, class: "app-form") do |form| %>
+  <% if court.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(court.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% court.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados do Órgão/Vara/Tribunal</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :name, "Nome" %>
+        <%= form.text_field :name %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :district_id, "Comarca" %>
+        <%= form.collection_select :district_id, District.order(:name), :id, :name, { include_blank: "Selecione a comarca" } %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

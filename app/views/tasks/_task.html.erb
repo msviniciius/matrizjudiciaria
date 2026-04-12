@@ -1,0 +1,36 @@
+<div id="<%= dom_id task %>">
+  <div>
+    <strong><%= Task.human_attribute_name(:legal_case_id) %>:</strong>
+    <%= task.legal_case&.internal_number %>
+  </div>
+
+  <div>
+    <strong><%= Task.human_attribute_name(:title) %>:</strong>
+    <%= task.title %>
+  </div>
+
+  <div>
+    <strong><%= Task.human_attribute_name(:description) %>:</strong>
+    <%= task.description %>
+  </div>
+
+  <div>
+    <strong><%= Task.human_attribute_name(:status) %>:</strong>
+    <%= enum_label(Task, :status, task.status) %>
+  </div>
+
+  <div>
+    <strong><%= Task.human_attribute_name(:priority) %>:</strong>
+    <%= enum_label(Task, :priority, task.priority) %>
+  </div>
+
+  <div>
+    <strong><%= Task.human_attribute_name(:due_date) %>:</strong>
+    <%= task.due_date %>
+  </div>
+
+  <div>
+    <strong><%= Task.human_attribute_name(:responsible_name) %>:</strong>
+    <%= task.responsible_name %>
+  </div>
+</div>

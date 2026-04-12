@@ -1,0 +1,96 @@
+<div id="<%= dom_id legal_case %>">
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:internal_number) %>:</strong>
+    <%= legal_case.internal_number %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:external_number) %>:</strong>
+    <%= legal_case.external_number %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:entry_date) %>:</strong>
+    <%= legal_case.entry_date %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:protocol_date) %>:</strong>
+    <%= legal_case.protocol_date %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:process_type_id) %>:</strong>
+    <%= legal_case.process_type&.name || legal_case.process_type %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:legal_area_id) %>:</strong>
+    <%= legal_case.legal_area&.name || legal_case.legal_area %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:subarea) %>:</strong>
+    <%= legal_case.subarea %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:main_subject) %>:</strong>
+    <%= legal_case.main_subject %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:court_id) %>:</strong>
+    <%= legal_case.court&.name || "-" %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:district_id) %>:</strong>
+    <%= legal_case.district&.name || "-" %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:phase) %>:</strong>
+    <%= enum_label(LegalCase, :phase, legal_case.phase) %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:status) %>:</strong>
+    <%= enum_label(LegalCase, :status, legal_case.status) %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:responsible_name) %>:</strong>
+    <%= legal_case.responsible_name %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:support_team) %>:</strong>
+    <%= legal_case.support_team %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:opposing_party) %>:</strong>
+    <%= legal_case.opposing_party %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:claim_value) %>:</strong>
+    <%= legal_case.claim_value %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:priority) %>:</strong>
+    <%= enum_label(LegalCase, :priority, legal_case.priority) %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:strategic_notes) %>:</strong>
+    <%= legal_case.strategic_notes %>
+  </div>
+
+  <div>
+    <strong><%= LegalCase.human_attribute_name(:client_id) %>:</strong>
+    <%= legal_case.client&.full_name %>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<div id="<%= dom_id deadline %>">
+  <div>
+    <strong><%= Deadline.human_attribute_name(:legal_case_id) %>:</strong>
+    <%= deadline.legal_case&.internal_number %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:title) %>:</strong>
+    <%= deadline.title %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:deadline_type) %>:</strong>
+    <%= enum_label(Deadline, :deadline_type, deadline.deadline_type) %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:start_date) %>:</strong>
+    <%= deadline.start_date %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:due_date) %>:</strong>
+    <%= deadline.due_date %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:status) %>:</strong>
+    <%= enum_label(Deadline, :status, deadline.status) %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:priority) %>:</strong>
+    <%= enum_label(Deadline, :priority, deadline.priority) %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:completed_at) %>:</strong>
+    <%= deadline.completed_at %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:delay_reason) %>:</strong>
+    <%= deadline.delay_reason %>
+  </div>
+
+  <div>
+    <strong><%= Deadline.human_attribute_name(:responsible_name) %>:</strong>
+    <%= deadline.responsible_name %>
+  </div>
+</div>

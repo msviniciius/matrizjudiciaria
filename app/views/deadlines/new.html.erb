@@ -1,0 +1,11 @@
+<% content_for :title, "Novo prazo" %>
+
+<h1>Novo prazo</h1>
+
+<%= render "form", deadline: @deadline %>
+
+<br>
+
+<div>
+  <%= link_to "Voltar para prazos", deadlines_path %>
+</div>

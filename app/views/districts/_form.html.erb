@@ -1,0 +1,26 @@
+<%= form_with(model: district, class: "app-form") do |form| %>
+  <% if district.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(district.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% district.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados da Comarca</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :name, "Nome" %>
+        <%= form.text_field :name %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

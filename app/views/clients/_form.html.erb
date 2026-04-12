@@ -1,0 +1,111 @@
+<%= form_with(model: client, class: "app-form") do |form| %>
+  <% if client.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(client.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% client.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Identificação</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :full_name %>
+        <%= form.text_field :full_name %>
+      </div>
+
+      <div>
+        <%= form.label :cpf_cnpj %>
+        <%= form.text_field :cpf_cnpj, data: { mask: "cpf_cnpj" }, inputmode: "numeric" %>
+      </div>
+
+      <div>
+        <%= form.label :rg %>
+        <%= form.text_field :rg, data: { mask: "rg" }, inputmode: "numeric" %>
+      </div>
+
+      <div>
+        <%= form.label :birth_date %>
+        <%= form.date_field :birth_date %>
+      </div>
+
+      <div>
+        <%= form.label :marital_status %>
+        <%= form.text_field :marital_status %>
+      </div>
+
+      <div>
+        <%= form.label :profession %>
+        <%= form.text_field :profession %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Contato</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :phone %>
+        <%= form.text_field :phone, data: { mask: "phone" }, inputmode: "numeric" %>
+      </div>
+
+      <div>
+        <%= form.label :whatsapp %>
+        <%= form.text_field :whatsapp, data: { mask: "phone" }, inputmode: "numeric" %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :email %>
+        <%= form.text_field :email %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Endereço</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :address %>
+        <%= form.text_field :address %>
+      </div>
+
+      <div>
+        <%= form.label :city %>
+        <%= form.text_field :city %>
+      </div>
+
+      <div>
+        <%= form.label :state %>
+        <%= form.text_field :state %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Informações Adicionais</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :mother_name %>
+        <%= form.text_field :mother_name %>
+      </div>
+
+      <div>
+        <%= form.label :father_name %>
+        <%= form.text_field :father_name %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :notes %>
+        <%= form.textarea :notes %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

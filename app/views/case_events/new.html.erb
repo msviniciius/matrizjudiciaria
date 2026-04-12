@@ -1,0 +1,11 @@
+<% content_for :title, "Novo andamento" %>
+
+<h1>Novo andamento</h1>
+
+<%= render "form", case_event: @case_event %>
+
+<br>
+
+<div>
+  <%= link_to "Voltar para andamentos", case_events_path %>
+</div>

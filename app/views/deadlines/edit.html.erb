@@ -1,0 +1,12 @@
+<% content_for :title, "Editar prazo" %>
+
+<h1>Editar prazo</h1>
+
+<%= render "form", deadline: @deadline %>
+
+<br>
+
+<div>
+  <%= link_to "Ver prazo", @deadline %> |
+  <%= link_to "Voltar para prazos", deadlines_path %>
+</div>

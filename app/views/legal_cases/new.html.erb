@@ -1,0 +1,9 @@
+<% content_for :title, "Novo processo" %>
+
+<%= render "form", legal_case: @legal_case %>
+
+<br>
+
+<div>
+  <%= link_to "Voltar para processos", legal_cases_path %>
+</div>

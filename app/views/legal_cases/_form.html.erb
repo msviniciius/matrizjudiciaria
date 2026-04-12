@@ -1,0 +1,141 @@
+<%= form_with(model: legal_case, class: "app-form") do |form| %>
+  <% if legal_case.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(legal_case.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% legal_case.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% grouped_areas = LegalArea.order(:justice_branch, :name).group_by(&:justice_branch) %>
+  <% grouped_options = grouped_areas.transform_values { |areas| areas.map { |area| [area.name, area.id] } } %>
+
+  <section class="form-section">
+    <h3>Classificação</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :internal_number %>
+        <%= form.text_field :internal_number %>
+      </div>
+
+      <div>
+        <%= form.label :external_number %>
+        <%= form.text_field :external_number %>
+      </div>
+
+      <div>
+        <%= form.label :legal_area_id, LegalCase.human_attribute_name(:legal_area_id) %>
+        <%= form.select :legal_area_id, grouped_options_for_select(grouped_options, legal_case.legal_area_id), { include_blank: "Selecione a área" }, data: { legal_area_select: true } %>
+      </div>
+
+      <div>
+        <%= form.label :process_type_id, LegalCase.human_attribute_name(:process_type_id) %>
+        <% process_types = legal_case.legal_area ? legal_case.legal_area.process_types.order(:name).map { |pt| [pt.name, pt.id] } : [] %>
+        <%= form.select :process_type_id, process_types, { include_blank: "Selecione o tipo" }, data: { process_type_select: true, current_process_type: legal_case.process_type_id } %>
+      </div>
+
+      <div>
+        <%= form.label :subarea %>
+        <%= form.text_field :subarea %>
+      </div>
+
+      <div>
+        <%= form.label :main_subject %>
+        <%= form.text_field :main_subject %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Estrutura Judiciária</h3>
+    <p class="form-hint">Comarca é a unidade territorial. O Órgão/Vara/Tribunal é a unidade jurisdicional dentro da comarca.</p>
+    <div class="form-grid">
+      <div>
+        <%= form.label :district_id, LegalCase.human_attribute_name(:district_id) %>
+        <%= form.collection_select :district_id, District.order(:name), :id, :name, { include_blank: "Selecione a comarca" }, data: { district_select: true } %>
+      </div>
+
+      <div>
+        <%= form.label :court_id, LegalCase.human_attribute_name(:court_id) %>
+        <%= form.collection_select :court_id, Court.order(:name), :id, :name, { include_blank: "Selecione o órgão/vara/tribunal" }, data: { court_select: true, current_court: legal_case.court_id } %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Andamento Processual</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :phase %>
+        <%= form.select :phase, enum_options_for(LegalCase, :phase) %>
+      </div>
+
+      <div>
+        <%= form.label :status %>
+        <%= form.select :status, enum_options_for(LegalCase, :status) %>
+      </div>
+
+      <div>
+        <%= form.label :priority %>
+        <%= form.select :priority, enum_options_for(LegalCase, :priority), include_blank: true %>
+      </div>
+
+      <div>
+        <%= form.label :claim_value %>
+        <%= form.text_field :claim_value, data: { mask: "currency-br" }, inputmode: "numeric" %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Vínculos e Responsáveis</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :entry_date %>
+        <%= form.date_field :entry_date %>
+      </div>
+
+      <div>
+        <%= form.label :protocol_date %>
+        <%= form.date_field :protocol_date %>
+      </div>
+
+      <div>
+        <%= form.label :responsible_name %>
+        <%= form.text_field :responsible_name %>
+      </div>
+
+      <div>
+        <%= form.label :support_team %>
+        <%= form.text_field :support_team %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :client_id %>
+        <%= form.collection_select :client_id, Client.order(:full_name), :id, :full_name, prompt: "Selecione o cliente" %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Estratégia</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :opposing_party %>
+        <%= form.text_field :opposing_party %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :strategic_notes %>
+        <%= form.textarea :strategic_notes %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

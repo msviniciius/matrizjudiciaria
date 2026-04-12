@@ -1,0 +1,61 @@
+<%= form_with(model: task, class: "app-form") do |form| %>
+  <% if task.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(task.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% task.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados da Tarefa</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :legal_case_id %>
+        <%= form.collection_select :legal_case_id, LegalCase.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+      </div>
+
+      <div>
+        <%= form.label :title %>
+        <%= form.text_field :title %>
+      </div>
+
+      <div>
+        <%= form.label :responsible_name %>
+        <%= form.text_field :responsible_name %>
+      </div>
+
+      <div>
+        <%= form.label :status %>
+        <%= form.select :status, enum_options_for(Task, :status) %>
+      </div>
+
+      <div>
+        <%= form.label :priority %>
+        <%= form.select :priority, enum_options_for(Task, :priority), include_blank: true %>
+      </div>
+
+      <div>
+        <%= form.label :due_date %>
+        <%= form.date_field :due_date %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Descrição</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :description %>
+        <%= form.textarea :description %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

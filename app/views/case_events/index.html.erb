@@ -1,0 +1,14 @@
+<% content_for :title, "Andamentos" %>
+
+<h1>Andamentos</h1>
+
+<div id="case_events">
+  <% @case_events.each do |case_event| %>
+    <%= render case_event %>
+    <p>
+      <%= link_to "Ver andamento", case_event %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "Novo andamento", new_case_event_path %>

@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  legal_case: one
+  title: MyString
+  description: MyText
+  status: MyString
+  priority: MyString
+  due_date: 2026-04-12
+  responsible_name: MyString
+
+two:
+  legal_case: two
+  title: MyString
+  description: MyText
+  status: MyString
+  priority: MyString
+  due_date: 2026-04-12
+  responsible_name: MyString

@@ -1,0 +1,8 @@
+<%= render @case_event %>
+
+<div>
+  <%= link_to "Editar andamento", edit_case_event_path(@case_event) %> |
+  <%= link_to "Voltar para andamentos", case_events_path %>
+
+  <%= button_to "Excluir andamento", @case_event, method: :delete %>
+</div>

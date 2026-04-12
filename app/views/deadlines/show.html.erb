@@ -1,0 +1,8 @@
+<%= render @deadline %>
+
+<div>
+  <%= link_to "Editar prazo", edit_deadline_path(@deadline) %> |
+  <%= link_to "Voltar para prazos", deadlines_path %>
+
+  <%= button_to "Excluir prazo", @deadline, method: :delete %>
+</div>
