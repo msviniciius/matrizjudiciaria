@@ -45,6 +45,6 @@ class CourtsController < ApplicationController
   end
 
   def court_params
-    params.expect(court: [:name, :district_id])
+    params.expect(court: [ :name, :district_id ])
   end
 end

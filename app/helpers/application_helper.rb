@@ -10,7 +10,7 @@ module ApplicationHelper
 
   def enum_options_for(model_class, enum_name)
     model_class.public_send(enum_name.to_s.pluralize).keys.map do |value|
-      [enum_label(model_class, enum_name, value), value]
+      [ enum_label(model_class, enum_name, value), value ]
     end
   end
 end

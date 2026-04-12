@@ -45,6 +45,6 @@ class DistrictsController < ApplicationController
   end
 
   def district_params
-    params.expect(district: [:name])
+    params.expect(district: [ :name ])
   end
 end

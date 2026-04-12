@@ -7,6 +7,6 @@ class CreateLegalAreas < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :legal_areas, [:justice_branch, :name], unique: true
+    add_index :legal_areas, [ :justice_branch, :name ], unique: true
   end
 end
