@@ -1,25 +1,23 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  legal_case: one
-  title: MyString
-  deadline_type: MyString
+  id: 1
+  legal_case_id: 1
+  title: Prazo de contestacao
+  deadline_type: judicial
   start_date: 2026-04-12
-  due_date: 2026-04-12
-  status: MyString
-  priority: MyString
-  completed_at: 2026-04-12 12:11:30
-  delay_reason: MyText
-  responsible_name: MyString
+  due_date: 2026-04-20
+  status: pending
+  priority: medium
+  responsible_name: Advogado 1
 
 two:
-  legal_case: two
-  title: MyString
-  deadline_type: MyString
-  start_date: 2026-04-12
-  due_date: 2026-04-12
-  status: MyString
-  priority: MyString
-  completed_at: 2026-04-12 12:11:30
-  delay_reason: MyText
-  responsible_name: MyString
+  id: 2
+  legal_case_id: 2
+  title: Prazo de recurso
+  deadline_type: appeal
+  start_date: 2026-04-10
+  due_date: 2026-04-18
+  status: in_progress
+  priority: high
+  responsible_name: Advogado 2

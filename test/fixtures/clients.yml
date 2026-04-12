@@ -1,35 +1,37 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  full_name: MyString
-  cpf_cnpj: MyString
-  rg: MyString
-  birth_date: 2026-04-12
-  marital_status: MyString
-  profession: MyString
-  phone: MyString
-  whatsapp: MyString
-  email: MyString
-  address: MyString
-  city: MyString
-  state: MyString
-  mother_name: MyString
-  father_name: MyString
-  notes: MyText
+  id: 1
+  full_name: Cliente Um
+  cpf_cnpj: 11111111111
+  rg: 1234567
+  birth_date: 1985-02-10
+  marital_status: Solteiro
+  profession: Professor
+  phone: 98999990001
+  whatsapp: 98999990001
+  email: cliente1@example.com
+  address: Rua A, 100
+  city: Sao Luis
+  state: MA
+  mother_name: Maria Um
+  father_name: Jose Um
+  notes: Cliente de teste 1
 
 two:
-  full_name: MyString
-  cpf_cnpj: MyString
-  rg: MyString
-  birth_date: 2026-04-12
-  marital_status: MyString
-  profession: MyString
-  phone: MyString
-  whatsapp: MyString
-  email: MyString
-  address: MyString
-  city: MyString
-  state: MyString
-  mother_name: MyString
-  father_name: MyString
-  notes: MyText
+  id: 2
+  full_name: Cliente Dois
+  cpf_cnpj: 22222222222
+  rg: 7654321
+  birth_date: 1990-08-20
+  marital_status: Casado
+  profession: Servidor
+  phone: 98999990002
+  whatsapp: 98999990002
+  email: cliente2@example.com
+  address: Rua B, 200
+  city: Imperatriz
+  state: MA
+  mother_name: Maria Dois
+  father_name: Jose Dois
+  notes: Cliente de teste 2

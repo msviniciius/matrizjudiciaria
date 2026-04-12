@@ -2,7 +2,31 @@ require "test_helper"
 
 class TasksControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @task = tasks(:one)
+    client = Client.create!(full_name: "Cliente Task", cpf_cnpj: "44444444444")
+    district = District.create!(name: "Bacabal/MA")
+    court = Court.create!(name: "3a Vara Civel", district: district)
+    legal_area = LegalArea.create!(name: "Trabalhista", justice_branch: "labor")
+    process_type = ProcessType.create!(name: "Reclamacao Trabalhista", legal_area: legal_area)
+
+    @legal_case = LegalCase.create!(
+      internal_number: "PROC-TASK-001",
+      phase: "analysis",
+      status: "active",
+      client: client,
+      legal_area_id: legal_area.id,
+      process_type_id: process_type.id,
+      district_id: district.id,
+      court_id: court.id
+    )
+
+    @task = Task.create!(
+      legal_case: @legal_case,
+      title: "Tarefa teste",
+      status: "pending",
+      priority: "medium",
+      due_date: Date.current + 3.days,
+      responsible_name: "Assistente"
+    )
   end
 
   test "should get index" do
@@ -17,7 +41,14 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
 
   test "should create task" do
     assert_difference("Task.count") do
-      post tasks_url, params: { task: { description: @task.description, due_date: @task.due_date, legal_case_id: @task.legal_case_id, priority: @task.priority, responsible_name: @task.responsible_name, status: @task.status, title: @task.title } }
+      post tasks_url, params: { task: {
+        legal_case_id: @legal_case.id,
+        title: "Nova tarefa",
+        status: "in_progress",
+        priority: "high",
+        due_date: Date.current + 2.days,
+        responsible_name: "Equipe"
+      } }
     end
 
     assert_redirected_to task_url(Task.last)
@@ -34,7 +65,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update task" do
-    patch task_url(@task), params: { task: { description: @task.description, due_date: @task.due_date, legal_case_id: @task.legal_case_id, priority: @task.priority, responsible_name: @task.responsible_name, status: @task.status, title: @task.title } }
+    patch task_url(@task), params: { task: { title: "Tarefa atualizada", status: "completed" } }
     assert_redirected_to task_url(@task)
   end
 

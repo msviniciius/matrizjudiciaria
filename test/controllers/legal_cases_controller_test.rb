@@ -2,7 +2,30 @@ require "test_helper"
 
 class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @legal_case = legal_cases(:one)
+    @client = Client.create!(full_name: "Cliente Base", cpf_cnpj: "11111111111")
+    @district = District.create!(name: "Sao Luis/MA")
+    @court = Court.create!(name: "1a Vara Civel", district: @district)
+    @legal_area = LegalArea.create!(name: "Civel", justice_branch: "state")
+    @process_type = ProcessType.create!(name: "Procedimento Comum", legal_area: @legal_area)
+
+    @legal_case = LegalCase.create!(
+      internal_number: "PROC-BASE-001",
+      external_number: "0000001-00.2026.8.10.0001",
+      entry_date: Date.current,
+      protocol_date: Date.current,
+      subarea: "Subarea",
+      main_subject: "Assunto",
+      phase: "analysis",
+      status: "active",
+      responsible_name: "Advogado",
+      claim_value: 1000,
+      priority: "medium",
+      client: @client,
+      legal_area_id: @legal_area.id,
+      process_type_id: @process_type.id,
+      district_id: @district.id,
+      court_id: @court.id
+    )
   end
 
   test "should get index" do
@@ -17,7 +40,24 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create legal_case" do
     assert_difference("LegalCase.count") do
-      post legal_cases_url, params: { legal_case: { claim_value: @legal_case.claim_value, client_id: @legal_case.client_id, court: @legal_case.court, district: @legal_case.district, entry_date: @legal_case.entry_date, external_number: @legal_case.external_number, internal_number: @legal_case.internal_number, legal_area: @legal_case.legal_area, main_subject: @legal_case.main_subject, opposing_party: @legal_case.opposing_party, phase: @legal_case.phase, priority: @legal_case.priority, process_type: @legal_case.process_type, protocol_date: @legal_case.protocol_date, responsible_name: @legal_case.responsible_name, status: @legal_case.status, strategic_notes: @legal_case.strategic_notes, subarea: @legal_case.subarea, support_team: @legal_case.support_team } }
+      post legal_cases_url, params: { legal_case: {
+        internal_number: "PROC-NEW-002",
+        external_number: "0000002-00.2026.8.10.0001",
+        entry_date: Date.current,
+        protocol_date: Date.current,
+        subarea: "Subarea",
+        main_subject: "Assunto",
+        phase: "analysis",
+        status: "active",
+        responsible_name: "Advogado",
+        claim_value: 2000,
+        priority: "medium",
+        client_id: @client.id,
+        legal_area_id: @legal_area.id,
+        process_type_id: @process_type.id,
+        district_id: @district.id,
+        court_id: @court.id
+      } }
     end
 
     assert_redirected_to legal_case_url(LegalCase.last)
@@ -34,7 +74,17 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update legal_case" do
-    patch legal_case_url(@legal_case), params: { legal_case: { claim_value: @legal_case.claim_value, client_id: @legal_case.client_id, court: @legal_case.court, district: @legal_case.district, entry_date: @legal_case.entry_date, external_number: @legal_case.external_number, internal_number: @legal_case.internal_number, legal_area: @legal_case.legal_area, main_subject: @legal_case.main_subject, opposing_party: @legal_case.opposing_party, phase: @legal_case.phase, priority: @legal_case.priority, process_type: @legal_case.process_type, protocol_date: @legal_case.protocol_date, responsible_name: @legal_case.responsible_name, status: @legal_case.status, strategic_notes: @legal_case.strategic_notes, subarea: @legal_case.subarea, support_team: @legal_case.support_team } }
+    patch legal_case_url(@legal_case), params: { legal_case: {
+      subarea: "Atualizada",
+      legal_area_id: @legal_area.id,
+      process_type_id: @process_type.id,
+      district_id: @district.id,
+      court_id: @court.id,
+      client_id: @client.id,
+      phase: @legal_case.phase,
+      status: @legal_case.status
+    } }
+
     assert_redirected_to legal_case_url(@legal_case)
   end
 

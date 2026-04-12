@@ -1,19 +1,21 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  legal_case: one
-  title: MyString
-  description: MyText
-  status: MyString
-  priority: MyString
-  due_date: 2026-04-12
-  responsible_name: MyString
+  id: 1
+  legal_case_id: 1
+  title: Revisar documentos
+  description: Conferir documentos recebidos
+  status: pending
+  priority: medium
+  due_date: 2026-04-15
+  responsible_name: Assistente 1
 
 two:
-  legal_case: two
-  title: MyString
-  description: MyText
-  status: MyString
-  priority: MyString
-  due_date: 2026-04-12
-  responsible_name: MyString
+  id: 2
+  legal_case_id: 2
+  title: Preparar peticao
+  description: Elaborar peticao inicial
+  status: in_progress
+  priority: high
+  due_date: 2026-04-16
+  responsible_name: Assistente 2

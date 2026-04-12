@@ -1,43 +1,53 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  internal_number: MyString
-  external_number: MyString
+  id: 1
+  internal_number: PROC-0001
+  external_number: 0000001-00.2026.4.01.3700
   entry_date: 2026-04-12
-  protocol_date: 2026-04-12
-  process_type: MyString
-  legal_area: MyString
-  subarea: MyString
-  main_subject: MyString
-  court: MyString
-  district: MyString
-  phase: MyString
-  status: MyString
-  responsible_name: MyString
-  support_team: MyString
-  opposing_party: MyString
-  claim_value: 9.99
-  priority: MyString
-  strategic_notes: MyText
-  client: one
+  protocol_date: 2026-04-13
+  process_type: Acao Previdenciaria
+  legal_area: Previdenciario
+  subarea: Beneficios
+  main_subject: Aposentadoria por idade
+  court: 1a Vara Federal Civel da SJMA
+  district: Sao Luis/MA
+  phase: analysis
+  status: active
+  responsible_name: Advogado 1
+  support_team: Equipe A
+  opposing_party: INSS
+  claim_value: 15000.0
+  priority: medium
+  strategic_notes: Caso de teste 1
+  client_id: 1
+  legal_area_id: 1
+  process_type_id: 1
+  district_id: 1
+  court_id: 1
 
 two:
-  internal_number: MyString
-  external_number: MyString
-  entry_date: 2026-04-12
-  protocol_date: 2026-04-12
-  process_type: MyString
-  legal_area: MyString
-  subarea: MyString
-  main_subject: MyString
-  court: MyString
-  district: MyString
-  phase: MyString
-  status: MyString
-  responsible_name: MyString
-  support_team: MyString
-  opposing_party: MyString
-  claim_value: 9.99
-  priority: MyString
-  strategic_notes: MyText
-  client: two
+  id: 2
+  internal_number: PROC-0002
+  external_number: 0000002-00.2026.8.10.0001
+  entry_date: 2026-04-10
+  protocol_date: 2026-04-11
+  process_type: Procedimento Comum Civel
+  legal_area: Civel
+  subarea: Responsabilidade civil
+  main_subject: Indenizacao por danos morais
+  court: 2a Vara Civel de Imperatriz
+  district: Imperatriz/MA
+  phase: filing
+  status: on_hold
+  responsible_name: Advogado 2
+  support_team: Equipe B
+  opposing_party: Empresa X
+  claim_value: 23000.0
+  priority: high
+  strategic_notes: Caso de teste 2
+  client_id: 2
+  legal_area_id: 2
+  process_type_id: 2
+  district_id: 2
+  court_id: 2

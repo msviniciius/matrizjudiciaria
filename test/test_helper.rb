@@ -6,9 +6,7 @@ module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
-
-    # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
-    fixtures :all
+    # Fixtures disabled: test data is built in each test case to avoid FK-order issues on restricted PostgreSQL users.
 
     # Add more helper methods to be used by all tests here...
   end

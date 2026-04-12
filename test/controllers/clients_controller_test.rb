@@ -2,7 +2,11 @@ require "test_helper"
 
 class ClientsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @client = clients(:one)
+    @client = Client.create!(
+      full_name: "Cliente Teste",
+      cpf_cnpj: "12345678901",
+      email: "cliente.teste@example.com"
+    )
   end
 
   test "should get index" do
@@ -17,7 +21,11 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create client" do
     assert_difference("Client.count") do
-      post clients_url, params: { client: { address: @client.address, birth_date: @client.birth_date, city: @client.city, cpf_cnpj: @client.cpf_cnpj, email: @client.email, father_name: @client.father_name, full_name: @client.full_name, marital_status: @client.marital_status, mother_name: @client.mother_name, notes: @client.notes, phone: @client.phone, profession: @client.profession, rg: @client.rg, state: @client.state, whatsapp: @client.whatsapp } }
+      post clients_url, params: { client: {
+        full_name: "Novo Cliente",
+        cpf_cnpj: "98765432100",
+        email: "novo.cliente@example.com"
+      } }
     end
 
     assert_redirected_to client_url(Client.last)
@@ -34,7 +42,7 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update client" do
-    patch client_url(@client), params: { client: { address: @client.address, birth_date: @client.birth_date, city: @client.city, cpf_cnpj: @client.cpf_cnpj, email: @client.email, father_name: @client.father_name, full_name: @client.full_name, marital_status: @client.marital_status, mother_name: @client.mother_name, notes: @client.notes, phone: @client.phone, profession: @client.profession, rg: @client.rg, state: @client.state, whatsapp: @client.whatsapp } }
+    patch client_url(@client), params: { client: { full_name: "Cliente Atualizado", cpf_cnpj: @client.cpf_cnpj } }
     assert_redirected_to client_url(@client)
   end
 
