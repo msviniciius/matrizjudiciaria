@@ -10,8 +10,8 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
 
     @legal_case = LegalCase.create!(
       internal_number: "PROC-DEA-001",
-      phase: "analysis",
-      status: "active",
+      phase: "analise_juridica",
+      status: "ativo",
       client: client,
       legal_area_id: legal_area.id,
       process_type_id: process_type.id,

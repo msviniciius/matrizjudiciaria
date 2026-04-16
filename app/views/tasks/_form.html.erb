@@ -1,3 +1,7 @@
+<% back_path = local_assigns[:back_path] %>
+<% show_path = local_assigns[:show_path] %>
+<% show_label = local_assigns[:show_label] || "Ver" %>
+
 <%= form_with(model: task, class: "app-form") do |form| %>
   <% if task.errors.any? %>
     <div class="form-errors">
@@ -56,6 +60,12 @@
   </section>
 
   <div class="form-actions">
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
+    <% if show_path.present? %>
+      <%= link_to show_label, show_path, class: "btn btn-secondary" %>
+    <% end %>
     <%= form.submit %>
   </div>
 <% end %>

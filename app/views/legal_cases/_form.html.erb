@@ -12,9 +12,43 @@
 
   <% grouped_areas = LegalArea.order(:justice_branch, :name).group_by(&:justice_branch) %>
   <% grouped_options = grouped_areas.transform_values { |areas| areas.map { |area| [area.name, area.id] } } %>
+  <% clients = Client.ordered.to_a %>
+  <% pending_client_ids = clients.select(&:cadastro_pendente?).map(&:id) %>
 
   <section class="form-section">
-    <h3>Classificação</h3>
+    <h3>Dados do cliente</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :client_id %>
+        <div class="inline-client-actions">
+          <%= form.collection_select :client_id,
+                                     clients,
+                                     :id,
+                                     :display_name_with_status,
+                                     { prompt: "Selecione o cliente" },
+                                     data: {
+                                       client_select: true,
+                                       pending_client_ids: pending_client_ids.join(",")
+                                     } %>
+          <button
+            type="button"
+            class="btn btn-secondary btn-icon"
+            data-open-quick-client-modal
+            aria-label="Cadastrar cliente"
+            title="Cadastrar cliente"
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+        </div>
+        <p class="form-hint form-hint--warning" data-client-pending-hint hidden>
+          Cliente com cadastro pendente. Complete os dados depois em Clientes.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Dados do Processo</h3>
     <div class="form-grid">
       <div>
         <%= form.label :internal_number %>
@@ -46,13 +80,7 @@
         <%= form.label :main_subject %>
         <%= form.text_field :main_subject %>
       </div>
-    </div>
-  </section>
 
-  <section class="form-section">
-    <h3>Estrutura Judiciária</h3>
-    <p class="form-hint">Comarca é a unidade territorial. O Órgão/Vara/Tribunal é a unidade jurisdicional dentro da comarca.</p>
-    <div class="form-grid">
       <div>
         <%= form.label :district_id, LegalCase.human_attribute_name(:district_id) %>
         <%= form.collection_select :district_id, District.order(:name), :id, :name, { include_blank: "Selecione a comarca" }, data: { district_select: true } %>
@@ -62,37 +90,7 @@
         <%= form.label :court_id, LegalCase.human_attribute_name(:court_id) %>
         <%= form.collection_select :court_id, Court.order(:name), :id, :name, { include_blank: "Selecione o órgão/vara/tribunal" }, data: { court_select: true, current_court: legal_case.court_id } %>
       </div>
-    </div>
-  </section>
 
-  <section class="form-section">
-    <h3>Andamento Processual</h3>
-    <div class="form-grid">
-      <div>
-        <%= form.label :phase %>
-        <%= form.select :phase, enum_options_for(LegalCase, :phase) %>
-      </div>
-
-      <div>
-        <%= form.label :status %>
-        <%= form.select :status, enum_options_for(LegalCase, :status) %>
-      </div>
-
-      <div>
-        <%= form.label :priority %>
-        <%= form.select :priority, enum_options_for(LegalCase, :priority), include_blank: true %>
-      </div>
-
-      <div>
-        <%= form.label :claim_value %>
-        <%= form.text_field :claim_value, data: { mask: "currency-br" }, inputmode: "numeric" %>
-      </div>
-    </div>
-  </section>
-
-  <section class="form-section">
-    <h3>Vínculos e Responsáveis</h3>
-    <div class="form-grid">
       <div>
         <%= form.label :entry_date %>
         <%= form.date_field :entry_date %>
@@ -104,25 +102,15 @@
       </div>
 
       <div>
-        <%= form.label :responsible_name %>
-        <%= form.text_field :responsible_name %>
-      </div>
-
-      <div>
-        <%= form.label :support_team %>
-        <%= form.text_field :support_team %>
+        <%= form.label :claim_value, "Valor da causa" %>
+        <%= form.text_field :claim_value, data: { mask: "currency-br" }, inputmode: "numeric" %>
       </div>
 
       <div class="field-full">
-        <%= form.label :client_id %>
-        <%= form.collection_select :client_id, Client.order(:full_name), :id, :full_name, prompt: "Selecione o cliente" %>
+        <%= form.label :support_team, "Equipe de apoio" %>
+        <%= form.text_field :support_team %>
       </div>
-    </div>
-  </section>
 
-  <section class="form-section">
-    <h3>Estratégia</h3>
-    <div class="form-grid">
       <div class="field-full">
         <%= form.label :opposing_party %>
         <%= form.text_field :opposing_party %>
@@ -135,7 +123,137 @@
     </div>
   </section>
 
+  <section class="form-section">
+    <h3>Classificação</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :phase, "Fase" %>
+        <%= form.select :phase, enum_options_for(LegalCase, :phase) %>
+      </div>
+
+      <div>
+        <%= form.label :status, "Status" %>
+        <%= form.select :status, enum_options_for(LegalCase, :status) %>
+      </div>
+
+      <div>
+        <%= form.label :priority, "Prioridade" %>
+        <%= form.select :priority, enum_options_for(LegalCase, :priority), include_blank: true %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Situação Atual</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :last_movement, "Último andamento" %>
+        <%= form.text_field :last_movement, value: legal_case.last_movement, readonly: true %>
+      </div>
+
+      <div>
+        <%= form.label :last_movement_at, "Data do último andamento" %>
+        <%= form.text_field :last_movement_at, value: legal_case.last_movement_at.present? ? l(legal_case.last_movement_at, format: :short) : "", readonly: true %>
+      </div>
+
+      <div>
+        <%= form.label :next_deadline_on, "Próximo prazo" %>
+        <%= form.date_field :next_deadline_on %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :next_action, "Próxima providência" %>
+        <%= form.text_field :next_action %>
+      </div>
+
+      <div>
+        <%= form.label :responsible_name, "Responsável atual" %>
+        <%= form.text_field :responsible_name %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Perícias</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <label class="checkbox-field">
+          <%= form.check_box :tem_pericia, data: { pericia_toggle: true } %>
+          <span>Tem perícia?</span>
+        </label>
+      </div>
+
+      <div class="field-full" data-pericia-section style="display: <%= legal_case.tem_pericia? ? "block" : "none" %>;">
+        <%= form.label :observacao_geral_pericia %>
+        <%= form.text_area :observacao_geral_pericia %>
+
+        <% if legal_case.persisted? %>
+          <%= link_to "Nova perícia", new_legal_case_process_exam_path(legal_case), class: "btn btn-secondary" %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
   <div class="form-actions">
+    <%= link_to "Voltar", legal_cases_path, class: "btn btn-secondary" %>
+    <% if legal_case.persisted? %>
+      <%= link_to "Ver processo", legal_case_path(legal_case), class: "btn btn-secondary" %>
+    <% end %>
     <%= form.submit %>
   </div>
 <% end %>
+
+<dialog class="quick-client-modal" data-quick-client-modal data-endpoint="<%= quick_create_clients_path %>">
+  <div class="quick-client-modal__header">
+    <h3>Novo cliente (cadastro rápido)</h3>
+    <button
+      type="button"
+      class="btn btn-secondary btn-icon"
+      data-close-quick-client-modal
+      aria-label="Fechar"
+      title="Fechar"
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <p class="form-hint">Preencha os dados mínimos obrigatórios. O cliente será criado com cadastro pendente.</p>
+
+  <div class="form-errors" data-quick-client-errors hidden></div>
+
+  <div class="form-grid">
+    <div class="field-full">
+      <label for="quick_client_full_name">Nome completo *</label>
+      <input id="quick_client_full_name" type="text" data-quick-client-field="full_name" required />
+    </div>
+
+    <div>
+      <label for="quick_client_cpf_cnpj">CPF/CNPJ *</label>
+      <input id="quick_client_cpf_cnpj" type="text" data-mask="cpf_cnpj" data-quick-client-field="cpf_cnpj" inputmode="numeric" required />
+    </div>
+
+    <div>
+      <label for="quick_client_phone">Telefone *</label>
+      <input id="quick_client_phone" type="text" data-mask="phone" data-quick-client-field="phone" inputmode="numeric" required />
+    </div>
+
+    <div>
+      <label for="quick_client_whatsapp">WhatsApp</label>
+      <input id="quick_client_whatsapp" type="text" data-mask="phone" data-quick-client-field="whatsapp" inputmode="numeric" />
+    </div>
+
+    <div>
+      <label for="quick_client_email">E-mail</label>
+      <input id="quick_client_email" type="email" data-quick-client-field="email" />
+    </div>
+
+    <div class="field-full">
+      <label for="quick_client_dados_gov">Dados GOV (e-mail e senha)</label>
+      <textarea id="quick_client_dados_gov" data-quick-client-field="dados_gov" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-primary" data-save-quick-client>Salvar cliente</button>
+  </div>
+</dialog>

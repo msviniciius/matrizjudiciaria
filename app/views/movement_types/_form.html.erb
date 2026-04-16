@@ -1,0 +1,36 @@
+<%= form_with(model: movement_type, class: "app-form") do |form| %>
+  <% if movement_type.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(movement_type.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% movement_type.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Tipo de Andamento</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :name, "Nome" %>
+        <%= form.text_field :name %>
+      </div>
+
+      <div>
+        <%= form.label :code, "Código" %>
+        <%= form.text_field :code %>
+      </div>
+
+      <div>
+        <%= form.label :active, "Ativo" %>
+        <%= form.check_box :active %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

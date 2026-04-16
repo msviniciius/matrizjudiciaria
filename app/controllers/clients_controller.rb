@@ -1,25 +1,20 @@
 class ClientsController < ApplicationController
   before_action :set_client, only: %i[ show edit update destroy ]
 
-  # GET /clients or /clients.json
   def index
-    @clients = Client.all
+    @clients = Client.ordered
   end
 
-  # GET /clients/1 or /clients/1.json
   def show
   end
 
-  # GET /clients/new
   def new
     @client = Client.new
   end
 
-  # GET /clients/1/edit
   def edit
   end
 
-  # POST /clients or /clients.json
   def create
     @client = Client.new(client_params)
 
@@ -34,7 +29,21 @@ class ClientsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /clients/1 or /clients/1.json
+  def quick_create
+    @client = Client.new(quick_client_params.merge(cadastro_pendente: true))
+
+    if @client.save(context: :quick_create)
+      render json: {
+        id: @client.id,
+        full_name: @client.full_name,
+        display_name: @client.display_name_with_status,
+        cadastro_pendente: @client.cadastro_pendente
+      }, status: :created
+    else
+      render json: { errors: @client.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def update
     respond_to do |format|
       if @client.update(client_params)
@@ -47,7 +56,6 @@ class ClientsController < ApplicationController
     end
   end
 
-  # DELETE /clients/1 or /clients/1.json
   def destroy
     @client.destroy!
 
@@ -58,13 +66,34 @@ class ClientsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_client
-      @client = Client.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def client_params
-      params.expect(client: [ :full_name, :cpf_cnpj, :rg, :birth_date, :marital_status, :profession, :phone, :whatsapp, :email, :address, :city, :state, :mother_name, :father_name, :notes ])
-    end
+  def set_client
+    @client = Client.find(params.expect(:id))
+  end
+
+  def client_params
+    params.expect(client: [
+      :full_name,
+      :cpf_cnpj,
+      :rg,
+      :birth_date,
+      :marital_status,
+      :profession,
+      :phone,
+      :whatsapp,
+      :email,
+      :address,
+      :city,
+      :state,
+      :mother_name,
+      :father_name,
+      :notes,
+      :dados_gov,
+      :cadastro_pendente
+    ])
+  end
+
+  def quick_client_params
+    params.expect(client: [ :full_name, :cpf_cnpj, :phone, :whatsapp, :email, :dados_gov ])
+  end
 end

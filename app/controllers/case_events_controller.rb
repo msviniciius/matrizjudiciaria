@@ -1,25 +1,20 @@
 class CaseEventsController < ApplicationController
   before_action :set_case_event, only: %i[ show edit update destroy ]
 
-  # GET /case_events or /case_events.json
   def index
-    @case_events = CaseEvent.all
+    @case_events = CaseEvent.includes(:legal_case, :movement_type, :process_exam).order(occurred_at: :desc)
   end
 
-  # GET /case_events/1 or /case_events/1.json
   def show
   end
 
-  # GET /case_events/new
   def new
-    @case_event = CaseEvent.new
+    @case_event = CaseEvent.new(legal_case_id: params[:legal_case_id])
   end
 
-  # GET /case_events/1/edit
   def edit
   end
 
-  # POST /case_events or /case_events.json
   def create
     @case_event = CaseEvent.new(case_event_params)
 
@@ -34,7 +29,6 @@ class CaseEventsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /case_events/1 or /case_events/1.json
   def update
     respond_to do |format|
       if @case_event.update(case_event_params)
@@ -47,7 +41,6 @@ class CaseEventsController < ApplicationController
     end
   end
 
-  # DELETE /case_events/1 or /case_events/1.json
   def destroy
     @case_event.destroy!
 
@@ -58,13 +51,24 @@ class CaseEventsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_case_event
-      @case_event = CaseEvent.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def case_event_params
-      params.expect(case_event: [ :legal_case_id, :event_type, :occurred_at, :description, :responsible_name ])
-    end
+  def set_case_event
+    @case_event = CaseEvent.find(params.expect(:id))
+  end
+
+  def case_event_params
+    params.expect(case_event: [
+      :legal_case_id,
+      :event_type,
+      :occurred_at,
+      :description,
+      :responsible_name,
+      :movement_type_id,
+      :entry_kind,
+      :next_action,
+      :phase_after,
+      :status_after,
+      :process_exam_id
+    ])
+  end
 end

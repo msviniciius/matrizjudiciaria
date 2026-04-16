@@ -1,14 +1,43 @@
-<% content_for :title, "Andamentos" %>
+<% content_for :title, "Andamentos Processuais" %>
 
-<h1>Andamentos</h1>
+<% content_for :topbar_actions do %>
+  <%= link_to "Novo andamento", new_case_event_path, class: "btn btn-primary" %>
+<% end %>
 
-<div id="case_events">
-  <% @case_events.each do |case_event| %>
-    <%= render case_event %>
-    <p>
-      <%= link_to "Ver andamento", case_event %>
-    </p>
-  <% end %>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Processo</th>
+        <th>Tipo de registro</th>
+        <th>Evento</th>
+        <th>Categoria</th>
+        <th>Perícia</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @case_events.any? %>
+        <% @case_events.each do |case_event| %>
+          <tr>
+            <td><%= case_event.legal_case&.internal_number %></td>
+            <td><%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %></td>
+            <td><%= enum_label(CaseEvent, :event_type, case_event.event_type) %></td>
+            <td><%= case_event.movement_type&.name || "-" %></td>
+            <td><%= case_event.process_exam&.summary_label || "-" %></td>
+            <td><%= case_event.occurred_at %></td>
+            <td class="table-actions">
+              <%= link_to "Ver", case_event_path(case_event), class: "btn btn-secondary" %>
+              <%= link_to "Editar", edit_case_event_path(case_event), class: "btn btn-secondary" %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="7" class="table-empty-state">Nenhum andamento cadastrado.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>
-
-<%= link_to "Novo andamento", new_case_event_path %>

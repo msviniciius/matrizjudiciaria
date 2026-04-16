@@ -1,0 +1,41 @@
+<% content_for :title, "Modelos de Andamento" %>
+
+<% content_for :topbar_actions do %>
+  <%= link_to "Novo modelo", new_movement_template_path, class: "btn btn-primary" %>
+<% end %>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nome</th>
+        <th>Fase</th>
+        <th>Tipo</th>
+        <th>Ativo</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @movement_templates.any? %>
+        <% @movement_templates.each do |template| %>
+          <tr>
+            <td><%= template.code %></td>
+            <td><%= template.name %></td>
+            <td><%= template.phase&.name %></td>
+            <td><%= template.movement_type&.name %></td>
+            <td><%= template.active? ? "Sim" : "Não" %></td>
+            <td>
+              <%= link_to "Ver", template, class: "btn btn-secondary" %>
+              <%= link_to "Editar", edit_movement_template_path(template), class: "btn btn-secondary" %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="6" class="table-empty-state">Nenhum modelo de andamento cadastrado.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

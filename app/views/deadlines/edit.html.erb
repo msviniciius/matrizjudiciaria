@@ -2,11 +2,8 @@
 
 <h1>Editar prazo</h1>
 
-<%= render "form", deadline: @deadline %>
-
-<br>
-
-<div>
-  <%= link_to "Ver prazo", @deadline %> |
-  <%= link_to "Voltar para prazos", deadlines_path %>
-</div>
+<%= render "form",
+           deadline: @deadline,
+           back_path: deadlines_path,
+           show_path: deadline_path(@deadline),
+           show_label: "Ver prazo" %>

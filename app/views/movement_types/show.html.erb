@@ -1,0 +1,7 @@
+<% content_for :title, "Tipo de Andamento" %>
+<p><strong>Nome:</strong> <%= @movement_type.name %></p>
+<p><strong>Código:</strong> <%= @movement_type.code %></p>
+<p><strong>Ativo:</strong> <%= @movement_type.active ? "Sim" : "Não" %></p>
+<div class="case-actions case-actions--footer">
+  <%= link_to "Voltar", movement_types_path, class: "btn btn-secondary" %>
+</div>

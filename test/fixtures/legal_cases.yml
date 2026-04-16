@@ -12,8 +12,8 @@ one:
   main_subject: Aposentadoria por idade
   court: 1a Vara Federal Civel da SJMA
   district: Sao Luis/MA
-  phase: analysis
-  status: active
+  phase: analise_juridica
+  status: ativo
   responsible_name: Advogado 1
   support_team: Equipe A
   opposing_party: INSS
@@ -38,8 +38,8 @@ two:
   main_subject: Indenizacao por danos morais
   court: 2a Vara Civel de Imperatriz
   district: Imperatriz/MA
-  phase: filing
-  status: on_hold
+  phase: judicial
+  status: suspenso
   responsible_name: Advogado 2
   support_team: Equipe B
   opposing_party: Empresa X

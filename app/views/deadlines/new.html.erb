@@ -2,10 +2,4 @@
 
 <h1>Novo prazo</h1>
 
-<%= render "form", deadline: @deadline %>
-
-<br>
-
-<div>
-  <%= link_to "Voltar para prazos", deadlines_path %>
-</div>
+<%= render "form", deadline: @deadline, back_path: deadlines_path %>

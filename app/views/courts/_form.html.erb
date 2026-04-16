@@ -1,3 +1,5 @@
+<% back_path = local_assigns[:back_path] %>
+
 <%= form_with(model: court, class: "app-form") do |form| %>
   <% if court.errors.any? %>
     <div class="form-errors">
@@ -26,6 +28,9 @@
   </section>
 
   <div class="form-actions">
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
     <%= form.submit %>
   </div>
 <% end %>

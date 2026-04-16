@@ -1,3 +1,7 @@
+<% back_path = local_assigns[:back_path] %>
+<% show_path = local_assigns[:show_path] %>
+<% show_label = local_assigns[:show_label] || "Ver" %>
+
 <%= form_with(model: client, class: "app-form") do |form| %>
   <% if client.errors.any? %>
     <div class="form-errors">
@@ -99,13 +103,31 @@
       </div>
 
       <div class="field-full">
+        <%= form.label :dados_gov, "Dados GOV (e-mail e senha)" %>
+        <%= form.textarea :dados_gov %>
+      </div>
+
+      <div class="field-full">
         <%= form.label :notes %>
         <%= form.textarea :notes %>
+      </div>
+
+      <div class="field-full">
+        <label class="checkbox-field">
+          <%= form.check_box :cadastro_pendente %>
+          <span>Cadastro pendente</span>
+        </label>
       </div>
     </div>
   </section>
 
   <div class="form-actions">
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
+    <% if show_path.present? %>
+      <%= link_to show_label, show_path, class: "btn btn-secondary" %>
+    <% end %>
     <%= form.submit %>
   </div>
 <% end %>

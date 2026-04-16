@@ -1,0 +1,94 @@
+<%= form_with(model: movement_template, class: "app-form") do |form| %>
+  <% if movement_template.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(movement_template.errors.count, "erro", "erros") %>:</h2>
+      <ul>
+        <% movement_template.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Modelo de Andamento</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :phase_id, "Fase" %>
+        <%= form.collection_select :phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name %>
+      </div>
+
+      <div>
+        <%= form.label :movement_type_id, "Tipo" %>
+        <%= form.collection_select :movement_type_id, MovementType.where(active: true).order(:name), :id, :name %>
+      </div>
+
+      <div>
+        <%= form.label :code %>
+        <%= form.text_field :code %>
+      </div>
+
+      <div>
+        <%= form.label :name %>
+        <%= form.text_field :name %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :short_description %>
+        <%= form.text_area :short_description %>
+      </div>
+
+      <div>
+        <%= form.label :nature_default, "Natureza padrão" %>
+        <%= form.select :nature_default, enum_options_for(MovementTemplate, :nature_default) %>
+      </div>
+
+      <div>
+        <%= form.label :impact_default, "Impacto padrão" %>
+        <%= form.select :impact_default, enum_options_for(MovementTemplate, :impact_default) %>
+      </div>
+
+      <div>
+        <%= form.label :next_phase_id, "Próxima fase" %>
+        <%= form.collection_select :next_phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, include_blank: true %>
+      </div>
+
+      <div>
+        <%= form.label :order, "Ordem" %>
+        <%= form.number_field :order %>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :updates_phase %><span>Atualiza fase</span></label>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :creates_task %><span>Cria tarefa</span></label>
+      </div>
+
+      <div>
+        <%= form.label :task_template_name, "Template da tarefa" %>
+        <%= form.text_field :task_template_name %>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :creates_deadline %><span>Cria prazo</span></label>
+      </div>
+
+      <div>
+        <%= form.label :deadline_template_name, "Template do prazo" %>
+        <%= form.text_field :deadline_template_name %>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :requires_exam_id %><span>Exige vínculo com perícia</span></label>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :active %><span>Ativo</span></label>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions"><%= form.submit %></div>
+<% end %>

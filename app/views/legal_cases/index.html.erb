@@ -1,14 +1,76 @@
 <% content_for :title, "Processos" %>
 
-<h1>Processos</h1>
+<% content_for :topbar_actions do %>
+  <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
+<% end %>
 
-<div id="legal_cases">
-  <% @legal_cases.each do |legal_case| %>
-    <%= render legal_case %>
-    <p>
-      <%= link_to "Ver processo", legal_case %>
-    </p>
-  <% end %>
-</div>
+<section class="case-section">
+  <h3>Relatórios Rápidos</h3>
+  <div class="report-grid">
+    <article class="report-card">
+      <p class="report-label">Com prazo próximo</p>
+      <p class="report-value"><%= @report_counts[:prazo_proximo] %></p>
+    </article>
+    <article class="report-card">
+      <p class="report-label">Sem prazo</p>
+      <p class="report-value"><%= @report_counts[:sem_prazo] %></p>
+    </article>
+    <article class="report-card">
+      <p class="report-label">Com perícia</p>
+      <p class="report-value"><%= @report_counts[:com_pericia] %></p>
+    </article>
+    <article class="report-card">
+      <p class="report-label">Com exigência pendente</p>
+      <p class="report-value"><%= @report_counts[:com_exigencia_pendente] %></p>
+    </article>
+  </div>
+</section>
 
-<%= link_to "Novo processo", new_legal_case_path %>
+<section class="case-section">
+  <h3>Processos por fase</h3>
+  <div class="report-grid">
+    <% @report_counts[:por_fase].each do |phase, count| %>
+      <article class="report-card">
+        <p class="report-label"><%= enum_label(LegalCase, :phase, phase) %></p>
+        <p class="report-value"><%= count %></p>
+      </article>
+    <% end %>
+  </div>
+</section>
+
+<section class="case-section">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Número interno</th>
+          <th>Fase</th>
+          <th>Status</th>
+          <th>Último andamento</th>
+          <th>Próximo prazo</th>
+          <th>Responsável</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @legal_cases.any? %>
+          <% @legal_cases.each do |legal_case| %>
+            <tr>
+              <td><%= legal_case.internal_number %></td>
+              <td><%= enum_label(LegalCase, :phase, legal_case.phase) %></td>
+              <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
+              <td><%= legal_case.last_movement.presence || "-" %></td>
+              <td><%= legal_case.next_deadline_on.presence || "-" %></td>
+              <td><%= legal_case.responsible_name.presence || "-" %></td>
+              <td><%= link_to "Ver processo", legal_case, class: "btn btn-secondary" %></td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="7" class="table-empty-state">Nenhum processo cadastrado.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

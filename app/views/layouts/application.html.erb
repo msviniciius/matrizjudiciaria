@@ -48,10 +48,11 @@
             <h2><%= content_for?(:title) ? content_for(:title) : "Painel Geral" %></h2>
           </div>
 
-          <div class="topbar-actions">
-            <%= link_to "Novo Cliente", new_client_path, class: "btn btn-secondary" %>
-            <%= link_to "Novo Processo", new_legal_case_path, class: "btn btn-primary" %>
-          </div>
+          <% if content_for?(:topbar_actions) %>
+            <div class="topbar-actions">
+              <%= yield :topbar_actions %>
+            </div>
+          <% end %>
         </header>
 
         <% flash.each do |type, message| %>

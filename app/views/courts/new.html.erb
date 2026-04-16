@@ -2,10 +2,4 @@
 
 <h1>Novo órgão/vara/tribunal</h1>
 
-<%= render "form", court: @court %>
-
-<br>
-
-<div>
-  <%= link_to "Voltar", courts_path %>
-</div>
+<%= render "form", court: @court, back_path: courts_path %>

@@ -2,10 +2,4 @@
 
 <h1>Editar comarca</h1>
 
-<%= render "form", district: @district %>
-
-<br>
-
-<div>
-  <%= link_to "Voltar", districts_path %>
-</div>
+<%= render "form", district: @district, back_path: districts_path %>

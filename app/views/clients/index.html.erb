@@ -1,14 +1,52 @@
 <% content_for :title, "Clientes" %>
 
-<h1>Clientes</h1>
+<% content_for :topbar_actions do %>
+  <%= link_to "Novo cliente", new_client_path, class: "btn btn-primary" %>
+<% end %>
 
-<div id="clients">
-  <% @clients.each do |client| %>
-    <%= render client %>
-    <p>
-      <%= link_to "Ver cliente", client %>
-    </p>
-  <% end %>
-</div>
+<section class="case-section">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>CPF/CNPJ</th>
+          <th>Telefone</th>
+          <th>E-mail</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @clients.any? %>
+          <% @clients.each do |client| %>
+            <tr>
+              <td><%= client.full_name %></td>
+              <td><%= client.cpf_cnpj.presence || "-" %></td>
+              <td><%= client.phone.presence || "-" %></td>
+              <td><%= client.email.presence || "-" %></td>
+              <td><%= client.cadastro_pendente? ? "Cadastro pendente" : "Completo" %></td>
+              <td class="table-actions">
+                <%= link_to client_path(client), class: "btn btn-secondary btn-icon", aria: { label: "Ver cliente" }, title: "Ver cliente" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
 
-<%= link_to "Novo cliente", new_client_path %>
+                <%= link_to edit_client_path(client), class: "btn btn-secondary btn-icon", aria: { label: "Editar cliente" }, title: "Editar cliente" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+
+                <%= button_to client_path(client), method: :delete, class: "btn btn-secondary btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Excluir este cliente?" } }, aria: { label: "Excluir cliente" }, title: "Excluir cliente" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="6" class="table-empty-state">Nenhum cliente cadastrado.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

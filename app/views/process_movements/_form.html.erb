@@ -1,0 +1,120 @@
+<%= form_with(model: process_movement, class: "app-form") do |form| %>
+  <% if process_movement.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(process_movement.errors.count, "erro", "erros") %>:</h2>
+      <ul>
+        <% process_movement.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Andamento Processual</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :process_id, "Processo" %>
+        <%= form.collection_select :process_id, LegalCase.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+      </div>
+
+      <div>
+        <%= form.label :phase_id, "Fase" %>
+        <%= form.collection_select :phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, prompt: "Selecione a fase" %>
+      </div>
+
+      <div>
+        <%= form.label :movement_type_id, "Tipo de andamento" %>
+        <%= form.collection_select :movement_type_id, MovementType.where(active: true).order(:name), :id, :name, prompt: "Selecione o tipo" %>
+      </div>
+
+      <div>
+        <%= form.label :movement_template_id, "Modelo de andamento" %>
+        <%= form.collection_select :movement_template_id, MovementTemplate.where(active: true).order(:order, :name), :id, :name, include_blank: "Sem modelo" %>
+      </div>
+
+      <div>
+        <%= form.label :exam_id, "Perícia vinculada" %>
+        <% exams = process_movement.process_id.present? ? ProcessExam.where(legal_case_id: process_movement.process_id, active: true).order(:scheduled_at) : ProcessExam.none %>
+        <%= form.collection_select :exam_id, exams, :id, :summary_label, include_blank: "Sem vínculo" %>
+      </div>
+
+      <div>
+        <%= form.label :event_date, "Data do evento" %>
+        <%= form.datetime_field :event_date %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :display_title, "Título" %>
+        <%= form.text_field :display_title %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :complementary_description, "Descrição complementar" %>
+        <%= form.text_area :complementary_description %>
+      </div>
+
+      <div>
+        <%= form.label :nature, "Natureza" %>
+        <%= form.select :nature, enum_options_for(ProcessMovement, :nature) %>
+      </div>
+
+      <div>
+        <%= form.label :impact, "Impacto" %>
+        <%= form.select :impact, enum_options_for(ProcessMovement, :impact) %>
+      </div>
+
+      <div>
+        <%= form.label :origin, "Origem" %>
+        <%= form.select :origin, enum_options_for(ProcessMovement, :origin) %>
+      </div>
+
+      <div>
+        <%= form.label :administrative_situation, "Situação administrativa" %>
+        <%= form.select :administrative_situation, enum_options_for(ProcessMovement, :administrative_situation), include_blank: "Não se aplica" %>
+      </div>
+
+      <div>
+        <%= form.label :next_phase_id, "Próxima fase" %>
+        <%= form.collection_select :next_phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, include_blank: true %>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :updates_phase %><span>Atualiza fase</span></label>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :creates_task %><span>Cria tarefa</span></label>
+      </div>
+
+      <div>
+        <label class="checkbox-field"><%= form.check_box :creates_deadline %><span>Cria prazo</span></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Modo de Exceção</h3>
+    <div class="form-grid">
+      <div class="field-full">
+        <label class="checkbox-field"><%= form.check_box :manual_override %><span>Aplicar override manual</span></label>
+      </div>
+      <div class="field-full">
+        <label class="checkbox-field"><%= form.check_box :exception_authorized %><span>Ação autorizada para exceção</span></label>
+      </div>
+      <div class="field-full">
+        <%= form.label :override_reason, "Justificativa obrigatória" %>
+        <%= form.text_area :override_reason %>
+      </div>
+      <div>
+        <%= form.label :override_by_user_id, "ID do responsável pela exceção" %>
+        <%= form.number_field :override_by_user_id %>
+      </div>
+      <div>
+        <label class="checkbox-field"><%= form.check_box :active %><span>Ativo</span></label>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions"><%= form.submit %></div>
+<% end %>

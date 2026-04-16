@@ -1,8 +1,7 @@
 <%= render @case_event %>
 
-<div>
-  <%= link_to "Editar andamento", edit_case_event_path(@case_event) %> |
-  <%= link_to "Voltar para andamentos", case_events_path %>
-
-  <%= button_to "Excluir andamento", @case_event, method: :delete %>
+<div class="case-actions case-actions--footer">
+  <%= link_to "Editar andamento", edit_case_event_path(@case_event), class: "btn btn-secondary" %>
+  <%= link_to "Voltar", case_events_path, class: "btn btn-secondary" %>
+  <%= button_to "Excluir andamento", @case_event, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Tem certeza que deseja excluir este andamento?" } } %>
 </div>

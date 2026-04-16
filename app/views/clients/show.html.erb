@@ -1,8 +1,139 @@
-<%= render @client %>
+<% content_for :title, "Cliente #{@client.full_name}" %>
 
-<div>
-  <%= link_to "Editar cliente", edit_client_path(@client) %> |
-  <%= link_to "Voltar para clientes", clients_path %>
+<% gov_lines = @client.dados_gov.to_s.lines.map { |line| line.strip }.reject(&:blank?) %>
+<% gov_raw = gov_lines.join("\n") %>
+<% gov_masked = gov_lines.map { |line| line.match?(/^senha\s*:/i) ? line.sub(/(:\s*).*/, ": ••••••••") : line }.join("\n") %>
 
-  <%= button_to "Excluir cliente", @client, method: :delete %>
+<section class="case-summary case-summary--header">
+  <div class="case-summary__header">
+    <div>
+      <p class="case-kicker">Cliente</p>
+      <h1><%= @client.full_name %></h1>
+    </div>
+  </div>
+
+  <div class="case-headline-grid client-headline-grid">
+    <div>
+      <strong><%= Client.human_attribute_name(:cpf_cnpj) %></strong>
+      <span><%= @client.cpf_cnpj.presence || "Não informado" %></span>
+    </div>
+    <div>
+      <strong><%= Client.human_attribute_name(:phone) %></strong>
+      <span><%= @client.phone.presence || "Não informado" %></span>
+    </div>
+    <div>
+      <strong><%= Client.human_attribute_name(:email) %></strong>
+      <span><%= @client.email.presence || "Não informado" %></span>
+    </div>
+    <div>
+      <strong><%= Client.human_attribute_name(:cadastro_pendente) %></strong>
+      <span><%= @client.cadastro_pendente? ? "Sim" : "Não" %></span>
+    </div>
+  </div>
+</section>
+
+<div class="client-details-grid">
+  <section class="case-section">
+    <h3>Identificação</h3>
+    <dl class="details-list">
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:full_name) %></dt>
+        <dd><%= @client.full_name %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:rg) %></dt>
+        <dd class="<%= @client.rg.present? ? "" : "is-empty" %>"><%= @client.rg.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:birth_date) %></dt>
+        <dd class="<%= @client.birth_date.present? ? "" : "is-empty" %>"><%= @client.birth_date.present? ? l(@client.birth_date) : "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:marital_status) %></dt>
+        <dd class="<%= @client.marital_status.present? ? "" : "is-empty" %>"><%= @client.marital_status.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:profession) %></dt>
+        <dd class="<%= @client.profession.present? ? "" : "is-empty" %>"><%= @client.profession.presence || "Não informado" %></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="case-section">
+    <h3>Contato</h3>
+    <dl class="details-list">
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:phone) %></dt>
+        <dd class="<%= @client.phone.present? ? "" : "is-empty" %>"><%= @client.phone.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:whatsapp) %></dt>
+        <dd class="<%= @client.whatsapp.present? ? "" : "is-empty" %>"><%= @client.whatsapp.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:email) %></dt>
+        <dd class="<%= @client.email.present? ? "" : "is-empty" %>"><%= @client.email.presence || "Não informado" %></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="case-section">
+    <h3>Endereço</h3>
+    <dl class="details-list">
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:address) %></dt>
+        <dd class="<%= @client.address.present? ? "" : "is-empty" %>"><%= @client.address.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:city) %></dt>
+        <dd class="<%= @client.city.present? ? "" : "is-empty" %>"><%= @client.city.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
+        <dt><%= Client.human_attribute_name(:state) %></dt>
+        <dd class="<%= @client.state.present? ? "" : "is-empty" %>"><%= @client.state.presence || "Não informado" %></dd>
+      </div>
+    </dl>
+  </section>
+</div>
+
+<section class="case-section">
+  <h3>Filiação</h3>
+  <dl class="details-list">
+    <div class="details-item">
+      <dt><%= Client.human_attribute_name(:mother_name) %></dt>
+      <dd class="<%= @client.mother_name.present? ? "" : "is-empty" %>"><%= @client.mother_name.presence || "Não informado" %></dd>
+    </div>
+    <div class="details-item">
+      <dt><%= Client.human_attribute_name(:father_name) %></dt>
+      <dd class="<%= @client.father_name.present? ? "" : "is-empty" %>"><%= @client.father_name.presence || "Não informado" %></dd>
+    </div>
+  </dl>
+</section>
+
+<% if gov_raw.present? %>
+  <section class="case-section">
+    <h3>Dados GOV</h3>
+    <div class="gov-credentials">
+      <div class="client-longtext"><%= simple_format(gov_masked, {}, wrapper_tag: "div") %></div>
+      <details>
+        <summary>Mostrar dados completos</summary>
+        <div class="client-longtext"><%= simple_format(gov_raw, {}, wrapper_tag: "div") %></div>
+      </details>
+    </div>
+  </section>
+<% end %>
+
+<section class="case-section">
+  <h3>Observações</h3>
+  <% if @client.notes.present? %>
+    <div class="client-longtext"><%= simple_format(@client.notes, {}, wrapper_tag: "div") %></div>
+  <% else %>
+    <p class="empty-state">Sem observações cadastradas.</p>
+  <% end %>
+</section>
+
+<div class="case-actions case-actions--footer">
+  <%= link_to "Voltar", clients_path, class: "btn btn-secondary" %>
+  <%= link_to "Editar", edit_client_path(@client), class: "btn btn-secondary" %>
+  <%= button_to "Excluir", @client, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Tem certeza que deseja excluir este cliente?" } } %>
 </div>

@@ -1,0 +1,38 @@
+<% content_for :title, @process_movement.display_title %>
+
+<div id="<%= dom_id @process_movement %>">
+  <p><strong>Processo:</strong> <%= @process_movement.process&.internal_number %></p>
+  <p><strong>Fase:</strong> <%= @process_movement.phase&.name %></p>
+  <p><strong>Tipo:</strong> <%= @process_movement.movement_type&.name %></p>
+  <p><strong>Natureza:</strong> <%= enum_label(ProcessMovement, :nature, @process_movement.nature) %></p>
+  <p><strong>Impacto:</strong> <%= enum_label(ProcessMovement, :impact, @process_movement.impact) %></p>
+  <p><strong>Origem:</strong> <%= enum_label(ProcessMovement, :origin, @process_movement.origin) %></p>
+  <p><strong>Situação administrativa:</strong> <%= @process_movement.administrative_situation.present? ? enum_label(ProcessMovement, :administrative_situation, @process_movement.administrative_situation) : "-" %></p>
+  <p><strong>Data:</strong> <%= l(@process_movement.event_date, format: :short) %></p>
+  <p><strong>Descrição:</strong> <%= @process_movement.complementary_description.presence || "-" %></p>
+  <p><strong>Modo de exceção:</strong> <%= @process_movement.manual_override? ? "Sim" : "Não" %></p>
+  <p><strong>Justificativa de exceção:</strong> <%= @process_movement.override_reason.presence || "-" %></p>
+</div>
+
+<section class="case-section">
+  <h3>Auditoria</h3>
+  <% if @process_movement.audits.any? %>
+    <div class="timeline-list">
+      <% @process_movement.audits.order(created_at: :desc).each do |audit| %>
+        <article class="timeline-item timeline-item--soft">
+          <h4><%= audit.action.humanize %></h4>
+          <p class="timeline-subline"><strong>Data:</strong> <%= l(audit.created_at, format: :short) %></p>
+          <p><strong>Justificativa:</strong> <%= audit.justification.presence || "-" %></p>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="empty-state">Sem registros de auditoria.</p>
+  <% end %>
+</section>
+
+<div class="case-actions case-actions--footer">
+  <%= link_to "Editar", edit_process_movement_path(@process_movement), class: "btn btn-secondary" %>
+  <%= link_to "Voltar", process_movements_path, class: "btn btn-secondary" %>
+  <%= button_to "Excluir", @process_movement, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Confirma a exclusão?" } } %>
+</div>

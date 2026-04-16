@@ -44,6 +44,13 @@
     <%= client.email %>
   </div>
 
+  <% if client.dados_gov.present? %>
+    <div>
+      <strong><%= Client.human_attribute_name(:dados_gov) %>:</strong>
+      <%= simple_format(client.dados_gov) %>
+    </div>
+  <% end %>
+
   <div>
     <strong><%= Client.human_attribute_name(:address) %>:</strong>
     <%= client.address %>

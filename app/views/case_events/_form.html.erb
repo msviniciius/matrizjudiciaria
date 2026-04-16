@@ -1,3 +1,7 @@
+<% back_path = local_assigns[:back_path] %>
+<% show_path = local_assigns[:show_path] %>
+<% show_label = local_assigns[:show_label] || "Ver" %>
+
 <%= form_with(model: case_event, class: "app-form") do |form| %>
   <% if case_event.errors.any? %>
     <div class="form-errors">
@@ -11,41 +15,87 @@
   <% end %>
 
   <section class="form-section">
-    <h3>Dados do Andamento</h3>
+    <h3>Andamento Processual</h3>
+    <p class="helper-text">Registre fatos relevantes do caso. Use <strong>nota interna</strong> ou <strong>atualização estratégica</strong> quando não for um andamento processual.</p>
+
     <div class="form-grid">
       <div class="field-full">
-        <%= form.label :legal_case_id %>
-        <%= form.collection_select :legal_case_id, LegalCase.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+        <%= form.label :legal_case_id, "Processo" %>
+        <%= form.collection_select :legal_case_id, LegalCase.order(:internal_number), :id, :internal_number, { prompt: "Selecione o processo" } %>
       </div>
 
       <div>
-        <%= form.label :event_type %>
+        <%= form.label :entry_kind, "Tipo de registro" %>
+        <%= form.select :entry_kind, enum_options_for(CaseEvent, :entry_kind), {}, data: { entry_kind_select: true } %>
+      </div>
+
+      <div data-movement-type-field>
+        <%= form.label :movement_type_id, "Tipo de andamento" %>
+        <%= form.collection_select :movement_type_id, MovementType.where(active: true).order(:name), :id, :name, { include_blank: "Selecione a categoria" }, data: { movement_type_select: true } %>
+      </div>
+
+      <div>
+        <%= form.label :event_type, "Evento" %>
         <%= form.select :event_type, enum_options_for(CaseEvent, :event_type) %>
       </div>
 
       <div>
-        <%= form.label :occurred_at %>
+        <%= form.label :occurred_at, "Data e hora do evento" %>
         <%= form.datetime_field :occurred_at %>
       </div>
 
       <div class="field-full">
-        <%= form.label :responsible_name %>
+        <label>
+          <%= check_box_tag :link_process_exam, "1", case_event.process_exam_id.present?, data: { process_exam_toggle: true } %>
+          Vincular este registro a uma perícia
+        </label>
+      </div>
+
+      <div data-process-exam-field>
+        <%= form.label :process_exam_id, "Perícia vinculada" %>
+        <% exams = case_event.legal_case_id.present? ? ProcessExam.where(legal_case_id: case_event.legal_case_id, active: true).order(:scheduled_at) : ProcessExam.none %>
+        <%= form.collection_select :process_exam_id, exams, :id, :summary_label, { include_blank: "Selecione a perícia" }, data: { process_exam_select: true } %>
+      </div>
+
+      <div>
+        <%= form.label :phase_after, "Fase após o registro" %>
+        <%= form.select :phase_after, enum_options_for(LegalCase, :phase), include_blank: true %>
+      </div>
+
+      <div>
+        <%= form.label :status_after, "Status após o registro" %>
+        <%= form.select :status_after, enum_options_for(LegalCase, :status), include_blank: true %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :next_action, "Próxima providência" %>
+        <%= form.text_field :next_action %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :responsible_name, "Responsável pelo registro" %>
         <%= form.text_field :responsible_name %>
       </div>
     </div>
   </section>
 
   <section class="form-section">
-    <h3>Descrição do Evento</h3>
+    <h3>Descrição do Fato</h3>
     <div class="form-grid">
       <div class="field-full">
-        <%= form.label :description %>
+        <%= form.label :description, "Descrição" %>
         <%= form.textarea :description %>
       </div>
     </div>
   </section>
 
   <div class="form-actions">
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
+    <% if show_path.present? %>
+      <%= link_to show_label, show_path, class: "btn btn-secondary" %>
+    <% end %>
     <%= form.submit %>
   </div>
 <% end %>

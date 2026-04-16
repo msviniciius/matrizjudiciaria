@@ -1,8 +1,7 @@
 <%= render @deadline %>
 
-<div>
-  <%= link_to "Editar prazo", edit_deadline_path(@deadline) %> |
-  <%= link_to "Voltar para prazos", deadlines_path %>
-
-  <%= button_to "Excluir prazo", @deadline, method: :delete %>
+<div class="case-actions case-actions--footer">
+  <%= link_to "Editar prazo", edit_deadline_path(@deadline), class: "btn btn-secondary" %>
+  <%= link_to "Voltar", deadlines_path, class: "btn btn-secondary" %>
+  <%= button_to "Excluir prazo", @deadline, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Tem certeza que deseja excluir este prazo?" } } %>
 </div>

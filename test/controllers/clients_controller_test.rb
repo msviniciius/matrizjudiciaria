@@ -31,6 +31,24 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to client_url(Client.last)
   end
 
+
+  test "should quick create pending client" do
+    assert_difference("Client.count") do
+      post quick_create_clients_url, params: { client: {
+        full_name: "Cliente Rápido",
+        cpf_cnpj: "11122233344",
+        phone: "(98) 99999-0000",
+        dados_gov: "E-mail GOV: gov.com\nSenha GOV: 123456"
+      } }, as: :json
+    end
+
+    assert_response :created
+    body = JSON.parse(response.body)
+    assert_equal true, body["cadastro_pendente"]
+    assert_equal true, Client.last.cadastro_pendente
+    assert_includes Client.last.dados_gov.to_s, "gov.com"
+  end
+
   test "should show client" do
     get client_url(@client)
     assert_response :success

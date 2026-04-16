@@ -2,11 +2,8 @@
 
 <h1>Editar cliente</h1>
 
-<%= render "form", client: @client %>
-
-<br>
-
-<div>
-  <%= link_to "Ver cliente", @client %> |
-  <%= link_to "Voltar para clientes", clients_path %>
-</div>
+<%= render "form",
+           client: @client,
+           back_path: clients_path,
+           show_path: client_path(@client),
+           show_label: "Ver cliente" %>

@@ -299,3 +299,128 @@ end
 districts.each do |name|
   District.find_or_create_by!(name: name)
 end
+
+# ===== Catálogos do módulo de andamento processual =====
+process_phases = [
+  [ "atendimento_inicial", "Atendimento Inicial" ],
+  [ "analise_juridica", "Análise Jurídica" ],
+  [ "administrativo", "Administrativo" ],
+  [ "judicial", "Judicial" ],
+  [ "instrucao", "Instrução" ],
+  [ "sentenca", "Sentença" ],
+  [ "recurso", "Recurso" ],
+  [ "cumprimento_execucao", "Cumprimento/Execução" ],
+  [ "acordo", "Acordo" ],
+  [ "encerrado", "Encerrado" ]
+]
+
+process_phases.each_with_index do |(code, name), index|
+  ProcessPhase.find_or_create_by!(code: code) do |phase|
+    phase.name = name
+    phase.active = true
+    phase.order = index + 1
+  end
+end
+
+process_statuses = [
+  [ "ativo", "Ativo" ],
+  [ "aguardando_providencia_escritorio", "Aguardando Providência do Escritório" ],
+  [ "aguardando_cliente", "Aguardando Cliente" ],
+  [ "aguardando_terceiros", "Aguardando Terceiros" ],
+  [ "suspenso", "Suspenso" ],
+  [ "arquivado", "Arquivado" ],
+  [ "encerrado", "Encerrado" ]
+]
+
+process_statuses.each_with_index do |(code, name), index|
+  ProcessStatus.find_or_create_by!(code: code) do |status|
+    status.name = name
+    status.active = true
+    status.order = index + 1
+  end
+end
+
+movement_type_catalog = {
+  "cadastro" => "Cadastro",
+  "documentacao" => "Documentação",
+  "analise_juridica" => "Análise Jurídica",
+  "estrategia" => "Estratégia",
+  "protocolo_administrativo" => "Protocolo Administrativo",
+  "movimentacao_administrativa" => "Movimentação Administrativa",
+  "exigencia_administrativa" => "Exigência Administrativa",
+  "protocolo_judicial" => "Protocolo Judicial",
+  "movimentacao_judicial" => "Movimentação Judicial",
+  "audiencia" => "Audiência",
+  "prova" => "Prova",
+  "pericia" => "Perícia",
+  "decisao" => "Decisão",
+  "recurso" => "Recurso",
+  "execucao" => "Execução",
+  "acordo" => "Acordo",
+  "pagamento" => "Pagamento",
+  "encerramento" => "Encerramento",
+  "nota_interna" => "Nota Interna"
+}
+
+movement_type_catalog.each do |code, name|
+  MovementType.find_or_create_by!(code: code) do |movement_type|
+    movement_type.name = name
+    movement_type.active = true
+  end
+end
+
+judicial_phase = ProcessPhase.find_by(code: "judicial")
+recurso_phase = ProcessPhase.find_by(code: "recurso")
+pericia_type = MovementType.find_by(code: "pericia")
+mov_judicial_type = MovementType.find_by(code: "movimentacao_judicial")
+
+if judicial_phase && recurso_phase && pericia_type && mov_judicial_type
+  MovementTemplate.find_or_create_by!(code: "pericia_designada") do |template|
+    template.phase = judicial_phase
+    template.movement_type = pericia_type
+    template.name = "Perícia Designada"
+    template.short_description = "Perícia agendada com necessidade de providências internas"
+    template.nature_default = "fato_processual"
+    template.impact_default = "exige_providencia_imediata"
+    template.updates_phase = false
+    template.creates_task = true
+    template.task_template_name = "Preparar documentação para perícia"
+    template.creates_deadline = true
+    template.deadline_template_name = "Prazo para providências da perícia"
+    template.requires_exam_id = true
+    template.active = true
+    template.order = 10
+  end
+
+  MovementTemplate.find_or_create_by!(code: "laudo_pericial_juntado") do |template|
+    template.phase = judicial_phase
+    template.movement_type = pericia_type
+    template.name = "Laudo Pericial Juntado"
+    template.short_description = "Laudo inserido no processo para análise técnica e estratégica"
+    template.nature_default = "fato_processual"
+    template.impact_default = "exige_revisao_estrategica"
+    template.updates_phase = false
+    template.creates_task = true
+    template.task_template_name = "Analisar laudo pericial"
+    template.creates_deadline = false
+    template.requires_exam_id = true
+    template.active = true
+    template.order = 20
+  end
+
+  MovementTemplate.find_or_create_by!(code: "recurso_interposto") do |template|
+    template.phase = judicial_phase
+    template.movement_type = mov_judicial_type
+    template.name = "Recurso Interposto"
+    template.short_description = "Interposição de recurso e transição para fase recursal"
+    template.nature_default = "fato_processual"
+    template.impact_default = "altera_fase"
+    template.updates_phase = true
+    template.next_phase = recurso_phase
+    template.creates_task = false
+    template.creates_deadline = false
+    template.requires_exam_id = false
+    template.active = true
+    template.order = 30
+  end
+end

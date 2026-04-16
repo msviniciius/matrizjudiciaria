@@ -2,11 +2,8 @@
 
 <h1>Editar andamento</h1>
 
-<%= render "form", case_event: @case_event %>
-
-<br>
-
-<div>
-  <%= link_to "Ver andamento", @case_event %> |
-  <%= link_to "Voltar para andamentos", case_events_path %>
-</div>
+<%= render "form",
+           case_event: @case_event,
+           back_path: case_events_path,
+           show_path: case_event_path(@case_event),
+           show_label: "Ver andamento" %>

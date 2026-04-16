@@ -1,5 +1,18 @@
 pt-BR:
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d/%m/%y"
+      long: "%d/%m/%Y"
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%d/%m/%Y %H:%M"
+      long: "%d/%m/%Y %H:%M"
   activerecord:
+    errors:
+      messages:
+        record_invalid: Registro inválido
     models:
       client: Cliente
       court: Órgão/Vara/Tribunal
@@ -8,6 +21,8 @@ pt-BR:
       deadline: Prazo
       task: Tarefa
       case_event: Andamento
+      process_movement: Andamento processual
+      process_exam: Perícia
     attributes:
       client:
         full_name: Nome completo
@@ -19,12 +34,14 @@ pt-BR:
         phone: Telefone
         whatsapp: WhatsApp
         email: E-mail
+        dados_gov: Dados GOV (e-mail e senha)
         address: Endereço
         city: Cidade
         state: UF
         mother_name: Nome da mãe
         father_name: Nome do pai
         notes: Observações
+        cadastro_pendente: Cadastro pendente
       court:
         name: Nome
       district:
@@ -54,24 +71,78 @@ pt-BR:
         strategic_notes: Observações estratégicas
         client_id: Cliente
         statuses:
-          active: Ativo
-          on_hold: Em espera
-          completed: Concluído
-          archived: Arquivado
+          ativo: Ativo
+          aguardando_providencia_escritorio: Aguardando providência do escritório
+          aguardando_cliente: Aguardando cliente
+          aguardando_terceiros: Aguardando terceiros
+          suspenso: Suspenso
+          arquivado: Arquivado
+          encerrado: Encerrado
         priorities:
           low: Baixa
           medium: Média
           high: Alta
           urgent: Urgente
         phases:
-          intake: Atendimento inicial
-          analysis: Análise
-          filing: Protocolo
-          instruction: Instrução
-          judgment: Julgamento
-          appeal: Recurso
-          enforcement: Cumprimento de sentença
-          closed: Encerrado
+          atendimento_inicial: Atendimento inicial
+          analise_juridica: Análise jurídica
+          administrativo: Administrativo
+          judicial: Judicial
+          instrucao: Instrução
+          sentenca: Sentença
+          recurso: Recurso
+          cumprimento_execucao: Cumprimento/Execução
+          acordo: Acordo
+          encerrado: Encerrado
+      process_exam:
+        exam_natures:
+          medica: Médica
+          social: Social
+          socioeconomica: Socioeconômica
+          tecnica: Técnica
+          outra: Outra
+        exam_scopes:
+          judicial: Judicial
+          administrativa: Administrativa
+        statuses:
+          nao_designada: Não designada
+          designada: Designada
+          realizada: Realizada
+          cancelada: Cancelada
+          redesignada: Redesignada
+          laudo_pendente: Laudo pendente
+          laudo_juntado: Laudo juntado
+          resultado_disponibilizado: Resultado disponibilizado
+      process_movement:
+        natures:
+          fato_processual: Fato processual
+          fato_administrativo: Fato administrativo
+          nota_interna: Nota interna
+          atualizacao_estrategica: Atualização estratégica
+        impacts:
+          sem_impacto_de_fase: Sem impacto de fase
+          altera_fase: Altera fase
+          exige_providencia_imediata: Exige providência imediata
+          exige_revisao_estrategica: Exige revisão estratégica
+        origins:
+          manual: Manual
+          tribunal: Tribunal
+          administrativo: Administrativo
+          interno: Interno
+          cliente: Cliente
+          integracao: Integração
+        administrative_situations:
+          em_analise: Em análise
+          em_exigencia: Em exigência
+          deferido: Deferido
+          indeferido: Indeferido
+          aguardando_protocolo: Aguardando protocolo
+          exigencia_cumprida: Exigência cumprida
+          recurso_em_andamento: Recurso em andamento
+          deferido_parcialmente: Deferido parcialmente
+          implantacao_pendente: Implantação pendente
+          pericia_designada: Perícia designada
+          avaliacao_social_designada: Avaliação social designada
       deadline:
         legal_case_id: Processo
         title: Título

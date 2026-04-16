@@ -1,0 +1,61 @@
+<%= form_with(model: [@legal_case || process_exam.legal_case, process_exam], class: "app-form") do |form| %>
+  <% if process_exam.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(process_exam.errors.count, "erro", "erros") %> neste cadastro:</h2>
+      <ul>
+        <% process_exam.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados da Perícia</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :exam_nature, "Natureza" %>
+        <%= form.select :exam_nature, enum_options_for(ProcessExam, :exam_nature) %>
+      </div>
+
+      <div>
+        <%= form.label :exam_scope, "Esfera" %>
+        <%= form.select :exam_scope, enum_options_for(ProcessExam, :exam_scope) %>
+      </div>
+
+      <div>
+        <%= form.label :status, "Status" %>
+        <%= form.select :status, enum_options_for(ProcessExam, :status) %>
+      </div>
+
+      <div>
+        <%= form.label :scheduled_at, "Data/hora" %>
+        <%= form.datetime_field :scheduled_at %>
+      </div>
+
+      <div>
+        <%= form.label :location, "Local" %>
+        <%= form.text_field :location %>
+      </div>
+
+      <div>
+        <%= form.label :expert_name, "Perito" %>
+        <%= form.text_field :expert_name %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :notes, "Observações" %>
+        <%= form.text_area :notes %>
+      </div>
+
+      <div>
+        <%= form.label :active, "Ativa" %>
+        <%= form.check_box :active %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= form.submit %>
+  </div>
+<% end %>

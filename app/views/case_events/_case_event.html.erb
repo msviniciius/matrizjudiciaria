@@ -1,26 +1,46 @@
 <div id="<%= dom_id case_event %>">
   <div>
-    <strong><%= CaseEvent.human_attribute_name(:legal_case_id) %>:</strong>
+    <strong>Processo:</strong>
     <%= case_event.legal_case&.internal_number %>
   </div>
 
   <div>
-    <strong><%= CaseEvent.human_attribute_name(:event_type) %>:</strong>
+    <strong>Tipo de registro:</strong>
+    <%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %>
+  </div>
+
+  <div>
+    <strong>Evento:</strong>
     <%= enum_label(CaseEvent, :event_type, case_event.event_type) %>
   </div>
 
   <div>
-    <strong><%= CaseEvent.human_attribute_name(:occurred_at) %>:</strong>
+    <strong>Categoria:</strong>
+    <%= case_event.movement_type&.name || "-" %>
+  </div>
+
+  <div>
+    <strong>Perícia vinculada:</strong>
+    <%= case_event.process_exam&.summary_label || "-" %>
+  </div>
+
+  <div>
+    <strong>Data/hora:</strong>
     <%= case_event.occurred_at %>
   </div>
 
   <div>
-    <strong><%= CaseEvent.human_attribute_name(:description) %>:</strong>
-    <%= case_event.description %>
+    <strong>Próxima providência:</strong>
+    <%= case_event.next_action.presence || "-" %>
   </div>
 
   <div>
-    <strong><%= CaseEvent.human_attribute_name(:responsible_name) %>:</strong>
-    <%= case_event.responsible_name %>
+    <strong>Responsável:</strong>
+    <%= case_event.responsible_name.presence || "-" %>
+  </div>
+
+  <div>
+    <strong>Descrição:</strong>
+    <%= case_event.description %>
   </div>
 </div>

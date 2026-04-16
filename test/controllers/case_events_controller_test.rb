@@ -7,11 +7,12 @@ class CaseEventsControllerTest < ActionDispatch::IntegrationTest
     court = Court.create!(name: "4a Vara Civel", district: district)
     legal_area = LegalArea.create!(name: "Civel Geral", justice_branch: "state")
     process_type = ProcessType.create!(name: "Procedimento Comum Civel", legal_area: legal_area)
+    @movement_type = MovementType.find_or_create_by!(code: "movimentacao_judicial") { |mt| mt.name = "Movimentacao Judicial" }
 
     @legal_case = LegalCase.create!(
       internal_number: "PROC-EVT-001",
-      phase: "analysis",
-      status: "active",
+      phase: "analise_juridica",
+      status: "ativo",
       client: client,
       legal_area_id: legal_area.id,
       process_type_id: process_type.id,
@@ -24,7 +25,8 @@ class CaseEventsControllerTest < ActionDispatch::IntegrationTest
       event_type: "initial_contact",
       occurred_at: Time.current,
       description: "Evento inicial",
-      responsible_name: "Advogado"
+      responsible_name: "Advogado",
+      movement_type: @movement_type
     )
   end
 
@@ -45,7 +47,8 @@ class CaseEventsControllerTest < ActionDispatch::IntegrationTest
         event_type: "filing",
         occurred_at: Time.current,
         description: "Protocolo",
-        responsible_name: "Equipe"
+        responsible_name: "Equipe",
+        movement_type_id: @movement_type.id
       } }
     end
 
