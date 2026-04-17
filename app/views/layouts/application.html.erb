@@ -21,36 +21,16 @@
   <body>
     <div class="app-background"></div>
 
-    <header class="app-navbar">
-      <div class="app-navbar__left">
-        <button
-          type="button"
-          class="sidebar-toggle"
-          data-sidebar-toggle
-          aria-expanded="true"
-          aria-label="Minimizar menu lateral"
-          title="Minimizar menu lateral"
-        >
-          <span class="sidebar-toggle__icon" data-sidebar-toggle-icon aria-hidden="true">&#10094;</span>
-        </button>
-
-        <div class="app-navbar__brand">
-          <span class="app-navbar__brand-mark" aria-hidden="true">&#9878;</span>
-          <span>Matriz Jurídica</span>
-        </div>
-      </div>
-
-      <div class="app-navbar__right">
-        <%= link_to "Novo cliente", new_client_path, class: "btn btn-secondary app-navbar__action" %>
-        <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary app-navbar__action" %>
-      </div>
-    </header>
-
     <div class="app-layout" data-sidebar-layout>
       <aside class="app-sidebar">
+        <div class="app-sidebar__brand">
+          <span class="app-sidebar__brand-mark" aria-hidden="true">&#9878;</span>
+          <span class="app-sidebar__brand-name"><%= app_product_name %></span>
+        </div>
+
         <div class="brand">
-          <p class="brand-eyebrow">Matriz Jurídica</p>
-          <h1>Gestão Processual</h1>
+          <p class="brand-eyebrow"><%= app_context_name %></p>
+          <h1><%= law_firm_name %></h1>
         </div>
 
         <nav class="sidebar-nav">
@@ -98,28 +78,45 @@
         </nav>
       </aside>
 
-      <main class="app-main">
-        <header class="topbar">
-          <div>
-            <p class="topbar-kicker">Plataforma operacional</p>
-            <h2><%= content_for?(:title) ? content_for(:title) : "Painel Geral" %></h2>
+      <div class="app-content">
+        <header class="app-navbar">
+          <div class="app-navbar__tools">
+            <button
+              type="button"
+              class="sidebar-toggle sidebar-toggle--navbar app-navbar__tool"
+              data-sidebar-toggle
+              aria-expanded="true"
+              aria-label="Minimizar menu lateral"
+              title="Minimizar menu lateral"
+            >
+              <span class="sidebar-toggle__icon" data-sidebar-toggle-icon aria-hidden="true">&#9776;</span>
+            </button>
           </div>
-
-          <% if content_for?(:topbar_actions) %>
-            <div class="topbar-actions">
-              <%= yield :topbar_actions %>
-            </div>
-          <% end %>
         </header>
 
-        <% flash.each do |type, message| %>
-          <div class="flash <%= type %>"><%= message %></div>
-        <% end %>
+        <main class="app-main">
+          <header class="topbar">
+            <div>
+              <p class="topbar-kicker">Plataforma operacional</p>
+              <h2><%= content_for?(:title) ? content_for(:title) : "Painel Geral" %></h2>
+            </div>
 
-        <section class="content-surface">
-          <%= yield %>
-        </section>
-      </main>
+            <% if content_for?(:topbar_actions) %>
+              <div class="topbar-actions">
+                <%= yield :topbar_actions %>
+              </div>
+            <% end %>
+          </header>
+
+          <% flash.each do |type, message| %>
+            <div class="flash <%= type %>"><%= message %></div>
+          <% end %>
+
+          <section class="content-surface">
+            <%= yield %>
+          </section>
+        </main>
+      </div>
     </div>
   </body>
 </html>

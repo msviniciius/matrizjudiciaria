@@ -1,4 +1,16 @@
 module ApplicationHelper
+  def app_product_name
+    "Matriz Jurídica"
+  end
+
+  def app_context_name
+    "Gestão Processual"
+  end
+
+  def law_firm_name
+    ENV.fetch("OFFICE_NAME", "Kayran Advocacia")
+  end
+
   def enum_label(model_class, enum_name, value)
     return "" if value.blank?
 

@@ -456,16 +456,18 @@
     const layout = document.querySelector("[data-sidebar-layout]");
     const toggle = document.querySelector("[data-sidebar-toggle]");
     const toggleIcon = document.querySelector("[data-sidebar-toggle-icon]");
+    const body = document.body;
     if (!layout || !toggle) return;
 
     layout.classList.toggle("is-sidebar-collapsed", collapsed);
+    body?.classList.toggle("is-sidebar-collapsed", collapsed);
     toggle.setAttribute("aria-expanded", String(!collapsed));
     const nextLabel = collapsed ? "Expandir menu lateral" : "Minimizar menu lateral";
     toggle.setAttribute("aria-label", nextLabel);
     toggle.title = nextLabel;
 
     if (toggleIcon) {
-      toggleIcon.textContent = collapsed ? "❯" : "❮";
+      toggleIcon.textContent = "☰";
     }
   };
 
