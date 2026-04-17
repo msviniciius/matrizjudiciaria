@@ -53,12 +53,13 @@ class CaseEvent < ApplicationRecord
   def sync_exam_status!
     return if process_exam.blank?
 
-    mapped_status = case event_type
-                    when "pericia_designada" then "designada"
-                    when "pericia_redesignada" then "redesignada"
-                    when "pericia_realizada" then "realizada"
-                    when "laudo_pericial_juntado" then "laudo_juntado"
-                    end
+    mapped_status =
+      case event_type
+      when "pericia_designada" then "designada"
+      when "pericia_redesignada" then "redesignada"
+      when "pericia_realizada" then "realizada"
+      when "laudo_pericial_juntado" then "laudo_juntado"
+      end
 
     attrs = {}
     attrs[:status] = mapped_status if mapped_status.present?
