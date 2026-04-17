@@ -448,3 +448,45 @@
   document.addEventListener("turbo:load", initQuickClientModal);
   document.addEventListener("DOMContentLoaded", initQuickClientModal);
 })();
+
+(() => {
+  const STORAGE_KEY = "matrizjuridica.sidebar.collapsed";
+
+  const applySidebarState = (collapsed) => {
+    const layout = document.querySelector("[data-sidebar-layout]");
+    const toggle = document.querySelector("[data-sidebar-toggle]");
+    const toggleIcon = document.querySelector("[data-sidebar-toggle-icon]");
+    if (!layout || !toggle) return;
+
+    layout.classList.toggle("is-sidebar-collapsed", collapsed);
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    const nextLabel = collapsed ? "Expandir menu lateral" : "Minimizar menu lateral";
+    toggle.setAttribute("aria-label", nextLabel);
+    toggle.title = nextLabel;
+
+    if (toggleIcon) {
+      toggleIcon.textContent = collapsed ? "❯" : "❮";
+    }
+  };
+
+  const initSidebarToggle = () => {
+    const layout = document.querySelector("[data-sidebar-layout]");
+    const toggle = document.querySelector("[data-sidebar-toggle]");
+    if (!layout || !toggle) return;
+
+    const savedState = window.localStorage.getItem(STORAGE_KEY) === "true";
+    applySidebarState(savedState);
+
+    if (toggle.dataset.sidebarBound === "true") return;
+    toggle.dataset.sidebarBound = "true";
+
+    toggle.addEventListener("click", () => {
+      const nextState = !layout.classList.contains("is-sidebar-collapsed");
+      applySidebarState(nextState);
+      window.localStorage.setItem(STORAGE_KEY, String(nextState));
+    });
+  };
+
+  document.addEventListener("turbo:load", initSidebarToggle);
+  document.addEventListener("DOMContentLoaded", initSidebarToggle);
+})();
