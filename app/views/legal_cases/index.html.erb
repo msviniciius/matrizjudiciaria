@@ -1,6 +1,7 @@
 <% content_for :title, "Processos" %>
 
 <% content_for :topbar_actions do %>
+  <%= link_to "Fechamento diário", daily_closure_legal_cases_path, class: "btn btn-secondary" %>
   <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
 <% end %>
 
@@ -23,6 +24,10 @@
       <p class="report-label">Com exigência pendente</p>
       <p class="report-value"><%= @report_counts[:com_exigencia_pendente] %></p>
     </article>
+    <article class="report-card">
+      <p class="report-label">Processos em risco</p>
+      <p class="report-value"><%= @report_counts[:saude_critica] %></p>
+    </article>
   </div>
 </section>
 
@@ -39,6 +44,87 @@
 </section>
 
 <section class="case-section">
+  <h3>Central de Risco</h3>
+  <div class="risk-grid">
+    <article class="risk-card">
+      <div class="risk-card__head">
+        <p>Vence hoje</p>
+        <span class="status-pill status-pill--warning"><%= @risk_counts[:vence_hoje] %></span>
+      </div>
+      <% if @risk_queues[:vence_hoje].any? %>
+        <ul class="risk-list">
+          <% @risk_queues[:vence_hoje].each do |legal_case| %>
+            <li>
+              <%= link_to legal_case.internal_number, legal_case %>
+              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Nenhum processo nesta fila.</p>
+      <% end %>
+    </article>
+
+    <article class="risk-card">
+      <div class="risk-card__head">
+        <p>Próximas 48h</p>
+        <span class="status-pill status-pill--info"><%= @risk_counts[:vence_48h] %></span>
+      </div>
+      <% if @risk_queues[:vence_48h].any? %>
+        <ul class="risk-list">
+          <% @risk_queues[:vence_48h].each do |legal_case| %>
+            <li>
+              <%= link_to legal_case.internal_number, legal_case %>
+              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Nenhum processo nesta fila.</p>
+      <% end %>
+    </article>
+
+    <article class="risk-card">
+      <div class="risk-card__head">
+        <p>Atrasados</p>
+        <span class="status-pill status-pill--danger"><%= @risk_counts[:atrasados] %></span>
+      </div>
+      <% if @risk_queues[:atrasados].any? %>
+        <ul class="risk-list">
+          <% @risk_queues[:atrasados].each do |legal_case| %>
+            <li>
+              <%= link_to legal_case.internal_number, legal_case %>
+              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Nenhum processo nesta fila.</p>
+      <% end %>
+    </article>
+
+    <article class="risk-card">
+      <div class="risk-card__head">
+        <p>Sem próxima providência</p>
+        <span class="status-pill status-pill--muted"><%= @risk_counts[:sem_proxima_providencia] %></span>
+      </div>
+      <% if @risk_queues[:sem_proxima_providencia].any? %>
+        <ul class="risk-list">
+          <% @risk_queues[:sem_proxima_providencia].each do |legal_case| %>
+            <li>
+              <%= link_to legal_case.internal_number, legal_case %>
+              <small>Responsável: <%= legal_case.responsible_name.presence || "-" %></small>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Nenhum processo nesta fila.</p>
+      <% end %>
+    </article>
+  </div>
+</section>
+
+<section class="case-section">
   <div class="table-wrap">
     <table>
       <thead>
@@ -49,6 +135,7 @@
           <th>Último andamento</th>
           <th>Próximo prazo</th>
           <th>Responsável</th>
+          <th>Saúde</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -60,14 +147,23 @@
               <td><%= enum_label(LegalCase, :phase, legal_case.phase) %></td>
               <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
               <td><%= legal_case.last_movement.presence || "-" %></td>
-              <td><%= legal_case.next_deadline_on.presence || "-" %></td>
+              <td><%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></td>
               <td><%= legal_case.responsible_name.presence || "-" %></td>
+              <td class="health-cell">
+                <span
+                  class="<%= legal_case_health_class(legal_case) %>"
+                  title="<%= legal_case_primary_alert(legal_case) %>"
+                  aria-label="<%= legal_case_primary_alert(legal_case) %>"
+                >
+                  <%= legal_case_health_label(legal_case) %>
+                </span>
+              </td>
               <td><%= link_to "Ver processo", legal_case, class: "btn btn-secondary" %></td>
             </tr>
           <% end %>
         <% else %>
           <tr>
-            <td colspan="7" class="table-empty-state">Nenhum processo cadastrado.</td>
+            <td colspan="8" class="table-empty-state">Nenhum processo cadastrado.</td>
           </tr>
         <% end %>
       </tbody>

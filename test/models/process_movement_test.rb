@@ -24,6 +24,8 @@ class ProcessMovementTest < ActiveSupport::TestCase
       phase: "judicial",
       status: "ativo",
       responsible_name: "Advogado PM",
+      next_action: "Preparar petição complementar",
+      next_deadline_on: Date.current + 4.days,
       claim_value: 1000,
       priority: "medium",
       client: @client,

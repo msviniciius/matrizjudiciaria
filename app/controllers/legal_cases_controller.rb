@@ -1,15 +1,31 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy ]
+  before_action :set_legal_case, only: %i[ show edit update destroy calendar ]
 
   def index
     @legal_cases = LegalCase.order(updated_at: :desc)
+    operational_scope = LegalCase.operational
 
     @report_counts = {
       por_fase: LegalCase.group(:phase).count,
       prazo_proximo: LegalCase.with_upcoming_deadline.count,
       sem_prazo: LegalCase.without_deadline.count,
       com_pericia: LegalCase.with_pericia.count,
-      com_exigencia_pendente: LegalCase.with_pending_requirement.count
+      com_exigencia_pendente: LegalCase.with_pending_requirement.count,
+      saude_critica: @legal_cases.count(&:health_status_vermelho?)
+    }
+
+    @risk_counts = {
+      vence_hoje: operational_scope.deadline_due_today.count,
+      vence_48h: operational_scope.deadline_due_in_48h.count,
+      atrasados: operational_scope.deadline_overdue.count,
+      sem_proxima_providencia: operational_scope.without_next_action.count
+    }
+
+    @risk_queues = {
+      vence_hoje: operational_scope.deadline_due_today.order(:next_deadline_on, :updated_at).limit(6),
+      vence_48h: operational_scope.deadline_due_in_48h.order(:next_deadline_on, :updated_at).limit(6),
+      atrasados: operational_scope.deadline_overdue.order(:next_deadline_on, :updated_at).limit(6),
+      sem_proxima_providencia: operational_scope.without_next_action.order(updated_at: :desc).limit(6)
     }
   end
 
@@ -29,6 +45,22 @@ class LegalCasesController < ApplicationController
     @process_exams = @legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC"))
   end
 
+  def daily_closure
+    @reference_date = parse_reference_date(params[:reference_date])
+    @closure_rows = DailyClosureReport.new(reference_date: @reference_date).rows
+  end
+
+  def calendar
+    exporter = LegalCaseCalendarExporter.new(@legal_case)
+
+    send_data(
+      exporter.to_ics,
+      type: "text/calendar; charset=utf-8",
+      disposition: "attachment",
+      filename: "processo-#{@legal_case.internal_number.parameterize}.ics"
+    )
+  end
+
   def new
     @legal_case = LegalCase.new
   end
@@ -41,7 +73,7 @@ class LegalCasesController < ApplicationController
 
     respond_to do |format|
       if @legal_case.save
-        format.html { redirect_to @legal_case, notice: "Processo cadastrado com sucesso." }
+        format.html { redirect_to @legal_case, flash: success_flash("Processo cadastrado com sucesso.", @legal_case) }
         format.json { render :show, status: :created, location: @legal_case }
       else
         format.html { render :new, status: :unprocessable_entity }
@@ -53,7 +85,7 @@ class LegalCasesController < ApplicationController
   def update
     respond_to do |format|
       if @legal_case.update(legal_case_params)
-        format.html { redirect_to @legal_case, notice: "Processo atualizado com sucesso.", status: :see_other }
+        format.html { redirect_to @legal_case, status: :see_other, flash: success_flash("Processo atualizado com sucesso.", @legal_case) }
         format.json { render :show, status: :ok, location: @legal_case }
       else
         format.html { render :edit, status: :unprocessable_entity }
@@ -137,5 +169,21 @@ class LegalCasesController < ApplicationController
     end
 
     (movement_items + legacy_items).sort_by { |item| item[:date] || Time.at(0) }.reverse
+  end
+
+  def parse_reference_date(raw_date)
+    return Date.current if raw_date.blank?
+
+    Date.parse(raw_date)
+  rescue ArgumentError
+    Date.current
+  end
+
+  def success_flash(message, legal_case)
+    payload = { notice: message }
+    return payload unless legal_case.next_action_warning?
+
+    payload[:warning] = I18n.t("legal_cases.warnings.next_action_blank")
+    payload
   end
 end

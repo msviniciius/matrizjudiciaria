@@ -20,6 +20,8 @@ one:
   claim_value: 15000.0
   priority: medium
   strategic_notes: Caso de teste 1
+  next_action: Revisar documentos iniciais
+  next_deadline_on: 2026-04-20
   client_id: 1
   legal_area_id: 1
   process_type_id: 1
@@ -46,6 +48,8 @@ two:
   claim_value: 23000.0
   priority: high
   strategic_notes: Caso de teste 2
+  next_action: Validar petição de resposta
+  next_deadline_on: 2026-04-22
   client_id: 2
   legal_area_id: 2
   process_type_id: 2

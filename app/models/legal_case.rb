@@ -1,4 +1,6 @@
 class LegalCase < ApplicationRecord
+  attr_accessor :skip_quality_validation
+
   OFFICIAL_PHASES = %w[
     atendimento_inicial
     analise_juridica
@@ -20,6 +22,14 @@ class LegalCase < ApplicationRecord
     suspenso
     arquivado
     encerrado
+  ].freeze
+
+  OPERATIONAL_STATUSES = %w[
+    ativo
+    aguardando_providencia_escritorio
+    aguardando_cliente
+    aguardando_terceiros
+    suspenso
   ].freeze
 
   belongs_to :client
@@ -52,10 +62,16 @@ class LegalCase < ApplicationRecord
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :phase, inclusion: { in: phases.keys }
+  validate :validate_operational_snapshot_quality
 
   scope :with_upcoming_deadline, ->(days = 7) { where(next_deadline_on: Date.current..(Date.current + days.to_i.days)) }
   scope :without_deadline, -> { where(next_deadline_on: nil) }
   scope :with_pericia, -> { where(tem_pericia: true) }
+  scope :operational, -> { where.not(status: [ "arquivado", "encerrado" ]).where.not(phase: "encerrado") }
+  scope :deadline_due_today, -> { where(next_deadline_on: Date.current) }
+  scope :deadline_due_in_48h, -> { where(next_deadline_on: (Date.current + 1.day)..(Date.current + 2.days)) }
+  scope :deadline_overdue, -> { where("next_deadline_on < ?", Date.current) }
+  scope :without_next_action, -> { where("TRIM(COALESCE(next_action, '')) = ''") }
 
   def self.with_pending_requirement
     joins(:process_movements)
@@ -84,7 +100,10 @@ class LegalCase < ApplicationRecord
     attrs[:phase] = event.phase_after if event.phase_after.present? && self.class.phases.key?(event.phase_after)
     attrs[:status] = event.status_after if event.status_after.present? && self.class.statuses.key?(event.status_after)
 
+    self.skip_quality_validation = true
     update!(attrs.compact)
+  ensure
+    self.skip_quality_validation = false
   end
 
   def update_snapshot_from_process_movement!(movement)
@@ -109,11 +128,63 @@ class LegalCase < ApplicationRecord
       attrs[:next_action] = movement.override_reason if movement.override_reason.present?
     end
 
+    self.skip_quality_validation = true
     update!(attrs.compact)
+  ensure
+    self.skip_quality_validation = false
   end
 
   def prazo_alerta?
     next_deadline_on.present? && next_deadline_on <= Date.current + 7.days
+  end
+
+  def deadline_overdue?
+    next_deadline_on.present? && next_deadline_on < Date.current
+  end
+
+  def stale_last_movement?
+    last_movement_at.blank? || last_movement_at < 15.days.ago
+  end
+
+  def health_score
+    score = 100
+    score -= 45 if deadline_overdue?
+    score -= 20 if next_deadline_expected? && next_deadline_on.blank?
+    score -= 18 if next_action.blank?
+    score -= 12 if responsible_name.blank?
+    score -= 10 if stale_last_movement?
+    score -= 8 if prazo_alerta? && !deadline_overdue?
+    score.clamp(0, 100)
+  end
+
+  def health_status
+    case health_score
+    when 80..100 then "verde"
+    when 50..79 then "amarelo"
+    else "vermelho"
+    end
+  end
+
+  def health_status_verde?
+    health_status == "verde"
+  end
+
+  def health_status_amarelo?
+    health_status == "amarelo"
+  end
+
+  def health_status_vermelho?
+    health_status == "vermelho"
+  end
+
+  def health_issues
+    issues = []
+    issues << "Prazo vencido" if deadline_overdue?
+    issues << "Sem próxima providência" if next_action.blank?
+    issues << "Sem próximo prazo definido" if next_deadline_expected? && next_deadline_on.blank?
+    issues << "Sem responsável definido" if responsible_name.blank?
+    issues << "Sem atualização recente" if stale_last_movement?
+    issues
   end
 
   def pericia_alerta?
@@ -152,11 +223,44 @@ class LegalCase < ApplicationRecord
     next_deadline_on
   end
 
+  def next_deadline_required?
+    next_deadline_expected?
+  end
+
+  def next_action_warning?
+    operational_tracking_required? && next_action.blank?
+  end
+
   def observacoes_estrategicas
     strategic_notes
   end
 
   private
+
+  def operational_tracking_required?
+    return false if status_arquivado? || status_encerrado? || phase_encerrado?
+
+    OPERATIONAL_STATUSES.include?(status.to_s)
+  end
+
+  def next_deadline_expected?
+    %w[
+      ativo
+      aguardando_providencia_escritorio
+      aguardando_cliente
+      aguardando_terceiros
+    ].include?(status.to_s)
+  end
+
+  def validate_operational_snapshot_quality
+    return if skip_quality_validation
+    return unless operational_tracking_required?
+
+    errors.add(:responsible_name, :blank) if responsible_name.blank?
+    return unless next_deadline_expected? && next_deadline_on.blank?
+
+    errors.add(:next_deadline_on, "deve ser informado para o acompanhamento operacional")
+  end
 
   def normalize_legacy_phase_and_status
     phase_map = {

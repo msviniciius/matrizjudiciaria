@@ -7,6 +7,14 @@ Rails.application.routes.draw do
   resources :process_movements
 
   resources :legal_cases do
+    collection do
+      get :daily_closure
+    end
+
+    member do
+      get :calendar
+    end
+
     resources :process_exams, only: [ :new, :create ]
   end
 

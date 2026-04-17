@@ -199,6 +199,10 @@ button {
   border-left-color: var(--danger);
 }
 
+.flash.warning {
+  border-left-color: var(--accent);
+}
+
 .content-surface {
   background: rgba(255, 253, 248, 0.92);
   border: 1px solid var(--line);
@@ -735,10 +739,22 @@ tbody tr:last-child td {
   color: #7d5a1e;
 }
 
+.status-pill--success {
+  background: #e6f3ea;
+  border-color: #9fc9ae;
+  color: #2f5f46;
+}
+
 .status-pill--info {
   background: #e8eff8;
   border-color: #aac0dc;
   color: #274f79;
+}
+
+.status-pill--danger {
+  background: #fff0ef;
+  border-color: #d9a7a2;
+  color: #8a2f29;
 }
 
 .status-pill--muted {
@@ -825,6 +841,84 @@ tbody tr:last-child td {
   background: #fffcf8;
 }
 
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.risk-card {
+  border: 1px solid #ddd2bf;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fffcf8;
+}
+
+.risk-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.risk-card__head p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.risk-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.risk-list li {
+  display: grid;
+  gap: 2px;
+}
+
+.risk-list li small {
+  color: var(--muted);
+}
+
+.health-cell {
+  display: flex;
+  align-items: center;
+}
+
+.health-guidance-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.health-guidance-card {
+  border: 1px solid #ddd2bf;
+  border-radius: 12px;
+  background: #fffaf3;
+  padding: 12px;
+}
+
+.health-guidance-card h4 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: #22344b;
+}
+
+.health-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.health-list li {
+  color: #24364b;
+}
+
 .report-label {
   margin: 0;
   color: var(--muted);
@@ -841,7 +935,9 @@ tbody tr:last-child td {
   .case-layout-grid,
   .case-headline-grid,
   .report-grid,
-  .exam-cards {
+  .exam-cards,
+  .risk-grid,
+  .health-guidance-grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -855,6 +951,8 @@ tbody tr:last-child td {
   .case-headline-grid,
   .report-grid,
   .exam-cards,
+  .risk-grid,
+  .health-guidance-grid,
   .client-details-grid {
     grid-template-columns: 1fr;
   }

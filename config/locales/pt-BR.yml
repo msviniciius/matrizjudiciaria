@@ -13,6 +13,7 @@ pt-BR:
     errors:
       messages:
         record_invalid: Registro inválido
+        blank: não pode ficar em branco
     models:
       client: Cliente
       court: Órgão/Vara/Tribunal
@@ -70,6 +71,8 @@ pt-BR:
         priority: Prioridade
         strategic_notes: Observações estratégicas
         client_id: Cliente
+        next_action: Próxima providência
+        next_deadline_on: Próximo prazo
         statuses:
           ativo: Ativo
           aguardando_providencia_escritorio: Aguardando providência do escritório
@@ -211,6 +214,14 @@ pt-BR:
           phase_changed: Alteração de fase
           status_changed: Alteração de status
           case_closed: Encerramento
+
+  legal_cases:
+    warnings:
+      next_action_blank: "Processo salvo com alerta: a próxima providência está em branco. Preencha esse campo para manter o acompanhamento operacional."
+
+  errors:
+    messages:
+      blank: não pode ficar em branco
 
   helpers:
     submit:

@@ -18,6 +18,8 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
       phase: "analise_juridica",
       status: "ativo",
       responsible_name: "Advogado",
+      next_action: "Revisar documentação inicial",
+      next_deadline_on: Date.current + 5.days,
       claim_value: 1000,
       priority: "medium",
       client: @client,
@@ -25,6 +27,14 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
       process_type_id: @process_type.id,
       district_id: @district.id,
       court_id: @court.id
+    )
+
+    Deadline.create!(
+      legal_case: @legal_case,
+      title: "Prazo inicial",
+      due_date: Date.current + 3.days,
+      status: "pending",
+      priority: "medium"
     )
   end
 
@@ -50,6 +60,8 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
         phase: "analise_juridica",
         status: "ativo",
         responsible_name: "Advogado",
+        next_action: "Acompanhar distribuição",
+        next_deadline_on: Date.current + 2.days,
         claim_value: 2000,
         priority: "medium",
         client_id: @client.id,
@@ -66,6 +78,19 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   test "should show legal_case" do
     get legal_case_url(@legal_case)
     assert_response :success
+  end
+
+  test "should get daily closure" do
+    get daily_closure_legal_cases_url
+    assert_response :success
+  end
+
+  test "should export process calendar in ics format" do
+    get calendar_legal_case_url(@legal_case, format: :ics)
+    assert_response :success
+    assert_equal "text/calendar", @response.media_type
+    assert_includes @response.body, "BEGIN:VCALENDAR"
+    assert_includes @response.body, @legal_case.internal_number
   end
 
   test "should get edit" do
@@ -86,6 +111,16 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     } }
 
     assert_redirected_to legal_case_url(@legal_case)
+  end
+
+  test "should update legal_case with blank next_action and show warning" do
+    patch legal_case_url(@legal_case), params: { legal_case: { next_action: "" } }
+
+    assert_redirected_to legal_case_url(@legal_case)
+    follow_redirect!
+    assert_response :success
+    assert_includes @response.body, I18n.t("legal_cases.warnings.next_action_blank")
+    assert_equal "", @legal_case.reload.next_action
   end
 
   test "should destroy legal_case" do

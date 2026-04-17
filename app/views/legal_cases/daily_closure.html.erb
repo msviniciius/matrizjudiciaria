@@ -1,0 +1,63 @@
+<% content_for :title, "Fechamento diário" %>
+
+<% content_for :topbar_actions do %>
+  <%= link_to "Voltar", legal_cases_path, class: "btn btn-secondary" %>
+<% end %>
+
+<section class="case-section">
+  <h3>Resumo operacional por responsável</h3>
+  <%= form_with url: daily_closure_legal_cases_path, method: :get, local: true, class: "app-form" do |form| %>
+    <div class="form-grid">
+      <div>
+        <%= form.label :reference_date, "Data de referência" %>
+        <%= form.date_field :reference_date, value: @reference_date %>
+      </div>
+    </div>
+    <div class="form-actions">
+      <%= form.submit "Atualizar resumo", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</section>
+
+<section class="case-section">
+  <p class="form-hint">Referência: <strong><%= l(@reference_date, format: :long) %></strong></p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Responsável</th>
+          <th>Equipe</th>
+          <th>Processos</th>
+          <th>Andamentos hoje</th>
+          <th>Prazos hoje</th>
+          <th>Prazos atrasados</th>
+          <th>Tarefas hoje</th>
+          <th>Tarefas concluídas hoje</th>
+          <th>Saúde crítica</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @closure_rows.any? %>
+          <% @closure_rows.each do |row| %>
+            <tr>
+              <td><%= row[:responsible_name] %></td>
+              <td><%= row[:support_team] %></td>
+              <td><%= row[:processes_count] %></td>
+              <td><%= row[:movements_today] %></td>
+              <td><%= row[:deadlines_due_today] %></td>
+              <td><%= row[:overdue_deadlines] %></td>
+              <td><%= row[:tasks_due_today] %></td>
+              <td><%= row[:tasks_completed_today] %></td>
+              <td><%= row[:red_health_cases] %></td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="9" class="table-empty-state">Nenhum dado operacional encontrado para o dia informado.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>
