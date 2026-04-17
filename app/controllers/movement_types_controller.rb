@@ -2,23 +2,23 @@ class MovementTypesController < ApplicationController
   before_action :set_movement_type, only: %i[ show edit update destroy ]
 
   def index
-     = MovementType.order(:name)
+    @movement_types = MovementType.order(:name)
   end
 
   def show
   end
 
   def new
-     = MovementType.new
+    @movement_type = MovementType.new
   end
 
   def edit
   end
 
   def create
-     = MovementType.new(movement_type_params)
+    @movement_type = MovementType.new(movement_type_params)
 
-    if .save
+    if @movement_type.save
       redirect_to movement_types_path, notice: "Tipo de andamento cadastrado com sucesso."
     else
       render :new, status: :unprocessable_entity
@@ -26,7 +26,7 @@ class MovementTypesController < ApplicationController
   end
 
   def update
-    if .update(movement_type_params)
+    if @movement_type.update(movement_type_params)
       redirect_to movement_types_path, notice: "Tipo de andamento atualizado com sucesso."
     else
       render :edit, status: :unprocessable_entity
@@ -34,14 +34,14 @@ class MovementTypesController < ApplicationController
   end
 
   def destroy
-    .destroy!
+    @movement_type.destroy!
     redirect_to movement_types_path, notice: "Tipo de andamento excluído com sucesso."
   end
 
   private
 
   def set_movement_type
-     = MovementType.find(params.expect(:id))
+    @movement_type = MovementType.find(params.expect(:id))
   end
 
   def movement_type_params
