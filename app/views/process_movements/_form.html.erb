@@ -74,47 +74,38 @@
         <%= form.select :administrative_situation, enum_options_for(ProcessMovement, :administrative_situation), include_blank: "Não se aplica" %>
       </div>
 
-      <div>
+      <div class="field-full">
         <%= form.label :next_phase_id, "Próxima fase" %>
         <%= form.collection_select :next_phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, include_blank: true %>
       </div>
 
-      <div>
-        <label class="checkbox-field"><%= form.check_box :updates_phase %><span>Atualiza fase</span></label>
-      </div>
+      <div class="field-full movement-automation-options">
+        <label class="checkbox-field">
+          <%= form.check_box :updates_phase %>
+          <span>Atualiza fase</span>
+          <span class="field-help" title="Se marcado, o processo muda para a próxima fase definida neste andamento." aria-label="Se marcado, o processo muda para a próxima fase definida neste andamento.">?</span>
+        </label>
 
-      <div>
-        <label class="checkbox-field"><%= form.check_box :creates_task %><span>Cria tarefa</span></label>
-      </div>
+        <label class="checkbox-field">
+          <%= form.check_box :creates_task %>
+          <span>Cria tarefa</span>
+          <span class="field-help" title="Se marcado, cria uma tarefa automática para acompanhamento deste andamento." aria-label="Se marcado, cria uma tarefa automática para acompanhamento deste andamento.">?</span>
+        </label>
 
-      <div>
-        <label class="checkbox-field"><%= form.check_box :creates_deadline %><span>Cria prazo</span></label>
+        <label class="checkbox-field">
+          <%= form.check_box :creates_deadline %>
+          <span>Cria prazo</span>
+          <span class="field-help" title="Se marcado, cria um prazo automático com base na data do evento ou da perícia vinculada." aria-label="Se marcado, cria um prazo automático com base na data do evento ou da perícia vinculada.">?</span>
+        </label>
       </div>
     </div>
   </section>
 
-  <section class="form-section">
-    <h3>Modo de Exceção</h3>
-    <div class="form-grid">
-      <div class="field-full">
-        <label class="checkbox-field"><%= form.check_box :manual_override %><span>Aplicar override manual</span></label>
-      </div>
-      <div class="field-full">
-        <label class="checkbox-field"><%= form.check_box :exception_authorized %><span>Ação autorizada para exceção</span></label>
-      </div>
-      <div class="field-full">
-        <%= form.label :override_reason, "Justificativa obrigatória" %>
-        <%= form.text_area :override_reason %>
-      </div>
-      <div>
-        <%= form.label :override_by_user_id, "ID do responsável pela exceção" %>
-        <%= form.number_field :override_by_user_id %>
-      </div>
-      <div>
-        <label class="checkbox-field"><%= form.check_box :active %><span>Ativo</span></label>
-      </div>
+  <div class="form-grid">
+    <div>
+      <label class="checkbox-field"><%= form.check_box :active %><span>Ativo</span></label>
     </div>
-  </section>
+  </div>
 
   <div class="form-actions"><%= form.submit %></div>
 <% end %>

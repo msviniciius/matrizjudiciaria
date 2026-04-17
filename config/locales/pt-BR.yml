@@ -14,6 +14,7 @@ pt-BR:
       messages:
         record_invalid: Registro inválido
         blank: não pode ficar em branco
+        required: deve existir
     models:
       client: Cliente
       court: Órgão/Vara/Tribunal
@@ -147,6 +148,7 @@ pt-BR:
           pericia_designada: Perícia designada
           avaliacao_social_designada: Avaliação social designada
       deadline:
+        legal_case: Processo
         legal_case_id: Processo
         title: Título
         deadline_type: Tipo de prazo
@@ -179,6 +181,7 @@ pt-BR:
           documentary: Documental
           contractual: Contratual
       task:
+        legal_case: Processo
         legal_case_id: Processo
         title: Título
         description: Descrição
@@ -197,6 +200,7 @@ pt-BR:
           high: Alta
           urgent: Urgente
       case_event:
+        legal_case: Processo
         legal_case_id: Processo
         event_type: Tipo de evento
         occurred_at: Data e hora
@@ -222,6 +226,7 @@ pt-BR:
   errors:
     messages:
       blank: não pode ficar em branco
+      required: deve existir
 
   helpers:
     submit:

@@ -140,10 +140,6 @@ class ProcessMovementsController < ApplicationController
       :creates_task,
       :creates_deadline,
       :created_by_user_id,
-      :manual_override,
-      :exception_authorized,
-      :override_reason,
-      :override_by_user_id,
       :active
     ])
   end

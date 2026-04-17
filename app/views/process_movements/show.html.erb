@@ -10,8 +10,6 @@
   <p><strong>Situação administrativa:</strong> <%= @process_movement.administrative_situation.present? ? enum_label(ProcessMovement, :administrative_situation, @process_movement.administrative_situation) : "-" %></p>
   <p><strong>Data:</strong> <%= l(@process_movement.event_date, format: :short) %></p>
   <p><strong>Descrição:</strong> <%= @process_movement.complementary_description.presence || "-" %></p>
-  <p><strong>Modo de exceção:</strong> <%= @process_movement.manual_override? ? "Sim" : "Não" %></p>
-  <p><strong>Justificativa de exceção:</strong> <%= @process_movement.override_reason.presence || "-" %></p>
 </div>
 
 <section class="case-section">

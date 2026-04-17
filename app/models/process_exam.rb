@@ -4,6 +4,8 @@ class ProcessExam < ApplicationRecord
   has_many :case_events, dependent: :nullify
   has_many :process_movements, foreign_key: :exam_id, dependent: :nullify
 
+  scope :active, -> { where(active: true) }
+
   enum :exam_nature, {
     medica: "medica",
     social: "social",
