@@ -2,6 +2,7 @@
 
 one:
   id: 1
+  office: one
   internal_number: PROC-0001
   external_number: 0000001-00.2026.4.01.3700
   entry_date: 2026-04-12
@@ -30,6 +31,7 @@ one:
 
 two:
   id: 2
+  office: one
   internal_number: PROC-0002
   external_number: 0000002-00.2026.8.10.0001
   entry_date: 2026-04-10

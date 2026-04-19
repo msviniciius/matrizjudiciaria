@@ -37,6 +37,7 @@ pt-BR:
         whatsapp: WhatsApp
         email: E-mail
         dados_gov: Dados GOV (e-mail e senha)
+        zip_code: CEP
         address: Endereço
         city: Cidade
         state: UF

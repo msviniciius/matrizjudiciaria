@@ -1,8 +1,9 @@
 class DailyClosureReport
   attr_reader :reference_date
 
-  def initialize(reference_date: Date.current)
+  def initialize(reference_date: Date.current, scope: LegalCase.all)
     @reference_date = reference_date.to_date
+    @scope = scope
   end
 
   def rows
@@ -33,7 +34,7 @@ class DailyClosureReport
   private
 
   def legal_cases
-    @legal_cases ||= LegalCase
+    @legal_cases ||= @scope
       .includes(:deadlines, :tasks, :process_movements)
       .order(:responsible_name, :internal_number)
       .to_a

@@ -3,7 +3,7 @@ class DeadlinesController < ApplicationController
 
   # GET /deadlines or /deadlines.json
   def index
-    @deadlines = Deadline.all
+    @deadlines = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
   end
 
   # GET /deadlines/1 or /deadlines/1.json
@@ -22,6 +22,7 @@ class DeadlinesController < ApplicationController
   # POST /deadlines or /deadlines.json
   def create
     @deadline = Deadline.new(deadline_params)
+    ensure_deadline_office_scope!
 
     respond_to do |format|
       if @deadline.save
@@ -60,11 +61,18 @@ class DeadlinesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_deadline
-      @deadline = Deadline.find(params.expect(:id))
+      @deadline = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
     def deadline_params
       params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :start_date, :due_date, :status, :priority, :completed_at, :delay_reason, :responsible_name ])
+    end
+
+    def ensure_deadline_office_scope!
+      return if @deadline.legal_case.blank?
+      return if @deadline.legal_case.office_id == current_office.id
+
+      raise ActiveRecord::RecordNotFound
     end
 end

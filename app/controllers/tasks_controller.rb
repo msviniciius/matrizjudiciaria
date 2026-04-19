@@ -3,7 +3,7 @@ class TasksController < ApplicationController
 
   # GET /tasks or /tasks.json
   def index
-    @tasks = Task.all
+    @tasks = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
   end
 
   # GET /tasks/1 or /tasks/1.json
@@ -22,6 +22,7 @@ class TasksController < ApplicationController
   # POST /tasks or /tasks.json
   def create
     @task = Task.new(task_params)
+    ensure_task_office_scope!
 
     respond_to do |format|
       if @task.save
@@ -60,11 +61,18 @@ class TasksController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_task
-      @task = Task.find(params.expect(:id))
+      @task = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
     def task_params
       params.expect(task: [ :legal_case_id, :title, :description, :status, :priority, :due_date, :responsible_name ])
+    end
+
+    def ensure_task_office_scope!
+      return if @task.legal_case.blank?
+      return if @task.legal_case.office_id == current_office.id
+
+      raise ActiveRecord::RecordNotFound
     end
 end

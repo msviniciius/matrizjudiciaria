@@ -1,0 +1,177 @@
+<% content_for :title, "Configurações do Escritório" %>
+
+<%= form_with model: @office, url: office_setting_path, method: :patch, class: "app-form" do |form| %>
+  <% if @office.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(@office.errors.count, "erro", "erros") %>:</h2>
+      <ul>
+        <% @office.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Identidade do Escritório</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :name, "Nome do escritório" %>
+        <%= form.text_field :name, required: true %>
+      </div>
+
+      <div>
+        <%= form.label :legal_name, "Razão social" %>
+        <%= form.text_field :legal_name %>
+      </div>
+
+      <div>
+        <%= form.label :cnpj, "CNPJ" %>
+        <%= form.text_field :cnpj, data: { mask: "cpf_cnpj" }, inputmode: "numeric" %>
+      </div>
+
+      <div>
+        <%= form.label :oab_registration, "Registro OAB" %>
+        <%= form.text_field :oab_registration %>
+      </div>
+
+      <div>
+        <%= form.label :email, "E-mail do escritório" %>
+        <%= form.email_field :email %>
+      </div>
+
+      <div>
+        <%= form.label :phone, "Telefone" %>
+        <%= form.text_field :phone, data: { mask: "phone" }, inputmode: "numeric" %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :zip_code, "CEP" %>
+        <%= form.text_field :zip_code, data: { mask: "cep", cep_lookup: true }, inputmode: "numeric" %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :address, "Endereço" %>
+        <%= form.text_field :address, data: { cep_lookup_street: true } %>
+      </div>
+
+      <div>
+        <%= form.label :city, "Cidade" %>
+        <%= form.text_field :city, data: { cep_lookup_city: true } %>
+      </div>
+
+      <div>
+        <%= form.label :state, "UF" %>
+        <%= form.text_field :state, data: { cep_lookup_state: true } %>
+      </div>
+
+      <div>
+        <%= form.label :slug, "Identificador" %>
+        <%= form.text_field :slug, disabled: true %>
+      </div>
+
+      <div>
+        <%= form.label :primary_color, "Cor primária" %>
+        <%= form.color_field :primary_color %>
+      </div>
+
+      <div>
+        <%= form.label :secondary_color, "Cor secundária" %>
+        <%= form.color_field :secondary_color %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :logo, "Logotipo" %>
+        <%= form.file_field :logo, accept: "image/png,image/jpeg,image/webp,image/svg+xml" %>
+      </div>
+
+      <% if @office.logo_attached? %>
+        <div class="field-full office-logo-preview">
+          <%= image_tag url_for(@office.logo), alt: @office.name %>
+          <label class="checkbox-field">
+            <%= check_box_tag "office[remove_logo]", "1", false %>
+            <span>Remover logotipo atual</span>
+          </label>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Regras Operacionais</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :default_phase, "Fase padrão em novo processo" %>
+        <%= form.select :default_phase, enum_options_for(LegalCase, :phase) %>
+      </div>
+
+      <div>
+        <%= form.label :default_status, "Status padrão em novo processo" %>
+        <%= form.select :default_status, enum_options_for(LegalCase, :status) %>
+      </div>
+
+      <div>
+        <%= form.label :default_priority, "Prioridade padrão em novo processo" %>
+        <%= form.select :default_priority, enum_options_for(LegalCase, :priority) %>
+      </div>
+
+      <div>
+        <%= form.label :deadline_alert_days, "Dias de alerta para prazos" %>
+        <%= form.number_field :deadline_alert_days, min: 0, max: 60 %>
+      </div>
+
+      <div>
+        <%= form.label :task_alert_days, "Dias de alerta para tarefas" %>
+        <%= form.number_field :task_alert_days, min: 0, max: 60 %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <div class="section-head-actions">
+      <h3>Equipe e Acessos</h3>
+      <%= link_to "Novo usuário", new_office_setting_user_path, class: "btn btn-secondary" %>
+    </div>
+
+    <div class="table-wrap office-users-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Tipo</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @users.any? %>
+            <% @users.each do |user| %>
+              <tr>
+                <td><%= user.name %></td>
+                <td><%= user.email %></td>
+                <td><%= user.admin? ? "Administrador" : "Atendente" %></td>
+                <td><%= user.active? ? "Ativo" : "Inativo" %></td>
+                <td class="office-users-actions">
+                  <%= link_to "Editar", edit_office_setting_user_path(user), class: "btn btn-secondary" %>
+                  <% unless user == current_user %>
+                    <%= link_to "Excluir", office_setting_user_path(user), class: "btn btn-secondary", data: { turbo_method: :delete, turbo_confirm: "Excluir este usuário?" } %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="table-empty-state">Nenhum usuário cadastrado.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= link_to "Voltar", root_path, class: "btn btn-secondary" %>
+    <%= form.submit "Salvar configurações", class: "btn btn-primary" %>
+  </div>
+<% end %>

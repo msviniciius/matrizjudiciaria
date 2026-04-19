@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_19_221000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "case_events", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -47,13 +75,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
     t.string "marital_status"
     t.string "mother_name"
     t.text "notes"
+    t.bigint "office_id", null: false
     t.string "phone"
     t.string "profession"
     t.string "rg"
     t.string "state"
     t.datetime "updated_at", null: false
     t.string "whatsapp"
+    t.string "zip_code"
     t.index ["cadastro_pendente"], name: "index_clients_on_cadastro_pendente"
+    t.index ["office_id"], name: "index_clients_on_office_id"
+    t.index ["zip_code"], name: "index_clients_on_zip_code"
   end
 
   create_table "courts", force: :cascade do |t|
@@ -115,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
     t.string "next_action"
     t.date "next_deadline_on"
     t.text "observacao_geral_pericia"
+    t.bigint "office_id", null: false
     t.string "opposing_party"
     t.string "phase"
     t.string "priority"
@@ -132,6 +165,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
     t.index ["court_id"], name: "index_legal_cases_on_court_id"
     t.index ["district_id"], name: "index_legal_cases_on_district_id"
     t.index ["legal_area_id"], name: "index_legal_cases_on_legal_area_id"
+    t.index ["office_id"], name: "index_legal_cases_on_office_id"
     t.index ["process_type_id"], name: "index_legal_cases_on_process_type_id"
   end
 
@@ -170,6 +204,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_movement_types_on_code", unique: true
     t.index ["name"], name: "index_movement_types_on_name", unique: true
+  end
+
+  create_table "offices", force: :cascade do |t|
+    t.string "address"
+    t.string "city"
+    t.string "cnpj"
+    t.datetime "created_at", null: false
+    t.integer "deadline_alert_days", default: 7, null: false
+    t.string "default_phase", default: "atendimento_inicial", null: false
+    t.string "default_priority", default: "medium", null: false
+    t.string "default_status", default: "em_analise", null: false
+    t.string "email"
+    t.string "legal_name"
+    t.string "name", null: false
+    t.string "oab_registration"
+    t.string "phone"
+    t.string "primary_color", default: "#112f4e", null: false
+    t.string "secondary_color", default: "#b08a45", null: false
+    t.string "slug", null: false
+    t.string "state"
+    t.integer "task_alert_days", default: 7, null: false
+    t.datetime "updated_at", null: false
+    t.string "zip_code"
+    t.index ["cnpj"], name: "index_offices_on_cnpj"
+    t.index ["email"], name: "index_offices_on_email"
+    t.index ["slug"], name: "index_offices_on_slug", unique: true
+    t.index ["zip_code"], name: "index_offices_on_zip_code"
   end
 
   create_table "process_exams", force: :cascade do |t|
@@ -288,15 +349,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
     t.index ["legal_case_id"], name: "index_tasks_on_legal_case_id"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "last_sign_in_at"
+    t.string "name", null: false
+    t.bigint "office_id", null: false
+    t.string "password_digest", null: false
+    t.string "password_salt", null: false
+    t.string "role", default: "attendant", null: false
+    t.datetime "updated_at", null: false
+    t.index ["office_id", "email"], name: "index_users_on_office_id_and_email", unique: true
+    t.index ["office_id"], name: "index_users_on_office_id"
+  end
+
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "case_events", "legal_cases"
   add_foreign_key "case_events", "movement_types"
   add_foreign_key "case_events", "process_exams"
+  add_foreign_key "clients", "offices"
   add_foreign_key "courts", "districts"
   add_foreign_key "deadlines", "legal_cases"
   add_foreign_key "legal_cases", "clients"
   add_foreign_key "legal_cases", "courts"
   add_foreign_key "legal_cases", "districts"
   add_foreign_key "legal_cases", "legal_areas"
+  add_foreign_key "legal_cases", "offices"
   add_foreign_key "legal_cases", "process_types"
   add_foreign_key "movement_templates", "movement_types"
   add_foreign_key "movement_templates", "process_phases", column: "next_phase_id"
@@ -311,4 +391,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_170000) do
   add_foreign_key "process_movements", "process_phases", column: "phase_id"
   add_foreign_key "process_types", "legal_areas"
   add_foreign_key "tasks", "legal_cases"
+  add_foreign_key "users", "offices"
 end

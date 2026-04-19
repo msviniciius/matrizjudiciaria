@@ -11,6 +11,7 @@ class ProcessExamsController < ApplicationController
 
   def create
     @process_exam = @legal_case.process_exams.new(process_exam_params)
+    @process_exam.created_by_user_id ||= current_user.id
 
     if @process_exam.save
       @legal_case.update_column(:tem_pericia, true)
@@ -38,11 +39,11 @@ class ProcessExamsController < ApplicationController
   private
 
   def set_process_exam
-    @process_exam = ProcessExam.find(params.expect(:id))
+    @process_exam = ProcessExam.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
   end
 
   def set_legal_case_from_params
-    @legal_case = LegalCase.find(params.expect(:legal_case_id))
+    @legal_case = current_office.legal_cases.find(params.expect(:legal_case_id))
   end
 
   def process_exam_params

@@ -52,6 +52,11 @@
   <% end %>
 
   <div>
+    <strong><%= Client.human_attribute_name(:zip_code) %>:</strong>
+    <%= client.zip_code %>
+  </div>
+
+  <div>
     <strong><%= Client.human_attribute_name(:address) %>:</strong>
     <%= client.address %>
   </div>

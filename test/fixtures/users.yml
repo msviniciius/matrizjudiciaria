@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  office: one
+  name: Admin Alpha
+  email: admin.alpha@example.com
+  role: admin
+  password_digest: 4f8a3f9d26620df5bcc24cfc7d2f3a0f194e1bca2bcfcaac30160279731f4f80
+  password_salt: test-salt
+  active: true
+  last_sign_in_at: 2026-04-19 17:41:37
+
+two:
+  office: two
+  name: Atendente Beta
+  email: atendente.beta@example.com
+  role: attendant
+  password_digest: 4f8a3f9d26620df5bcc24cfc7d2f3a0f194e1bca2bcfcaac30160279731f4f80
+  password_salt: test-salt
+  active: true
+  last_sign_in_at: 2026-04-19 17:41:37

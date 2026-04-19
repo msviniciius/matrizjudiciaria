@@ -1,4 +1,12 @@
 Rails.application.routes.draw do
+  get "/login", to: "sessions#new"
+  post "/login", to: "sessions#create"
+  delete "/logout", to: "sessions#destroy"
+  get "/logout", to: "sessions#destroy"
+  resource :office_setting, only: %i[show edit update] do
+    resources :users, controller: "office_users", except: :show
+  end
+
   resources :tasks
   resources :deadlines
   resources :case_events

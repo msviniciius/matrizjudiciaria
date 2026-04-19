@@ -2,15 +2,15 @@ class LegalCasesController < ApplicationController
   before_action :set_legal_case, only: %i[ show edit update destroy calendar ]
 
   def index
-    @legal_cases = LegalCase.order(updated_at: :desc)
-    operational_scope = LegalCase.operational
+    @legal_cases = current_office.legal_cases.order(updated_at: :desc)
+    operational_scope = current_office.legal_cases.operational
 
     @report_counts = {
-      por_fase: LegalCase.group(:phase).count,
-      prazo_proximo: LegalCase.with_upcoming_deadline.count,
-      sem_prazo: LegalCase.without_deadline.count,
-      com_pericia: LegalCase.with_pericia.count,
-      com_exigencia_pendente: LegalCase.with_pending_requirement.count,
+      por_fase: current_office.legal_cases.group(:phase).count,
+      prazo_proximo: @legal_cases.with_upcoming_deadline.count,
+      sem_prazo: @legal_cases.without_deadline.count,
+      com_pericia: @legal_cases.with_pericia.count,
+      com_exigencia_pendente: @legal_cases.with_pending_requirement.count,
       saude_critica: @legal_cases.count(&:health_status_vermelho?)
     }
 
@@ -47,7 +47,7 @@ class LegalCasesController < ApplicationController
 
   def daily_closure
     @reference_date = parse_reference_date(params[:reference_date])
-    @closure_rows = DailyClosureReport.new(reference_date: @reference_date).rows
+    @closure_rows = DailyClosureReport.new(reference_date: @reference_date, scope: current_office.legal_cases).rows
   end
 
   def calendar
@@ -62,14 +62,20 @@ class LegalCasesController < ApplicationController
   end
 
   def new
-    @legal_case = LegalCase.new(internal_number: LegalCase.next_internal_number_preview)
+    @legal_case = current_office.legal_cases.new(
+      internal_number: LegalCase.next_internal_number_preview(current_office),
+      phase: current_office.default_phase,
+      status: current_office.default_status,
+      priority: current_office.default_priority
+    )
   end
 
   def edit
   end
 
   def create
-    @legal_case = LegalCase.new(legal_case_params)
+    @legal_case = current_office.legal_cases.new(legal_case_params)
+    ensure_legal_case_office_scope!
 
     respond_to do |format|
       if @legal_case.save
@@ -83,6 +89,8 @@ class LegalCasesController < ApplicationController
   end
 
   def update
+    ensure_legal_case_office_scope!
+
     respond_to do |format|
       if @legal_case.update(legal_case_params)
         format.html { redirect_to @legal_case, status: :see_other, flash: success_flash("Processo atualizado com sucesso.", @legal_case) }
@@ -106,7 +114,7 @@ class LegalCasesController < ApplicationController
   private
 
   def set_legal_case
-    @legal_case = LegalCase.find(params.expect(:id))
+    @legal_case = current_office.legal_cases.find(params.expect(:id))
   end
 
   def legal_case_params
@@ -185,5 +193,12 @@ class LegalCasesController < ApplicationController
 
     payload[:warning] = I18n.t("legal_cases.warnings.next_action_blank")
     payload
+  end
+
+  def ensure_legal_case_office_scope!
+    return if @legal_case.client.blank?
+    return if @legal_case.client.office_id == current_office.id
+
+    raise ActiveRecord::RecordNotFound
   end
 end

@@ -81,6 +81,10 @@
     <h3>Endereço</h3>
     <dl class="details-list">
       <div class="details-item">
+        <dt><%= Client.human_attribute_name(:zip_code) %></dt>
+        <dd class="<%= @client.zip_code.present? ? "" : "is-empty" %>"><%= @client.zip_code.presence || "Não informado" %></dd>
+      </div>
+      <div class="details-item">
         <dt><%= Client.human_attribute_name(:address) %></dt>
         <dd class="<%= @client.address.present? ? "" : "is-empty" %>"><%= @client.address.presence || "Não informado" %></dd>
       </div>

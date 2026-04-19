@@ -2,6 +2,7 @@
 
 one:
   id: 1
+  office: one
   full_name: Cliente Um
   cpf_cnpj: 11111111111
   rg: 1234567
@@ -20,6 +21,7 @@ one:
 
 two:
   id: 2
+  office: one
   full_name: Cliente Dois
   cpf_cnpj: 22222222222
   rg: 7654321

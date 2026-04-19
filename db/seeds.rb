@@ -259,6 +259,27 @@ branches.each do |branch_name, areas|
   end
 end
 
+# Seed de escritório + usuário admin (Kayran)
+kayran_office = Office.find_or_initialize_by(slug: "kayran-advocacia")
+kayran_office.name = "Kayran Advocacia"
+kayran_office.save!
+
+kayran_admin_email = ENV.fetch("KAYRAN_ADMIN_EMAIL", "admin@kayranadvocacia.com").downcase
+kayran_admin_password = ENV.fetch("KAYRAN_ADMIN_PASSWORD", "admin123")
+reset_kayran_admin_password = ENV["KAYRAN_ADMIN_RESET_PASSWORD"] == "1"
+
+kayran_admin = kayran_office.users.find_or_initialize_by(email: kayran_admin_email)
+kayran_admin.name = "Administrador Kayran" if kayran_admin.name.blank?
+kayran_admin.role = "admin"
+kayran_admin.active = true
+
+if kayran_admin.new_record? || reset_kayran_admin_password
+  kayran_admin.password = kayran_admin_password
+  kayran_admin.password_confirmation = kayran_admin_password
+end
+
+kayran_admin.save!
+
 courts = [
   "1ª Vara Federal",
   "2ª Vara Federal",

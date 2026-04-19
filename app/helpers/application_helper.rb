@@ -8,7 +8,29 @@ module ApplicationHelper
   end
 
   def law_firm_name
-    ENV.fetch("OFFICE_NAME", "Kayran Advocacia")
+    current_office&.name.presence || ENV.fetch("OFFICE_NAME", "Kayran Advocacia")
+  end
+
+  def office_logo_url
+    return unless current_office&.logo_attached?
+
+    url_for(current_office.logo)
+  end
+
+  def office_theme_css_variables
+    primary = normalized_hex_color(current_office&.primary_color) || "#112f4e"
+    secondary = normalized_hex_color(current_office&.secondary_color) || "#b08a45"
+
+    [
+      "--brand: #{primary}",
+      "--brand-2: #{darken_hex_color(primary, 10)}",
+      "--accent: #{secondary}",
+      "--nav-start: #{darken_hex_color(primary, 18)}",
+      "--nav-end: #{darken_hex_color(primary, 8)}",
+      "--sidebar-start: #{darken_hex_color(primary, 22)}",
+      "--sidebar-mid: #{darken_hex_color(primary, 14)}",
+      "--sidebar-end: #{darken_hex_color(primary, 18)}"
+    ].join("; ")
   end
 
   def enum_label(model_class, enum_name, value)
@@ -72,5 +94,29 @@ module ApplicationHelper
     actions << "Registre um novo andamento para atualizar o histórico do processo." if legal_case.stale_last_movement?
     actions << "Revise as tarefas e prazos que vencem nesta semana." if legal_case.prazo_alerta? && !legal_case.deadline_overdue?
     actions.presence || [ "Manter o acompanhamento diário e atualizar o processo sempre que houver novidade." ]
+  end
+
+  private
+
+  def normalized_hex_color(value)
+    color = value.to_s.strip
+    return if color.blank?
+
+    hex = color.delete_prefix("#")
+    return "##{hex}" if /\A[0-9a-fA-F]{6}\z/.match?(hex)
+    return "##{hex.chars.map { |char| char * 2 }.join}" if /\A[0-9a-fA-F]{3}\z/.match?(hex)
+
+    nil
+  end
+
+  def darken_hex_color(hex_color, percent)
+    hex = normalized_hex_color(hex_color)
+    return "#112f4e" if hex.blank?
+
+    rgb = hex.delete_prefix("#").scan(/../).map { |part| part.to_i(16) }
+    factor = [ [ percent.to_f, 0.0 ].max, 100.0 ].min / 100.0
+    darkened = rgb.map { |channel| (channel * (1.0 - factor)).round.clamp(0, 255) }
+
+    format("#%02x%02x%02x", darkened[0], darkened[1], darkened[2])
   end
 end

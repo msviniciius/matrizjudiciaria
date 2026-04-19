@@ -2,14 +2,22 @@ class CaseEventsController < ApplicationController
   before_action :set_case_event, only: %i[ show edit update destroy ]
 
   def index
-    @case_events = CaseEvent.includes(:legal_case, :movement_type, :process_exam).order(occurred_at: :desc)
+    @case_events = CaseEvent
+      .joins(:legal_case)
+      .where(legal_cases: { office_id: current_office.id })
+      .includes(:legal_case, :movement_type, :process_exam)
+      .order(occurred_at: :desc)
   end
 
   def show
   end
 
   def new
-    @case_event = CaseEvent.new(legal_case_id: params[:legal_case_id])
+    legal_case_id = params[:legal_case_id]
+    if legal_case_id.present?
+      current_office.legal_cases.find(legal_case_id)
+    end
+    @case_event = CaseEvent.new(legal_case_id: legal_case_id)
   end
 
   def edit
@@ -17,6 +25,7 @@ class CaseEventsController < ApplicationController
 
   def create
     @case_event = CaseEvent.new(case_event_params)
+    ensure_case_event_office_scope!
 
     respond_to do |format|
       if @case_event.save
@@ -53,7 +62,10 @@ class CaseEventsController < ApplicationController
   private
 
   def set_case_event
-    @case_event = CaseEvent.find(params.expect(:id))
+    @case_event = CaseEvent
+      .joins(:legal_case)
+      .where(legal_cases: { office_id: current_office.id })
+      .find(params.expect(:id))
   end
 
   def case_event_params
@@ -68,5 +80,12 @@ class CaseEventsController < ApplicationController
       :next_action,
       :process_exam_id
     ])
+  end
+
+  def ensure_case_event_office_scope!
+    return if @case_event.legal_case.blank?
+    return if @case_event.legal_case.office_id == current_office.id
+
+    raise ActiveRecord::RecordNotFound
   end
 end

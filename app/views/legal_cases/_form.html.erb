@@ -12,7 +12,7 @@
 
   <% grouped_areas = LegalArea.order(:justice_branch, :name).group_by(&:justice_branch) %>
   <% grouped_options = grouped_areas.transform_values { |areas| areas.map { |area| [area.name, area.id] } } %>
-  <% clients = Client.ordered.to_a %>
+  <% clients = current_office.clients.ordered.to_a %>
   <% pending_client_ids = clients.select(&:cadastro_pendente?).map(&:id) %>
 
   <section class="form-section">

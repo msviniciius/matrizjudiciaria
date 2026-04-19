@@ -38,6 +38,7 @@ class LegalCase < ApplicationRecord
   ].freeze
 
   belongs_to :client
+  belongs_to :office
   belongs_to :legal_area, optional: true
   belongs_to :process_type, optional: true
   belongs_to :court, optional: true
@@ -61,10 +62,11 @@ class LegalCase < ApplicationRecord
   enum :phase, OFFICIAL_PHASES.index_with(&:itself), prefix: true
 
   before_validation :normalize_legacy_phase_and_status
+  before_validation :apply_office_operational_defaults
   before_validation :assign_internal_number, on: :create
 
   validates :internal_number, :legal_area_id, :process_type_id, :phase, :status, presence: true
-  validates :internal_number, uniqueness: true
+  validates :internal_number, uniqueness: { scope: :office_id }
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :phase, inclusion: { in: phases.keys }
@@ -85,8 +87,10 @@ class LegalCase < ApplicationRecord
       .distinct
   end
 
-  def self.next_internal_number_preview
-    latest = where("internal_number ~ ?", "^#{INTERNAL_NUMBER_PREFIX}[0-9]+$")
+  def self.next_internal_number_preview(office = nil)
+    scope = office.present? ? where(office_id: office.id) : all
+
+    latest = scope.where("internal_number ~ ?", "^#{INTERNAL_NUMBER_PREFIX}[0-9]+$")
       .maximum(Arel.sql("CAST(SUBSTRING(internal_number FROM 4) AS bigint)"))
       .to_i
 
@@ -306,6 +310,14 @@ class LegalCase < ApplicationRecord
 
   def assign_internal_number
     return if internal_number.present?
-    self.internal_number = self.class.next_internal_number_preview
+    self.internal_number = self.class.next_internal_number_preview(office)
+  end
+
+  def apply_office_operational_defaults
+    return if office.blank?
+
+    self.phase = office.default_phase if phase.blank?
+    self.status = office.default_status if status.blank?
+    self.priority = office.default_priority if priority.blank?
   end
 end

@@ -1,0 +1,78 @@
+<%= form_with model: [ :office_setting, user ], class: "app-form" do |form| %>
+  <% if user.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(user.errors.count, "erro", "erros") %>:</h2>
+      <ul>
+        <% user.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados do Usuário</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :name, "Nome" %>
+        <%= form.text_field :name, required: true %>
+      </div>
+
+      <div>
+        <%= form.label :email, "E-mail" %>
+        <%= form.email_field :email, required: true %>
+      </div>
+
+      <div>
+        <%= form.label :role, "Tipo de usuário" %>
+        <%= form.select :role, [["Administrador", "admin"], ["Atendente", "attendant"]] %>
+      </div>
+
+      <div class="field-checkbox">
+        <label class="checkbox-field">
+          <%= form.check_box :active %>
+          <span>Usuário ativo</span>
+        </label>
+      </div>
+
+      <div>
+        <%= form.label :password, user.persisted? ? "Nova senha (opcional)" : "Senha" %>
+        <div class="password-field">
+          <%= form.password_field :password, id: "office_user_password", autocomplete: "new-password" %>
+          <button
+            type="button"
+            class="password-field__toggle"
+            data-password-toggle
+            data-password-target="office_user_password"
+            aria-label="Mostrar senha"
+            title="Mostrar senha"
+          >
+            <span data-password-icon aria-hidden="true">&#128065;</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :password_confirmation, user.persisted? ? "Confirmar nova senha" : "Confirmar senha" %>
+        <div class="password-field">
+          <%= form.password_field :password_confirmation, id: "office_user_password_confirmation", autocomplete: "new-password" %>
+          <button
+            type="button"
+            class="password-field__toggle"
+            data-password-toggle
+            data-password-target="office_user_password_confirmation"
+            aria-label="Mostrar confirmação de senha"
+            title="Mostrar confirmação de senha"
+          >
+            <span data-password-icon aria-hidden="true">&#128065;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= link_to "Voltar", office_setting_users_path, class: "btn btn-secondary" %>
+    <%= form.submit user.persisted? ? "Salvar usuário" : "Cadastrar usuário", class: "btn btn-primary" %>
+  </div>
+<% end %>

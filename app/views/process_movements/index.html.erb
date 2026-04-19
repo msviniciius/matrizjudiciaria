@@ -46,7 +46,7 @@
       </div>
       <div>
         <%= form.label :exam_id, "Perícia" %>
-        <%= form.collection_select :exam_id, ProcessExam.where(active: true).order(:scheduled_at), :id, :summary_label, { include_blank: "Todas", selected: @filters[:exam_id] } %>
+        <%= form.collection_select :exam_id, ProcessExam.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).where(active: true).order(:scheduled_at), :id, :summary_label, { include_blank: "Todas", selected: @filters[:exam_id] } %>
       </div>
       <div>
         <%= form.label :administrative_situation, "Situação administrativa" %>

@@ -67,19 +67,24 @@
   <section class="form-section">
     <h3>Endereço</h3>
     <div class="form-grid">
+      <div>
+        <%= form.label :zip_code, "CEP" %>
+        <%= form.text_field :zip_code, data: { mask: "cep", cep_lookup: true }, inputmode: "numeric" %>
+      </div>
+
       <div class="field-full">
         <%= form.label :address %>
-        <%= form.text_field :address %>
+        <%= form.text_field :address, data: { cep_lookup_street: true } %>
       </div>
 
       <div>
         <%= form.label :city %>
-        <%= form.text_field :city %>
+        <%= form.text_field :city, data: { cep_lookup_city: true } %>
       </div>
 
       <div>
         <%= form.label :state %>
-        <%= form.text_field :state %>
+        <%= form.text_field :state, data: { cep_lookup_state: true } %>
       </div>
     </div>
   </section>

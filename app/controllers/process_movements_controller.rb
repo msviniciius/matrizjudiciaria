@@ -8,11 +8,11 @@ class ProcessMovementsController < ApplicationController
       .recent
 
     @reports = {
-      por_fase: ProcessMovement.joins(:phase).group("process_phases.name").count,
-      por_tipo: ProcessMovement.joins(:movement_type).group("movement_types.name").count,
-      por_natureza: ProcessMovement.group(:nature).count,
-      por_impacto: ProcessMovement.group(:impact).count,
-      por_origem: ProcessMovement.group(:origin).count
+      por_fase: office_process_movements.joins(:phase).group("process_phases.name").count,
+      por_tipo: office_process_movements.joins(:movement_type).group("movement_types.name").count,
+      por_natureza: office_process_movements.group(:nature).count,
+      por_impacto: office_process_movements.group(:impact).count,
+      por_origem: office_process_movements.group(:origin).count
     }
   end
 
@@ -28,6 +28,8 @@ class ProcessMovementsController < ApplicationController
 
   def create
     @process_movement = ProcessMovement.new(process_movement_params)
+    @process_movement.created_by_user_id ||= current_user.id
+    ensure_process_movement_office_scope!
 
     if @process_movement.save
       redirect_to @process_movement, notice: "Andamento processual cadastrado com sucesso."
@@ -52,11 +54,11 @@ class ProcessMovementsController < ApplicationController
   private
 
   def set_process_movement
-    @process_movement = ProcessMovement.find(params.expect(:id))
+    @process_movement = office_process_movements.find(params.expect(:id))
   end
 
   def filtered_scope
-    scope = ProcessMovement.active
+    scope = office_process_movements.active
 
     if @filters[:phase_id].present?
       scope = scope.where(phase_id: @filters[:phase_id])
@@ -142,5 +144,16 @@ class ProcessMovementsController < ApplicationController
       :created_by_user_id,
       :active
     ])
+  end
+
+  def office_process_movements
+    ProcessMovement.joins(:process).where(legal_cases: { office_id: current_office.id })
+  end
+
+  def ensure_process_movement_office_scope!
+    return if @process_movement.process.blank?
+    return if @process_movement.process.office_id == current_office.id
+
+    raise ActiveRecord::RecordNotFound
   end
 end

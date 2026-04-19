@@ -19,7 +19,7 @@
     <div class="form-grid">
       <div class="field-full">
         <%= form.label :legal_case_id %>
-        <%= form.collection_select :legal_case_id, LegalCase.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+        <%= form.collection_select :legal_case_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
       </div>
 
       <div>
