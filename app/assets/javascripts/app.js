@@ -1,4 +1,37 @@
 (() => {
+  const togglePasswordVisibility = (button) => {
+    const targetId = button.dataset.passwordTarget;
+    if (!targetId) return;
+
+    const input = document.getElementById(targetId);
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const icon = button.querySelector("[data-password-icon]");
+    const isHidden = input.type === "password";
+
+    input.type = isHidden ? "text" : "password";
+    button.setAttribute("aria-label", isHidden ? "Ocultar senha" : "Mostrar senha");
+    button.title = isHidden ? "Ocultar senha" : "Mostrar senha";
+
+    if (icon) {
+      icon.innerHTML = isHidden ? "&#128584;" : "&#128065;";
+    }
+  };
+
+  const initPasswordToggles = () => {
+    document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+      if (button.dataset.passwordToggleBound === "true") return;
+
+      button.dataset.passwordToggleBound = "true";
+      button.addEventListener("click", () => togglePasswordVisibility(button));
+    });
+  };
+
+  document.addEventListener("turbo:load", initPasswordToggles);
+  document.addEventListener("DOMContentLoaded", initPasswordToggles);
+})();
+
+(() => {
   const applyMask = (digits, pattern) => {
     let result = "";
     let i = 0;
@@ -35,6 +68,11 @@
     return applyMask(digits, "##.###.###-#");
   };
 
+  const formatCep = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    return applyMask(digits, "#####-###");
+  };
+
   const formatCurrencyBr = (value) => {
     let digits = value.replace(/\D/g, "").replace(/^0+/, "");
     if (digits.length === 0) return "";
@@ -66,6 +104,9 @@
       case "currency-br":
         element.value = formatCurrencyBr(element.value);
         break;
+      case "cep":
+        element.value = formatCep(element.value);
+        break;
       default:
         break;
     }
@@ -91,6 +132,53 @@
   document.addEventListener("turbo:load", () => {
     document.querySelectorAll("[data-mask]").forEach((el) => formatByMask(el));
   });
+})();
+
+(() => {
+  const fetchAddressByCep = async (cepInput) => {
+    const form = cepInput.closest("form");
+    if (!form) return;
+
+    const streetInput = form.querySelector("[data-cep-lookup-street]");
+    const cityInput = form.querySelector("[data-cep-lookup-city]");
+    const stateInput = form.querySelector("[data-cep-lookup-state]");
+    if (!streetInput || !cityInput || !stateInput) return;
+
+    const cepDigits = cepInput.value.replace(/\D/g, "");
+    if (cepDigits.length !== 8) return;
+    if (cepInput.dataset.lastLookupCep === cepDigits) return;
+
+    cepInput.dataset.lastLookupCep = cepDigits;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`, {
+        headers: { Accept: "application/json" }
+      });
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (data.erro) return;
+
+      streetInput.value = data.logradouro || streetInput.value;
+      cityInput.value = data.localidade || cityInput.value;
+      stateInput.value = data.uf || stateInput.value;
+    } catch (_error) {
+      // no-op: user can still fill manually
+    }
+  };
+
+  const initCepLookup = () => {
+    document.querySelectorAll("[data-cep-lookup]").forEach((cepInput) => {
+      if (cepInput.dataset.cepBound === "true") return;
+
+      cepInput.dataset.cepBound = "true";
+      cepInput.addEventListener("blur", () => fetchAddressByCep(cepInput));
+      cepInput.addEventListener("input", () => fetchAddressByCep(cepInput));
+    });
+  };
+
+  document.addEventListener("turbo:load", initCepLookup);
+  document.addEventListener("DOMContentLoaded", initCepLookup);
 })();
 
 (() => {
@@ -468,6 +556,28 @@
 
     if (toggleIcon) {
       toggleIcon.textContent = "☰";
+    }
+
+    if (collapsed) {
+      const sections = Array.from(document.querySelectorAll("[data-sidebar-section]"));
+      const openSections = sections.filter((section) => section.classList.contains("is-open"));
+
+      if (openSections.length === 0 && sections.length > 0) {
+        const firstSection = sections[0];
+        const firstToggle = firstSection.querySelector("[data-sidebar-section-toggle]");
+        firstSection.classList.add("is-open");
+        if (firstToggle) firstToggle.setAttribute("aria-expanded", "true");
+      } else if (openSections.length > 1) {
+        const [firstOpen, ...others] = openSections;
+        others.forEach((section) => {
+          section.classList.remove("is-open");
+          const toggleButton = section.querySelector("[data-sidebar-section-toggle]");
+          if (toggleButton) toggleButton.setAttribute("aria-expanded", "false");
+        });
+
+        const firstToggle = firstOpen.querySelector("[data-sidebar-section-toggle]");
+        if (firstToggle) firstToggle.setAttribute("aria-expanded", "true");
+      }
     }
   };
 

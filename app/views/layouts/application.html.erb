@@ -18,7 +18,7 @@
     <%= javascript_include_tag :app, "data-turbo-track": "reload", defer: true %>
   </head>
 
-  <body>
+  <body style="<%= office_theme_css_variables %>">
     <div class="app-background"></div>
 
     <div class="app-layout" data-sidebar-layout>
@@ -41,7 +41,10 @@
               data-sidebar-section-toggle
               aria-expanded="true"
               aria-controls="sidebar-section-operacao"
+              aria-label="Operação"
+              title="Operação"
             >
+              <span class="sidebar-section__icon" aria-hidden="true">&#9878;</span>
               <span class="sidebar-section__title">Operação</span>
               <span class="sidebar-section__chevron" aria-hidden="true">&#9662;</span>
             </button>
@@ -86,7 +89,10 @@
               data-sidebar-section-toggle
               aria-expanded="true"
               aria-controls="sidebar-section-cadastros"
+              aria-label="Cadastros"
+              title="Cadastros"
             >
+              <span class="sidebar-section__icon" aria-hidden="true">&#128451;</span>
               <span class="sidebar-section__title">Cadastros</span>
               <span class="sidebar-section__chevron" aria-hidden="true">&#9662;</span>
             </button>
@@ -100,6 +106,31 @@
               <%= link_to districts_path, class: "nav-link #{'is-active' if controller_name == 'districts'}", aria: { label: "Comarcas" }, title: "Comarcas" do %>
                 <span class="nav-link__icon" aria-hidden="true">&#128205;</span>
                 <span class="nav-link__label">Comarcas</span>
+              <% end %>
+            </div>
+          </section>
+
+          <section class="sidebar-section is-open" data-sidebar-section="configuracoes">
+            <button
+              type="button"
+              class="sidebar-section__toggle"
+              data-sidebar-section-toggle
+              aria-expanded="true"
+              aria-controls="sidebar-section-configuracoes"
+              aria-label="Configurações"
+              title="Configurações"
+            >
+              <span class="sidebar-section__icon" aria-hidden="true">&#9881;</span>
+              <span class="sidebar-section__title">Configurações</span>
+              <span class="sidebar-section__chevron" aria-hidden="true">&#9662;</span>
+            </button>
+
+            <div class="sidebar-section__body" id="sidebar-section-configuracoes">
+              <% if current_user&.admin? %>
+                <%= link_to edit_office_setting_path, class: "nav-link #{'is-active' if %w[office_settings office_users].include?(controller_name)}", aria: { label: "Escritório" }, title: "Escritório" do %>
+                  <span class="nav-link__icon" aria-hidden="true">&#9881;</span>
+                  <span class="nav-link__label">Escritório</span>
+                <% end %>
               <% end %>
             </div>
           </section>
@@ -119,6 +150,64 @@
             >
               <span class="sidebar-toggle__icon" data-sidebar-toggle-icon aria-hidden="true">&#9776;</span>
             </button>
+          </div>
+
+          <div class="app-navbar__right">
+            <div class="navbar-user-badge">
+              <strong><%= current_user&.name %></strong>
+              <span><%= law_firm_name %></span>
+            </div>
+
+            <details class="navbar-notifications">
+              <summary class="app-navbar__tool" aria-label="Notificações" title="Notificações">
+                <span aria-hidden="true">&#128276;</span>
+                <% if @navbar_notification_total.to_i.positive? %>
+                  <span class="navbar-notifications__badge"><%= @navbar_notification_total %></span>
+                <% end %>
+              </summary>
+
+              <div class="navbar-notifications__panel">
+                <h4>Notificações</h4>
+
+                <div class="navbar-notifications__group">
+                  <p class="navbar-notifications__title">Prazos</p>
+                  <% if @navbar_deadlines.present? %>
+                    <% @navbar_deadlines.each do |deadline| %>
+                      <%= link_to deadline_path(deadline), class: "navbar-notifications__item" do %>
+                        <strong><%= deadline.title %></strong>
+                        <span><%= deadline.legal_case.internal_number %> - <%= l(deadline.due_date) %></span>
+                      <% end %>
+                    <% end %>
+                  <% else %>
+                    <p class="navbar-notifications__empty">Sem prazos próximos.</p>
+                  <% end %>
+                </div>
+
+                <div class="navbar-notifications__group">
+                  <p class="navbar-notifications__title">Tarefas</p>
+                  <% if @navbar_tasks.present? %>
+                    <% @navbar_tasks.each do |task| %>
+                      <%= link_to task_path(task), class: "navbar-notifications__item" do %>
+                        <strong><%= task.title %></strong>
+                        <span><%= task.legal_case.internal_number %> - <%= l(task.due_date) %></span>
+                      <% end %>
+                    <% end %>
+                  <% else %>
+                    <p class="navbar-notifications__empty">Sem tarefas próximas.</p>
+                  <% end %>
+                </div>
+
+                <div class="navbar-notifications__actions">
+                  <%= link_to "Ver prazos", deadlines_path, class: "btn btn-secondary" %>
+                  <%= link_to "Ver tarefas", tasks_path, class: "btn btn-secondary" %>
+                </div>
+              </div>
+            </details>
+
+            <%= link_to logout_path, class: "app-navbar__logout", title: "Sair da conta", data: { turbo_method: :delete, turbo_confirm: "Deseja sair da conta?" } do %>
+              <span class="app-navbar__logout-icon" aria-hidden="true">&#10162;</span>
+              <span class="app-navbar__logout-label">Sair</span>
+            <% end %>
           </div>
         </header>
 
