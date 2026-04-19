@@ -22,7 +22,7 @@ class ProcessMovementTest < ActiveSupport::TestCase
       subarea: "Subárea",
       main_subject: "Assunto",
       phase: "judicial",
-      status: "ativo",
+      status: "em_analise",
       responsible_name: "Advogado PM",
       next_action: "Preparar petição complementar",
       next_deadline_on: Date.current + 4.days,

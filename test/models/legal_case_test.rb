@@ -68,7 +68,7 @@ class LegalCaseTest < ActiveSupport::TestCase
       {
         internal_number: "PROC-TEST-#{SecureRandom.hex(4).upcase}",
         phase: "analise_juridica",
-        status: "ativo",
+        status: "em_analise",
         responsible_name: "Advogado responsável",
         next_action: "Revisar petição inicial",
         next_deadline_on: Date.current + 3.days,

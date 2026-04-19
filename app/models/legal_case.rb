@@ -1,5 +1,8 @@
 class LegalCase < ApplicationRecord
   attr_accessor :skip_quality_validation
+  INTERNAL_NUMBER_PREFIX = "SEI"
+  INTERNAL_NUMBER_MIN_DIGITS = 2
+  INTERNAL_NUMBER_START = 1
 
   OFFICIAL_PHASES = %w[
     atendimento_inicial
@@ -15,17 +18,19 @@ class LegalCase < ApplicationRecord
   ].freeze
 
   OFFICIAL_STATUSES = %w[
-    ativo
+    em_analise
     aguardando_providencia_escritorio
     aguardando_cliente
     aguardando_terceiros
     suspenso
+    deferido
+    indeferido
     arquivado
     encerrado
   ].freeze
 
   OPERATIONAL_STATUSES = %w[
-    ativo
+    em_analise
     aguardando_providencia_escritorio
     aguardando_cliente
     aguardando_terceiros
@@ -56,8 +61,9 @@ class LegalCase < ApplicationRecord
   enum :phase, OFFICIAL_PHASES.index_with(&:itself), prefix: true
 
   before_validation :normalize_legacy_phase_and_status
+  before_validation :assign_internal_number, on: :create
 
-  validates :internal_number, :legal_area_id, :process_type_id, :court_id, :district_id, :phase, :status, presence: true
+  validates :internal_number, :legal_area_id, :process_type_id, :phase, :status, presence: true
   validates :internal_number, uniqueness: true
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
@@ -67,7 +73,7 @@ class LegalCase < ApplicationRecord
   scope :with_upcoming_deadline, ->(days = 7) { where(next_deadline_on: Date.current..(Date.current + days.to_i.days)) }
   scope :without_deadline, -> { where(next_deadline_on: nil) }
   scope :with_pericia, -> { where(tem_pericia: true) }
-  scope :operational, -> { where.not(status: [ "arquivado", "encerrado" ]).where.not(phase: "encerrado") }
+  scope :operational, -> { where.not(status: [ "arquivado", "encerrado", "deferido", "indeferido" ]).where.not(phase: "encerrado") }
   scope :deadline_due_today, -> { where(next_deadline_on: Date.current) }
   scope :deadline_due_in_48h, -> { where(next_deadline_on: (Date.current + 1.day)..(Date.current + 2.days)) }
   scope :deadline_overdue, -> { where("next_deadline_on < ?", Date.current) }
@@ -77,6 +83,15 @@ class LegalCase < ApplicationRecord
     joins(:process_movements)
       .where(process_movements: { administrative_situation: "em_exigencia", active: true })
       .distinct
+  end
+
+  def self.next_internal_number_preview
+    latest = where("internal_number ~ ?", "^#{INTERNAL_NUMBER_PREFIX}[0-9]+$")
+      .maximum(Arel.sql("CAST(SUBSTRING(internal_number FROM 4) AS bigint)"))
+      .to_i
+
+    next_sequence = [ latest + 1, INTERNAL_NUMBER_START ].max
+    "#{INTERNAL_NUMBER_PREFIX}#{next_sequence.to_s.rjust(INTERNAL_NUMBER_MIN_DIGITS, '0')}"
   end
 
   def refresh_next_deadline!
@@ -245,7 +260,7 @@ class LegalCase < ApplicationRecord
 
   def next_deadline_expected?
     %w[
-      ativo
+      em_analise
       aguardando_providencia_escritorio
       aguardando_cliente
       aguardando_terceiros
@@ -275,7 +290,8 @@ class LegalCase < ApplicationRecord
     }
 
     status_map = {
-      "active" => "ativo",
+      "active" => "em_analise",
+      "ativo" => "em_analise",
       "on_hold" => "suspenso",
       "completed" => "encerrado",
       "archived" => "arquivado"
@@ -283,5 +299,10 @@ class LegalCase < ApplicationRecord
 
     self.phase = phase_map[phase] || phase
     self.status = status_map[status] || status
+  end
+
+  def assign_internal_number
+    return if internal_number.present?
+    self.internal_number = self.class.next_internal_number_preview
   end
 end

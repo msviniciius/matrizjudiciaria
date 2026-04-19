@@ -52,12 +52,7 @@
     <div class="form-grid">
       <div>
         <%= form.label :internal_number %>
-        <%= form.text_field :internal_number %>
-      </div>
-
-      <div>
-        <%= form.label :external_number %>
-        <%= form.text_field :external_number %>
+        <%= form.text_field :internal_number, readonly: true, placeholder: "Será gerado automaticamente" %>
       </div>
 
       <div>
@@ -79,16 +74,6 @@
       <div>
         <%= form.label :main_subject %>
         <%= form.text_field :main_subject %>
-      </div>
-
-      <div>
-        <%= form.label :district_id, LegalCase.human_attribute_name(:district_id) %>
-        <%= form.collection_select :district_id, District.order(:name), :id, :name, { include_blank: "Selecione a comarca" }, data: { district_select: true } %>
-      </div>
-
-      <div>
-        <%= form.label :court_id, LegalCase.human_attribute_name(:court_id) %>
-        <%= form.collection_select :court_id, Court.order(:name), :id, :name, { include_blank: "Selecione o órgão/vara/tribunal" }, data: { court_select: true, current_court: legal_case.court_id } %>
       </div>
 
       <div>
@@ -148,12 +133,12 @@
     <div class="form-grid">
       <div class="field-full">
         <%= form.label :last_movement, "Último andamento" %>
-        <%= form.text_field :last_movement, value: legal_case.last_movement, readonly: true %>
+        <%= form.text_field :last_movement %>
       </div>
 
       <div>
         <%= form.label :last_movement_at, "Data do último andamento" %>
-        <%= form.text_field :last_movement_at, value: legal_case.last_movement_at.present? ? l(legal_case.last_movement_at, format: :short) : "", readonly: true %>
+        <%= form.datetime_local_field :last_movement_at, value: legal_case.last_movement_at&.strftime("%Y-%m-%dT%H:%M") %>
       </div>
 
       <div>

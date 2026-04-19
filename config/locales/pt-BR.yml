@@ -75,11 +75,13 @@ pt-BR:
         next_action: Próxima providência
         next_deadline_on: Próximo prazo
         statuses:
-          ativo: Ativo
+          em_analise: Em análise
           aguardando_providencia_escritorio: Aguardando providência do escritório
           aguardando_cliente: Aguardando cliente
           aguardando_terceiros: Aguardando terceiros
           suspenso: Suspenso
+          deferido: Deferido
+          indeferido: Indeferido
           arquivado: Arquivado
           encerrado: Encerrado
         priorities:

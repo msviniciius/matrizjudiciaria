@@ -11,7 +11,7 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     @legal_case = LegalCase.create!(
       internal_number: "PROC-DEA-001",
       phase: "analise_juridica",
-      status: "ativo",
+      status: "em_analise",
       responsible_name: "Advogado da carteira",
       next_action: "Acompanhar prazo do cliente",
       next_deadline_on: Date.current + 6.days,

@@ -62,7 +62,7 @@ class LegalCasesController < ApplicationController
   end
 
   def new
-    @legal_case = LegalCase.new
+    @legal_case = LegalCase.new(internal_number: LegalCase.next_internal_number_preview)
   end
 
   def edit
@@ -111,8 +111,6 @@ class LegalCasesController < ApplicationController
 
   def legal_case_params
     params.expect(legal_case: [
-      :internal_number,
-      :external_number,
       :entry_date,
       :protocol_date,
       :process_type_id,
@@ -130,6 +128,8 @@ class LegalCasesController < ApplicationController
       :priority,
       :strategic_notes,
       :client_id,
+      :last_movement,
+      :last_movement_at,
       :next_action,
       :next_deadline_on,
       :tem_pericia,
