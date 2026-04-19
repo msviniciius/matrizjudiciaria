@@ -492,3 +492,61 @@
   document.addEventListener("turbo:load", initSidebarToggle);
   document.addEventListener("DOMContentLoaded", initSidebarToggle);
 })();
+
+(() => {
+  const STORAGE_KEY = "matrizjuridica.sidebar.sections";
+
+  const setSectionState = (section, open) => {
+    const toggle = section.querySelector("[data-sidebar-section-toggle]");
+    section.classList.toggle("is-open", open);
+    if (toggle) toggle.setAttribute("aria-expanded", String(open));
+  };
+
+  const loadSavedState = () => {
+    try {
+      return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
+    } catch (_error) {
+      return {};
+    }
+  };
+
+  const saveState = (sections) => {
+    const state = {};
+    sections.forEach((section) => {
+      const key = section.dataset.sidebarSection;
+      if (!key) return;
+      state[key] = section.classList.contains("is-open");
+    });
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  const initSidebarSections = () => {
+    const container = document.querySelector("[data-sidebar-sections]");
+    if (!container) return;
+
+    const sections = Array.from(container.querySelectorAll("[data-sidebar-section]"));
+    const saved = loadSavedState();
+
+    sections.forEach((section) => {
+      const key = section.dataset.sidebarSection;
+      const hasActiveLink = section.querySelector(".nav-link.is-active");
+      const open = Object.prototype.hasOwnProperty.call(saved, key) ? !!saved[key] : !!hasActiveLink;
+      setSectionState(section, open);
+    });
+
+    sections.forEach((section) => {
+      const toggle = section.querySelector("[data-sidebar-section-toggle]");
+      if (!toggle || toggle.dataset.bound === "true") return;
+
+      toggle.dataset.bound = "true";
+      toggle.addEventListener("click", () => {
+        const next = !section.classList.contains("is-open");
+        setSectionState(section, next);
+        saveState(sections);
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initSidebarSections);
+  document.addEventListener("DOMContentLoaded", initSidebarSections);
+})();

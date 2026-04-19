@@ -33,48 +33,76 @@
           <h1><%= law_firm_name %></h1>
         </div>
 
-        <nav class="sidebar-nav">
-          <%= link_to root_path, class: "nav-link #{'is-active' if current_page?(root_path)}", aria: { label: "Painel" }, title: "Painel" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#8962;</span>
-            <span class="nav-link__label">Painel</span>
-          <% end %>
+        <nav class="sidebar-nav" data-sidebar-sections>
+          <section class="sidebar-section is-open" data-sidebar-section="operacao">
+            <button
+              type="button"
+              class="sidebar-section__toggle"
+              data-sidebar-section-toggle
+              aria-expanded="true"
+              aria-controls="sidebar-section-operacao"
+            >
+              <span class="sidebar-section__title">Operação</span>
+              <span class="sidebar-section__chevron" aria-hidden="true">&#9662;</span>
+            </button>
 
-          <%= link_to clients_path, class: "nav-link #{'is-active' if controller_name == 'clients'}", aria: { label: "Clientes" }, title: "Clientes" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#128101;</span>
-            <span class="nav-link__label">Clientes</span>
-          <% end %>
+            <div class="sidebar-section__body" id="sidebar-section-operacao">
+              <%= link_to root_path, class: "nav-link #{'is-active' if current_page?(root_path)}", aria: { label: "Painel" }, title: "Painel" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#8962;</span>
+                <span class="nav-link__label">Painel</span>
+              <% end %>
 
-          <%= link_to legal_cases_path, class: "nav-link #{'is-active' if controller_name == 'legal_cases'}", aria: { label: "Processos" }, title: "Processos" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#128194;</span>
-            <span class="nav-link__label">Processos</span>
-          <% end %>
+              <%= link_to clients_path, class: "nav-link #{'is-active' if controller_name == 'clients'}", aria: { label: "Clientes" }, title: "Clientes" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128101;</span>
+                <span class="nav-link__label">Clientes</span>
+              <% end %>
 
-          <%= link_to case_events_path, class: "nav-link #{'is-active' if controller_name == 'case_events'}", aria: { label: "Andamentos" }, title: "Andamentos" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#128221;</span>
-            <span class="nav-link__label">Andamentos</span>
-          <% end %>
+              <%= link_to legal_cases_path, class: "nav-link #{'is-active' if controller_name == 'legal_cases'}", aria: { label: "Processos" }, title: "Processos" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128194;</span>
+                <span class="nav-link__label">Processos</span>
+              <% end %>
 
-          <%= link_to deadlines_path, class: "nav-link #{'is-active' if controller_name == 'deadlines'}", aria: { label: "Prazos" }, title: "Prazos" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#9200;</span>
-            <span class="nav-link__label">Prazos</span>
-          <% end %>
+              <%= link_to case_events_path, class: "nav-link #{'is-active' if controller_name == 'case_events'}", aria: { label: "Andamentos" }, title: "Andamentos" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128221;</span>
+                <span class="nav-link__label">Andamentos</span>
+              <% end %>
 
-          <%= link_to tasks_path, class: "nav-link #{'is-active' if controller_name == 'tasks'}", aria: { label: "Tarefas" }, title: "Tarefas" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#10003;</span>
-            <span class="nav-link__label">Tarefas</span>
-          <% end %>
+              <%= link_to deadlines_path, class: "nav-link #{'is-active' if controller_name == 'deadlines'}", aria: { label: "Prazos" }, title: "Prazos" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#9200;</span>
+                <span class="nav-link__label">Prazos</span>
+              <% end %>
 
-          <div class="nav-divider">Configurações</div>
+              <%= link_to tasks_path, class: "nav-link #{'is-active' if controller_name == 'tasks'}", aria: { label: "Tarefas" }, title: "Tarefas" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#10003;</span>
+                <span class="nav-link__label">Tarefas</span>
+              <% end %>
+            </div>
+          </section>
 
-          <%= link_to courts_path, class: "nav-link #{'is-active' if controller_name == 'courts'}", aria: { label: "Órgãos/Varas" }, title: "Órgãos/Varas" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#9873;</span>
-            <span class="nav-link__label">Órgãos/Varas</span>
-          <% end %>
+          <section class="sidebar-section is-open" data-sidebar-section="cadastros">
+            <button
+              type="button"
+              class="sidebar-section__toggle"
+              data-sidebar-section-toggle
+              aria-expanded="true"
+              aria-controls="sidebar-section-cadastros"
+            >
+              <span class="sidebar-section__title">Cadastros</span>
+              <span class="sidebar-section__chevron" aria-hidden="true">&#9662;</span>
+            </button>
 
-          <%= link_to districts_path, class: "nav-link #{'is-active' if controller_name == 'districts'}", aria: { label: "Comarcas" }, title: "Comarcas" do %>
-            <span class="nav-link__icon" aria-hidden="true">&#128205;</span>
-            <span class="nav-link__label">Comarcas</span>
-          <% end %>
+            <div class="sidebar-section__body" id="sidebar-section-cadastros">
+              <%= link_to courts_path, class: "nav-link #{'is-active' if controller_name == 'courts'}", aria: { label: "Órgãos/Varas" }, title: "Órgãos/Varas" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#9873;</span>
+                <span class="nav-link__label">Órgãos/Varas</span>
+              <% end %>
+
+              <%= link_to districts_path, class: "nav-link #{'is-active' if controller_name == 'districts'}", aria: { label: "Comarcas" }, title: "Comarcas" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128205;</span>
+                <span class="nav-link__label">Comarcas</span>
+              <% end %>
+            </div>
+          </section>
         </nav>
       </aside>
 
