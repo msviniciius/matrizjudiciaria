@@ -66,8 +66,6 @@ class CaseEventsController < ApplicationController
       :movement_type_id,
       :entry_kind,
       :next_action,
-      :phase_after,
-      :status_after,
       :process_exam_id
     ])
   end

@@ -1,4 +1,51 @@
 class CaseEvent < ApplicationRecord
+  EVENT_STATUS_TRANSITIONS = {
+    initial_contact: "em_analise",
+    documents_received: "em_analise",
+    legal_analysis: "em_analise",
+    filing: "em_analise",
+    hearing: "aguardando_providencia_escritorio",
+    decision: "em_analise",
+    appeal: "em_analise",
+    client_contact: "em_analise",
+    phase_changed: "em_analise",
+    status_changed: "em_analise",
+    case_closed: "encerrado",
+    requerimento_administrativo_protocolado: "em_analise",
+    exigencia_administrativa_emitida: "aguardando_providencia_escritorio",
+    peticao_inicial_protocolada: "em_analise",
+    contestacao_apresentada: "em_analise",
+    audiencia_designada: "aguardando_providencia_escritorio",
+    sentenca_proferida: "em_analise",
+    recurso_interposto: "em_analise",
+    rpv_expedida: "em_analise",
+    pericia_designada: "aguardando_providencia_escritorio",
+    pericia_redesignada: "aguardando_providencia_escritorio",
+    pericia_realizada: "em_analise",
+    laudo_pericial_juntado: "em_analise"
+  }.freeze
+
+  MOVEMENT_TYPE_PHASE_TRANSITIONS = {
+    "cadastro" => "atendimento_inicial",
+    "documentacao" => "analise_juridica",
+    "analise_juridica" => "analise_juridica",
+    "estrategia" => "analise_juridica",
+    "protocolo_administrativo" => "administrativo",
+    "movimentacao_administrativa" => "administrativo",
+    "exigencia_administrativa" => "administrativo",
+    "protocolo_judicial" => "judicial",
+    "movimentacao_judicial" => "judicial",
+    "audiencia" => "instrucao",
+    "prova" => "instrucao",
+    "pericia" => "instrucao",
+    "decisao" => "sentenca",
+    "recurso" => "recurso",
+    "execucao" => "cumprimento_execucao",
+    "acordo" => "acordo",
+    "pagamento" => "cumprimento_execucao",
+    "encerramento" => "encerrado"
+  }.freeze
+
   belongs_to :legal_case
   belongs_to :movement_type, optional: true
   belongs_to :process_exam, optional: true
@@ -39,9 +86,34 @@ class CaseEvent < ApplicationRecord
   validates :event_type, inclusion: { in: event_types.keys }
   validates :movement_type, presence: true, if: :entry_kind_andamento?
 
+  before_validation :apply_unified_phase_and_status_after
   after_commit :sync_modules!, on: [ :create, :update ]
 
   private
+
+  def apply_unified_phase_and_status_after
+    return unless entry_kind_andamento?
+
+    phase = resolved_phase_after
+    status = resolved_status_after
+
+    self.phase_after = phase if phase.present?
+    self.status_after = status if status.present?
+  end
+
+  def resolved_phase_after
+    from_type = MOVEMENT_TYPE_PHASE_TRANSITIONS[movement_type&.code]
+    return from_type if from_type.present?
+
+    legal_case&.phase
+  end
+
+  def resolved_status_after
+    from_event = EVENT_STATUS_TRANSITIONS[event_type&.to_sym]
+    return from_event if from_event.present?
+
+    legal_case&.status
+  end
 
   def sync_modules!
     sync_exam_status!

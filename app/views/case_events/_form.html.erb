@@ -57,14 +57,11 @@
         <%= form.collection_select :process_exam_id, exams, :id, :summary_label, { include_blank: "Selecione a perícia" }, data: { process_exam_select: true } %>
       </div>
 
-      <div>
-        <%= form.label :phase_after, "Fase após o registro" %>
-        <%= form.select :phase_after, enum_options_for(LegalCase, :phase), include_blank: true %>
-      </div>
-
-      <div>
-        <%= form.label :status_after, "Status após o registro" %>
-        <%= form.select :status_after, enum_options_for(LegalCase, :status), include_blank: true %>
+      <div class="field-full">
+        <p class="form-hint">
+          Fase após o registro: definida automaticamente pelo <strong>tipo de andamento</strong>.
+          Status após o registro: definido automaticamente pelo <strong>evento</strong>.
+        </p>
       </div>
 
       <div class="field-full">
