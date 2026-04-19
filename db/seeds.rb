@@ -264,8 +264,8 @@ kayran_office = Office.find_or_initialize_by(slug: "kayran-advocacia")
 kayran_office.name = "Kayran Advocacia"
 kayran_office.save!
 
-kayran_admin_email = ENV.fetch("KAYRAN_ADMIN_EMAIL", "admin@kayranadvocacia.com").downcase
-kayran_admin_password = ENV.fetch("KAYRAN_ADMIN_PASSWORD", "admin123")
+kayran_admin_email = ENV.fetch("KAYRAN_ADMIN_EMAIL", "kayranadvocacia@gmail.com").downcase
+kayran_admin_password = ENV.fetch("KAYRAN_ADMIN_PASSWORD", "Kayran18727@")
 reset_kayran_admin_password = ENV["KAYRAN_ADMIN_RESET_PASSWORD"] == "1"
 
 kayran_admin = kayran_office.users.find_or_initialize_by(email: kayran_admin_email)
