@@ -112,8 +112,11 @@ class LegalCase < ApplicationRecord
       next_deadline_on: deadlines.where.not(status: [ "completed", "overdue" ]).order(:due_date).pick(:due_date)
     }
 
-    attrs[:phase] = event.phase_after if event.phase_after.present? && self.class.phases.key?(event.phase_after)
-    attrs[:status] = event.status_after if event.status_after.present? && self.class.statuses.key?(event.status_after)
+    unified_phase = event.phase_after_unified
+    unified_status = event.status_after_unified
+
+    attrs[:phase] = unified_phase if unified_phase.present? && self.class.phases.key?(unified_phase)
+    attrs[:status] = unified_status if unified_status.present? && self.class.statuses.key?(unified_status)
 
     self.skip_quality_validation = true
     update!(attrs.compact)

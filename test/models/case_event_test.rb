@@ -17,7 +17,7 @@ class CaseEventTest < ActiveSupport::TestCase
     )
 
     assert event.valid?
-    assert_equal "administrativo", event.phase_after
-    assert_equal "encerrado", event.status_after
+    assert_equal "administrativo", event.phase_after_unified
+    assert_equal "encerrado", event.status_after_unified
   end
 end

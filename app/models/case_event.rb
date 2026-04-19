@@ -86,34 +86,27 @@ class CaseEvent < ApplicationRecord
   validates :event_type, inclusion: { in: event_types.keys }
   validates :movement_type, presence: true, if: :entry_kind_andamento?
 
-  before_validation :apply_unified_phase_and_status_after
   after_commit :sync_modules!, on: [ :create, :update ]
 
-  private
-
-  def apply_unified_phase_and_status_after
+  def phase_after_unified
     return unless entry_kind_andamento?
 
-    phase = resolved_phase_after
-    status = resolved_status_after
-
-    self.phase_after = phase if phase.present?
-    self.status_after = status if status.present?
-  end
-
-  def resolved_phase_after
     from_type = MOVEMENT_TYPE_PHASE_TRANSITIONS[movement_type&.code]
     return from_type if from_type.present?
 
     legal_case&.phase
   end
 
-  def resolved_status_after
+  def status_after_unified
+    return unless entry_kind_andamento?
+
     from_event = EVENT_STATUS_TRANSITIONS[event_type&.to_sym]
     return from_event if from_event.present?
 
     legal_case&.status
   end
+
+  private
 
   def sync_modules!
     sync_exam_status!
