@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "/painel", to: "dashboard#index"
   get "/login", to: "sessions#new"
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
@@ -47,7 +48,7 @@ Rails.application.routes.draw do
     resources :process_types, only: :index
   end
 
-  root "legal_cases#index"
+  root "dashboard#index"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

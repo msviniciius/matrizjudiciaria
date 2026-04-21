@@ -5,126 +5,67 @@
   <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
 <% end %>
 
-<section class="case-section">
-  <h3>Relatórios Rápidos</h3>
-  <div class="report-grid">
-    <article class="report-card">
-      <p class="report-label">Com prazo próximo</p>
-      <p class="report-value"><%= @report_counts[:prazo_proximo] %></p>
-    </article>
-    <article class="report-card">
-      <p class="report-label">Sem prazo</p>
-      <p class="report-value"><%= @report_counts[:sem_prazo] %></p>
-    </article>
-    <article class="report-card">
-      <p class="report-label">Com perícia</p>
-      <p class="report-value"><%= @report_counts[:com_pericia] %></p>
-    </article>
-    <article class="report-card">
-      <p class="report-label">Com exigência pendente</p>
-      <p class="report-value"><%= @report_counts[:com_exigencia_pendente] %></p>
-    </article>
-    <article class="report-card">
-      <p class="report-label">Processos em risco</p>
-      <p class="report-value"><%= @report_counts[:saude_critica] %></p>
-    </article>
-  </div>
+<section class="case-section case-section--filters">
+  <%= form_with url: legal_cases_path, method: :get, local: true, class: "main-filters", data: { main_filters: true, filters_open: @advanced_filters_open } do |form| %>
+    <div class="main-filters__bar">
+      <button
+        type="button"
+        class="main-filters__toggle"
+        data-main-filters-toggle
+        aria-expanded="<%= @advanced_filters_open ? 'true' : 'false' %>"
+      >
+        <span aria-hidden="true"><%= @advanced_filters_open ? "▾" : "▸" %></span>
+        Filtrar
+      </button>
+
+      <%= form.text_field :q, value: @filters[:q], placeholder: "Objeto, cliente, número interno, parte contrária...", class: "main-filters__q" %>
+
+      <%= form.submit "Buscar", class: "main-filters__submit" %>
+    </div>
+
+    <div class="main-filters__advanced <%= "is-open" if @advanced_filters_open %>" data-main-filters-advanced>
+      <div class="form-grid">
+        <div>
+          <%= form.label :phase, "Fase" %>
+          <%= form.select :phase, enum_options_for(LegalCase, :phase), { include_blank: "Todas", selected: @filters[:phase] } %>
+        </div>
+        <div>
+          <%= form.label :status, "Status" %>
+          <%= form.select :status, enum_options_for(LegalCase, :status), { include_blank: "Todos", selected: @filters[:status] } %>
+        </div>
+        <div>
+          <%= form.label :priority, "Prioridade" %>
+          <%= form.select :priority, enum_options_for(LegalCase, :priority), { include_blank: "Todas", selected: @filters[:priority] } %>
+        </div>
+        <div>
+          <%= form.label :responsible_name, "Responsável" %>
+          <%= form.text_field :responsible_name, value: @filters[:responsible_name], placeholder: "Nome do responsável" %>
+        </div>
+        <div>
+          <%= form.label :deadline_state, "Situação do prazo" %>
+          <%= form.select :deadline_state, [
+                [ "Atrasado", "overdue" ],
+                [ "Vence hoje", "today" ],
+                [ "Próximos 7 dias", "upcoming" ],
+                [ "Sem prazo", "without_deadline" ]
+              ], { include_blank: "Todas", selected: @filters[:deadline_state] } %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= link_to "Limpar filtros", legal_cases_path, class: "btn btn-secondary" %>
+        <%= form.submit "Buscar", class: "btn btn-primary" %>
+      </div>
+    </div>
+  <% end %>
 </section>
 
-<section class="case-section">
-  <h3>Processos por fase</h3>
-  <div class="report-grid">
-    <% @report_counts[:por_fase].each do |phase, count| %>
-      <article class="report-card">
-        <p class="report-label"><%= enum_label(LegalCase, :phase, phase) %></p>
-        <p class="report-value"><%= count %></p>
-      </article>
-    <% end %>
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @legal_cases.size %></strong> processo(s)</p>
   </div>
-</section>
 
-<section class="case-section">
-  <h3>Central de Risco</h3>
-  <div class="risk-grid">
-    <article class="risk-card">
-      <div class="risk-card__head">
-        <p>Vence hoje</p>
-        <span class="status-pill status-pill--warning"><%= @risk_counts[:vence_hoje] %></span>
-      </div>
-      <% if @risk_queues[:vence_hoje].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:vence_hoje].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
-
-    <article class="risk-card">
-      <div class="risk-card__head">
-        <p>Próximas 48h</p>
-        <span class="status-pill status-pill--info"><%= @risk_counts[:vence_48h] %></span>
-      </div>
-      <% if @risk_queues[:vence_48h].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:vence_48h].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
-
-    <article class="risk-card">
-      <div class="risk-card__head">
-        <p>Atrasados</p>
-        <span class="status-pill status-pill--danger"><%= @risk_counts[:atrasados] %></span>
-      </div>
-      <% if @risk_queues[:atrasados].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:atrasados].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
-
-    <article class="risk-card">
-      <div class="risk-card__head">
-        <p>Sem próxima providência</p>
-        <span class="status-pill status-pill--muted"><%= @risk_counts[:sem_proxima_providencia] %></span>
-      </div>
-      <% if @risk_queues[:sem_proxima_providencia].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:sem_proxima_providencia].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Responsável: <%= legal_case.responsible_name.presence || "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
-  </div>
-</section>
-
-<section class="case-section">
   <div class="table-wrap">
     <table>
       <thead>
@@ -165,7 +106,7 @@
           <% end %>
         <% else %>
           <tr>
-            <td colspan="8" class="table-empty-state">Nenhum processo cadastrado.</td>
+            <td colspan="9" class="table-empty-state">Nenhum processo cadastrado.</td>
           </tr>
         <% end %>
       </tbody>

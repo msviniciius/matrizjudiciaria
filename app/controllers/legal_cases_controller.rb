@@ -2,31 +2,43 @@ class LegalCasesController < ApplicationController
   before_action :set_legal_case, only: %i[ show edit update destroy calendar ]
 
   def index
-    @legal_cases = current_office.legal_cases.order(updated_at: :desc)
-    operational_scope = current_office.legal_cases.operational
+    @filters = legal_case_filters
+    scope = current_office.legal_cases.includes(:client).order(updated_at: :desc)
 
-    @report_counts = {
-      por_fase: current_office.legal_cases.group(:phase).count,
-      prazo_proximo: @legal_cases.with_upcoming_deadline.count,
-      sem_prazo: @legal_cases.without_deadline.count,
-      com_pericia: @legal_cases.with_pericia.count,
-      com_exigencia_pendente: @legal_cases.with_pending_requirement.count,
-      saude_critica: @legal_cases.count(&:health_status_vermelho?)
-    }
+    if @filters[:q].present?
+      term = "%#{@filters[:q].strip}%"
+      scope = scope.joins(:client).where(
+        "legal_cases.internal_number ILIKE :term
+         OR clients.full_name ILIKE :term
+         OR COALESCE(legal_cases.main_subject, '') ILIKE :term
+         OR COALESCE(legal_cases.opposing_party, '') ILIKE :term
+         OR COALESCE(legal_cases.last_movement, '') ILIKE :term",
+        term: term
+      )
+    end
 
-    @risk_counts = {
-      vence_hoje: operational_scope.deadline_due_today.count,
-      vence_48h: operational_scope.deadline_due_in_48h.count,
-      atrasados: operational_scope.deadline_overdue.count,
-      sem_proxima_providencia: operational_scope.without_next_action.count
-    }
+    scope = scope.where(phase: @filters[:phase]) if @filters[:phase].present?
+    scope = scope.where(status: @filters[:status]) if @filters[:status].present?
+    scope = scope.where(priority: @filters[:priority]) if @filters[:priority].present?
 
-    @risk_queues = {
-      vence_hoje: operational_scope.deadline_due_today.order(:next_deadline_on, :updated_at).limit(6),
-      vence_48h: operational_scope.deadline_due_in_48h.order(:next_deadline_on, :updated_at).limit(6),
-      atrasados: operational_scope.deadline_overdue.order(:next_deadline_on, :updated_at).limit(6),
-      sem_proxima_providencia: operational_scope.without_next_action.order(updated_at: :desc).limit(6)
-    }
+    if @filters[:responsible_name].present?
+      responsible_term = "%#{@filters[:responsible_name].strip}%"
+      scope = scope.where("COALESCE(legal_cases.responsible_name, '') ILIKE ?", responsible_term)
+    end
+
+    case @filters[:deadline_state]
+    when "overdue"
+      scope = scope.where("next_deadline_on < ?", Date.current)
+    when "today"
+      scope = scope.where(next_deadline_on: Date.current)
+    when "upcoming"
+      scope = scope.where(next_deadline_on: Date.current..(Date.current + 7.days))
+    when "without_deadline"
+      scope = scope.where(next_deadline_on: nil)
+    end
+
+    @legal_cases = scope
+    @advanced_filters_open = false
   end
 
   def show
@@ -200,5 +212,9 @@ class LegalCasesController < ApplicationController
     return if @legal_case.client.office_id == current_office.id
 
     raise ActiveRecord::RecordNotFound
+  end
+
+  def legal_case_filters
+    params.permit(:q, :phase, :status, :priority, :responsible_name, :deadline_state)
   end
 end

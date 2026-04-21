@@ -50,7 +50,7 @@
             </button>
 
             <div class="sidebar-section__body" id="sidebar-section-operacao">
-              <%= link_to root_path, class: "nav-link #{'is-active' if current_page?(root_path)}", aria: { label: "Painel" }, title: "Painel" do %>
+              <%= link_to painel_path, class: "nav-link #{'is-active' if controller_name == 'dashboard'}", aria: { label: "Painel" }, title: "Painel" do %>
                 <span class="nav-link__icon" aria-hidden="true">&#8962;</span>
                 <span class="nav-link__label">Painel</span>
               <% end %>
