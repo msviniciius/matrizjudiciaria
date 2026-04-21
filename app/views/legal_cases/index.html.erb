@@ -130,6 +130,7 @@
       <thead>
         <tr>
           <th>Número interno</th>
+          <th>Cliente</th>
           <th>Fase</th>
           <th>Status</th>
           <th>Último andamento</th>
@@ -143,7 +144,8 @@
         <% if @legal_cases.any? %>
           <% @legal_cases.each do |legal_case| %>
             <tr>
-              <td><%= legal_case.internal_number %></td>
+              <td><%= link_to legal_case.internal_number, legal_case_path(legal_case) %></td>
+              <td><%= legal_case.client.full_name %></td>
               <td><%= enum_label(LegalCase, :phase, legal_case.phase) %></td>
               <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
               <td><%= legal_case.last_movement.presence || "-" %></td>

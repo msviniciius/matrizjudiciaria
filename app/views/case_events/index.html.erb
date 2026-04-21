@@ -21,7 +21,13 @@
       <% if @case_events.any? %>
         <% @case_events.each do |case_event| %>
           <tr>
-            <td><%= case_event.legal_case&.internal_number %></td>
+            <td>
+              <% if case_event.legal_case.present? %>
+                <%= link_to case_event.legal_case.internal_number, legal_case_path(case_event.legal_case) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
             <td><%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %></td>
             <td><%= enum_label(CaseEvent, :event_type, case_event.event_type) %></td>
             <td><%= case_event.movement_type&.name || "-" %></td>

@@ -22,7 +22,13 @@
         <% if @tasks.any? %>
           <% @tasks.each do |task| %>
             <tr>
-              <td><%= task.legal_case&.internal_number || "-" %></td>
+              <td>
+                <% if task.legal_case.present? %>
+                  <%= link_to task.legal_case.internal_number, legal_case_path(task.legal_case) %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
               <td><%= task.title %></td>
               <td><%= enum_label(Task, :status, task.status) %></td>
               <td><%= task.priority.present? ? enum_label(Task, :priority, task.priority) : "-" %></td>

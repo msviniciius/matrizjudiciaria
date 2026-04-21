@@ -100,7 +100,13 @@
       <% if @process_movements.any? %>
         <% @process_movements.each do |movement| %>
           <tr>
-            <td><%= movement.process&.internal_number %></td>
+            <td>
+              <% if movement.process.present? %>
+                <%= link_to movement.process.internal_number, legal_case_path(movement.process) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
             <td><%= movement.phase&.name %></td>
             <td><%= movement.process&.status.present? ? enum_label(LegalCase, :status, movement.process.status) : "-" %></td>
             <td><%= movement.movement_type&.name %></td>
