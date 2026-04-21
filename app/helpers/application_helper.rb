@@ -1,4 +1,5 @@
 module ApplicationHelper
+
   def app_product_name
     "Matriz Jurídica"
   end
@@ -8,7 +9,7 @@ module ApplicationHelper
   end
 
   def law_firm_name
-    current_office&.name.presence || ENV.fetch("OFFICE_NAME", "Kayran Advocacia")
+    current_office&.name.presence || ENV.fetch("OFFICE_NAME", "Kayran Mota Advocacia")
   end
 
   def office_logo_url
