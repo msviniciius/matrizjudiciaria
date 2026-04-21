@@ -4,6 +4,7 @@ class Office < ApplicationRecord
   has_many :users, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :legal_cases, dependent: :destroy
+  has_many :deadline_settings, dependent: :destroy
 
   before_validation :normalize_slug
 

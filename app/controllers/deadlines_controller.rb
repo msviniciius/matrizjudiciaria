@@ -1,5 +1,5 @@
 class DeadlinesController < ApplicationController
-  before_action :set_deadline, only: %i[ show edit update destroy ]
+  before_action :set_deadline, only: %i[ show edit update destroy quick_update ]
 
   # GET /deadlines or /deadlines.json
   def index
@@ -58,6 +58,59 @@ class DeadlinesController < ApplicationController
     end
   end
 
+  def quick_update
+    action_kind = params[:action_kind].to_s
+
+    case action_kind
+    when "completed"
+      @deadline.update!(status: "completed", completed_at: Time.current)
+      notice = "Prazo marcado como cumprido."
+    when "suspended"
+      @deadline.update!(
+        status: "suspended",
+        delay_reason: @deadline.delay_reason.presence || "Prazo suspenso em #{I18n.l(Time.current, format: :short)}."
+      )
+      notice = "Prazo marcado como suspenso."
+    when "extended"
+      unless Deadline.column_names.include?("extended_at") && Deadline.column_names.include?("extended_from_date")
+        redirect_back fallback_location: deadlines_path, alert: "Atualize o banco com as migrations para usar a prorrogação com data."
+        return
+      end
+
+      extended_to = begin
+        Date.parse(params[:extended_to].to_s)
+      rescue StandardError
+        nil
+      end
+
+      if extended_to.blank?
+        redirect_back fallback_location: deadlines_path, alert: "Selecione a data de prorrogação."
+        return
+      end
+
+      previous_due_date = @deadline.due_date || Date.current
+
+      if extended_to <= previous_due_date
+        redirect_back fallback_location: deadlines_path, alert: "A nova data deve ser posterior ao vencimento atual."
+        return
+      end
+
+      @deadline.update!(
+        status: "extended",
+        extended_at: Time.current,
+        extended_from_date: previous_due_date,
+        due_date: extended_to,
+        delay_reason: @deadline.delay_reason.presence || "Prazo prorrogado manualmente para #{I18n.l(extended_to, format: :short)}."
+      )
+      notice = "Prazo prorrogado para #{I18n.l(extended_to, format: :short)}."
+    else
+      notice = "Ação de prazo inválida."
+    end
+
+    refresh_legal_case_next_deadline!(@deadline.legal_case)
+    redirect_back fallback_location: deadlines_path, notice: notice
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_deadline
@@ -66,7 +119,7 @@ class DeadlinesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def deadline_params
-      params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :start_date, :due_date, :status, :priority, :completed_at, :delay_reason, :responsible_name ])
+      params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :due_date, :status, :priority, :delay_reason ])
     end
 
     def ensure_deadline_office_scope!
@@ -74,5 +127,16 @@ class DeadlinesController < ApplicationController
       return if @deadline.legal_case.office_id == current_office.id
 
       raise ActiveRecord::RecordNotFound
+    end
+
+    def refresh_legal_case_next_deadline!(legal_case)
+      return if legal_case.blank?
+
+      next_due_date = legal_case.deadlines
+        .where(status: %w[pending in_progress extended overdue])
+        .where.not(due_date: nil)
+        .minimum(:due_date)
+
+      legal_case.update_column(:next_deadline_on, next_due_date)
     end
 end

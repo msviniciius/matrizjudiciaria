@@ -1,0 +1,43 @@
+<% content_for :title, "Cadastro de Prazos" %>
+
+<% content_for :topbar_actions do %>
+  <%= link_to "Novo cadastro de prazo", new_deadline_setting_path, class: "btn btn-primary" %>
+<% end %>
+
+<section class="case-section">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Tipo</th>
+          <th>Dias</th>
+          <th>Prioridade</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @deadline_settings.any? %>
+          <% @deadline_settings.each do |setting| %>
+            <tr>
+              <td><%= setting.name %></td>
+              <td><%= enum_label(DeadlineSetting, :deadline_type, setting.deadline_type) %></td>
+              <td><%= setting.days_to_due %></td>
+              <td><%= enum_label(DeadlineSetting, :default_priority, setting.default_priority) %></td>
+              <td><%= setting.active? ? "Ativo" : "Inativo" %></td>
+              <td class="table-actions">
+                <%= link_to "Editar", edit_deadline_setting_path(setting), class: "btn btn-secondary" %>
+                <%= button_to "Excluir", deadline_setting_path(setting), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Excluir este cadastro de prazo?" } } %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="6" class="table-empty-state">Nenhum cadastro de prazo definido.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -20,7 +20,7 @@ class ProcessMovementsController < ApplicationController
   end
 
   def new
-    @process_movement = ProcessMovement.new(process_id: params[:process_id])
+    @process_movement = ProcessMovement.new(process_id: params[:process_id], creates_deadline: true)
   end
 
   def edit

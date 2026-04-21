@@ -1,0 +1,54 @@
+<%= form_with(model: deadline_setting, class: "app-form") do |form| %>
+  <% if deadline_setting.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(deadline_setting.errors.count, "erro", "erros") %>:</h2>
+      <ul>
+        <% deadline_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Cadastro de Prazo</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :name, "Nome do prazo" %>
+        <%= form.text_field :name, required: true %>
+      </div>
+
+      <div>
+        <%= form.label :deadline_type, "Tipo de prazo" %>
+        <%= form.select :deadline_type, enum_options_for(DeadlineSetting, :deadline_type), include_blank: "Selecione" %>
+      </div>
+
+      <div>
+        <%= form.label :days_to_due, "Tempo padrão (dias)" %>
+        <%= form.number_field :days_to_due, min: 0, required: true %>
+      </div>
+
+      <div>
+        <%= form.label :default_priority, "Prioridade padrão" %>
+        <%= form.select :default_priority, enum_options_for(DeadlineSetting, :default_priority), include_blank: "Sem prioridade padrão" %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :justification_hint, "Justificativa" %>
+        <%= form.text_area :justification_hint %>
+      </div>
+
+      <div>
+        <label class="checkbox-field">
+          <%= form.check_box :active %>
+          <span>Ativo</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= link_to "Voltar", deadline_settings_path, class: "btn btn-secondary" %>
+    <%= form.submit deadline_setting.persisted? ? "Salvar cadastro de prazo" : "Cadastrar prazo", class: "btn btn-primary" %>
+  </div>
+<% end %>

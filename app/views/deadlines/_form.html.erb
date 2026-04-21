@@ -45,30 +45,15 @@
   </section>
 
   <section class="form-section">
-    <h3>Datas e Observações</h3>
+    <h3>Prazo e Justificativa</h3>
     <div class="form-grid">
       <div>
-        <%= form.label :start_date %>
-        <%= form.date_field :start_date %>
-      </div>
-
-      <div>
-        <%= form.label :due_date %>
+        <%= form.label :due_date, "Data limite" %>
         <%= form.date_field :due_date %>
       </div>
 
-      <div>
-        <%= form.label :completed_at %>
-        <%= form.datetime_field :completed_at %>
-      </div>
-
-      <div>
-        <%= form.label :responsible_name %>
-        <%= form.text_field :responsible_name %>
-      </div>
-
       <div class="field-full">
-        <%= form.label :delay_reason %>
+        <%= form.label :delay_reason, "Justificativa" %>
         <%= form.textarea :delay_reason %>
       </div>
     </div>

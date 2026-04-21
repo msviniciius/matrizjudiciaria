@@ -8,7 +8,12 @@ Rails.application.routes.draw do
   end
 
   resources :tasks
-  resources :deadlines
+  resources :deadlines do
+    member do
+      patch :quick_update
+    end
+  end
+  resources :deadline_settings, except: :show
   resources :case_events
   resources :movement_types
   resources :movement_templates

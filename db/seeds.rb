@@ -445,3 +445,28 @@ if judicial_phase && recurso_phase && pericia_type && mov_judicial_type
     template.order = 30
   end
 end
+
+# Regras padrão de prazo por escritório
+default_deadline_settings = [
+  [ "Prazo Judicial", "judicial", 15, "high" ],
+  [ "Prazo Administrativo", "administrative", 10, "medium" ],
+  [ "Prazo Interno", "internal", 3, "medium" ],
+  [ "Prazo de Audiência", "hearing", 5, "high" ],
+  [ "Prazo de Perícia", "expert_exam", 7, "high" ],
+  [ "Prazo de Recurso", "appeal", 15, "urgent" ],
+  [ "Prazo de Manifestação", "manifestation", 5, "medium" ],
+  [ "Prazo de Cumprimento", "compliance", 10, "high" ],
+  [ "Prazo Documental", "documentary", 3, "medium" ],
+  [ "Prazo Contratual", "contractual", 30, "medium" ]
+]
+
+Office.find_each do |office|
+  default_deadline_settings.each do |name, deadline_type, days_to_due, default_priority|
+    office.deadline_settings.find_or_create_by!(deadline_type: deadline_type) do |setting|
+      setting.name = name
+      setting.days_to_due = days_to_due
+      setting.default_priority = default_priority
+      setting.active = true
+    end
+  end
+end

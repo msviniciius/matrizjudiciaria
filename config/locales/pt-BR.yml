@@ -21,6 +21,7 @@ pt-BR:
       district: Comarca
       legal_case: Processo
       deadline: Prazo
+      deadline_setting: Cadastro de prazo
       task: Tarefa
       case_event: Andamento
       process_movement: Andamento processual
@@ -160,6 +161,8 @@ pt-BR:
         status: Status
         priority: Prioridade
         completed_at: Concluído em
+        extended_at: Prorrogado em
+        extended_from_date: Data anterior
         delay_reason: Justificativa de atraso
         responsible_name: Responsável
         statuses:
@@ -167,6 +170,8 @@ pt-BR:
           in_progress: Em andamento
           completed: Concluído
           overdue: Vencido
+          suspended: Suspenso
+          extended: Prorrogado
         priorities:
           low: Baixa
           medium: Média
@@ -183,6 +188,29 @@ pt-BR:
           compliance: Cumprimento de exigência
           documentary: Documental
           contractual: Contratual
+      deadline_setting:
+        name: Nome
+        deadline_type: Tipo de prazo
+        days_to_due: Tempo padrão (dias)
+        default_priority: Prioridade padrão
+        justification_hint: Justificativa
+        active: Ativo
+        deadline_types:
+          judicial: Judicial
+          administrative: Administrativo
+          internal: Interno
+          hearing: Audiência
+          expert_exam: Perícia
+          appeal: Recurso
+          manifestation: Manifestação
+          compliance: Cumprimento de exigência
+          documentary: Documental
+          contractual: Contratual
+        default_priorities:
+          low: Baixa
+          medium: Média
+          high: Alta
+          urgent: Urgente
       task:
         legal_case: Processo
         legal_case_id: Processo

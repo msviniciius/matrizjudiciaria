@@ -1,4 +1,26 @@
 (() => {
+  const initDeadlineExtendToggles = () => {
+    document.querySelectorAll("[data-extend-toggle]").forEach((button) => {
+      if (button.dataset.extendBound === "true") return;
+
+      button.dataset.extendBound = "true";
+      button.addEventListener("click", () => {
+        const targetId = button.dataset.extendTarget;
+        if (!targetId) return;
+
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initDeadlineExtendToggles);
+  document.addEventListener("DOMContentLoaded", initDeadlineExtendToggles);
+})();
+
+(() => {
   const togglePasswordVisibility = (button) => {
     const targetId = button.dataset.passwordTarget;
     if (!targetId) return;

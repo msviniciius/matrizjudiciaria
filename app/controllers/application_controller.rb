@@ -53,7 +53,7 @@ class ApplicationController < ActionController::Base
     @navbar_deadlines = Deadline
       .joins(:legal_case)
       .where(legal_cases: { office_id: current_office.id })
-      .where(status: %w[pending in_progress overdue])
+      .where(status: %w[pending in_progress overdue extended])
       .where.not(due_date: nil)
       .where(due_date: ..deadline_limit)
       .order(:due_date)

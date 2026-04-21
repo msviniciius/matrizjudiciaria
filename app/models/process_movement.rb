@@ -162,14 +162,16 @@ class ProcessMovement < ApplicationRecord
     return unless creates_deadline?
 
     title = movement_template&.deadline_template_name.presence || "Prazo: #{display_title}"
-    due_date = exam&.scheduled_at&.to_date || event_date.to_date
+    deadline_type = "internal"
+    base_date = exam&.scheduled_at&.to_date || event_date.to_date
+    rule = process.office&.deadline_settings&.active&.find_by(deadline_type: deadline_type)
+    due_date = base_date + rule&.days_to_due.to_i.days
 
     Deadline.find_or_create_by!(legal_case_id: process_id, title: title, due_date: due_date) do |deadline|
-      deadline.deadline_type = "internal"
+      deadline.deadline_type = deadline_type
       deadline.status = "pending"
-      deadline.priority = "high"
-      deadline.start_date = Date.current
-      deadline.responsible_name = process.responsible_name
+      deadline.priority = rule&.default_priority.presence || "high"
+      deadline.delay_reason = rule&.justification_hint
     end
   end
 

@@ -98,6 +98,11 @@
             </button>
 
             <div class="sidebar-section__body" id="sidebar-section-cadastros">
+              <%= link_to deadline_settings_path, class: "nav-link #{'is-active' if controller_name == 'deadline_settings'}", aria: { label: "Cadastro de prazos" }, title: "Cadastro de prazos" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128197;</span>
+                <span class="nav-link__label">Cadastro de prazos</span>
+              <% end %>
+
               <%= link_to courts_path, class: "nav-link #{'is-active' if controller_name == 'courts'}", aria: { label: "Órgãos/Varas" }, title: "Órgãos/Varas" do %>
                 <span class="nav-link__icon" aria-hidden="true">&#9873;</span>
                 <span class="nav-link__label">Órgãos/Varas</span>
@@ -173,10 +178,33 @@
                   <p class="navbar-notifications__title">Prazos</p>
                   <% if @navbar_deadlines.present? %>
                     <% @navbar_deadlines.each do |deadline| %>
-                      <%= link_to deadline_path(deadline), class: "navbar-notifications__item" do %>
-                        <strong><%= deadline.title %></strong>
-                        <span><%= deadline.legal_case.internal_number %> - <%= l(deadline.due_date) %></span>
-                      <% end %>
+                      <div class="navbar-notifications__item">
+                        <%= link_to deadline_path(deadline), class: "navbar-notifications__item-link" do %>
+                          <strong><%= deadline.title %></strong>
+                          <span><%= deadline.legal_case.internal_number %> - <%= deadline.legal_case.client.full_name %> - <%= l(deadline.due_date) %></span>
+                        <% end %>
+                        <div class="navbar-notifications__deadline-actions">
+                          <%= button_to "Cumprido", quick_update_deadline_path(deadline, action_kind: "completed"), method: :patch, class: "btn btn-secondary btn-xs", form: { class: "inline-form" } %>
+                          <%= button_to "Suspenso", quick_update_deadline_path(deadline, action_kind: "suspended"), method: :patch, class: "btn btn-secondary btn-xs", form: { class: "inline-form" } %>
+                          <button type="button" class="btn btn-secondary btn-xs" data-extend-toggle data-extend-target="extend-deadline-<%= deadline.id %>">
+                            Prorrogado
+                          </button>
+                        </div>
+
+                        <div id="extend-deadline-<%= deadline.id %>" class="navbar-notifications__extend-form" hidden>
+                          <%= form_with url: quick_update_deadline_path(deadline), method: :patch, class: "navbar-notifications__extend-inline", local: true do %>
+                            <%= hidden_field_tag :action_kind, "extended" %>
+                            <%= date_field_tag :extended_to, deadline.due_date, required: true %>
+                            <%= submit_tag "Salvar", class: "btn btn-secondary btn-xs" %>
+                          <% end %>
+                        </div>
+
+                        <% if deadline.respond_to?(:extended_at) && deadline.status_extended? && deadline.extended_at.present? %>
+                          <p class="navbar-notifications__meta">
+                            Prorrogado em <%= l(deadline.extended_at, format: :short) %>
+                          </p>
+                        <% end %>
+                      </div>
                     <% end %>
                   <% else %>
                     <p class="navbar-notifications__empty">Sem prazos próximos.</p>
@@ -187,10 +215,12 @@
                   <p class="navbar-notifications__title">Tarefas</p>
                   <% if @navbar_tasks.present? %>
                     <% @navbar_tasks.each do |task| %>
-                      <%= link_to task_path(task), class: "navbar-notifications__item" do %>
-                        <strong><%= task.title %></strong>
-                        <span><%= task.legal_case.internal_number %> - <%= l(task.due_date) %></span>
-                      <% end %>
+                      <div class="navbar-notifications__item">
+                        <%= link_to task_path(task), class: "navbar-notifications__item-link" do %>
+                          <strong><%= task.title %></strong>
+                          <span><%= task.legal_case.internal_number %> - <%= l(task.due_date) %></span>
+                        <% end %>
+                      </div>
                     <% end %>
                   <% else %>
                     <p class="navbar-notifications__empty">Sem tarefas próximas.</p>

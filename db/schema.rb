@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_19_221000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_112000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -97,12 +97,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_221000) do
     t.index ["name"], name: "index_courts_on_name", unique: true
   end
 
+  create_table "deadline_settings", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "days_to_due", default: 0, null: false
+    t.string "deadline_type", null: false
+    t.string "default_priority"
+    t.text "justification_hint"
+    t.string "name", null: false
+    t.bigint "office_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["office_id", "active"], name: "index_deadline_settings_on_office_id_and_active"
+    t.index ["office_id", "deadline_type"], name: "index_deadline_settings_on_office_id_and_deadline_type", unique: true
+    t.index ["office_id"], name: "index_deadline_settings_on_office_id"
+  end
+
   create_table "deadlines", force: :cascade do |t|
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.string "deadline_type"
     t.text "delay_reason"
     t.date "due_date"
+    t.datetime "extended_at"
+    t.date "extended_from_date"
     t.bigint "legal_case_id", null: false
     t.string "priority"
     t.string "responsible_name"
@@ -110,6 +127,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_221000) do
     t.string "status"
     t.string "title"
     t.datetime "updated_at", null: false
+    t.index ["extended_at"], name: "index_deadlines_on_extended_at"
     t.index ["legal_case_id"], name: "index_deadlines_on_legal_case_id"
   end
 
@@ -371,6 +389,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_221000) do
   add_foreign_key "case_events", "process_exams"
   add_foreign_key "clients", "offices"
   add_foreign_key "courts", "districts"
+  add_foreign_key "deadline_settings", "offices"
   add_foreign_key "deadlines", "legal_cases"
   add_foreign_key "legal_cases", "clients"
   add_foreign_key "legal_cases", "courts"
