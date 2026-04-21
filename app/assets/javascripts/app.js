@@ -1,4 +1,54 @@
 (() => {
+  const openModal = (modal) => {
+    if (!modal) return;
+    modal.hidden = false;
+
+    if (typeof modal.showModal === "function") {
+      if (!modal.open) modal.showModal();
+      return;
+    }
+
+    modal.setAttribute("open", "open");
+  };
+
+  const closeModal = (modal) => {
+    if (!modal) return;
+
+    if (typeof modal.close === "function" && modal.open) {
+      modal.close();
+    }
+
+    modal.removeAttribute("open");
+    if (typeof modal.showModal !== "function") modal.hidden = true;
+  };
+
+  const initClientProcessesModals = () => {
+    document.querySelectorAll("[data-open-client-processes-modal]").forEach((button) => {
+      if (button.dataset.clientProcessesModalBound === "true") return;
+      button.dataset.clientProcessesModalBound = "true";
+
+      button.addEventListener("click", () => {
+        const modalId = button.dataset.openClientProcessesModal;
+        if (!modalId) return;
+        openModal(document.getElementById(modalId));
+      });
+    });
+
+    document.querySelectorAll("[data-close-client-processes-modal]").forEach((button) => {
+      if (button.dataset.clientProcessesModalCloseBound === "true") return;
+      button.dataset.clientProcessesModalCloseBound = "true";
+
+      button.addEventListener("click", () => {
+        closeModal(button.closest("dialog"));
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initClientProcessesModals);
+  document.addEventListener("DOMContentLoaded", initClientProcessesModals);
+})();
+
+(() => {
   const initDeadlineExtendToggles = () => {
     document.querySelectorAll("[data-extend-toggle]").forEach((button) => {
       if (button.dataset.extendBound === "true") return;

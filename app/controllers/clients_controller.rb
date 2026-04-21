@@ -2,10 +2,11 @@ class ClientsController < ApplicationController
   before_action :set_client, only: %i[ show edit update destroy ]
 
   def index
-    @clients = current_office.clients.ordered
+    @clients = current_office.clients.ordered.includes(:legal_cases)
   end
 
   def show
+    @client_legal_cases = @client.legal_cases.order(updated_at: :desc)
   end
 
   def new

@@ -1365,6 +1365,16 @@ tbody tr:last-child td {
   margin: 0;
 }
 
+.table-wrap--modal {
+  margin-top: 12px;
+  max-height: 52vh;
+  overflow: auto;
+}
+
+.quick-client-modal__actions {
+  margin-top: 12px;
+}
+
 .navbar-user-badge {
   display: flex;
   flex-direction: column;

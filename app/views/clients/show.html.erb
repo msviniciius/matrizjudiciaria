@@ -136,6 +136,42 @@
   <% end %>
 </section>
 
+<section class="case-section">
+  <h3>Processos vinculados</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Número interno</th>
+          <th>Fase</th>
+          <th>Status</th>
+          <th>Próximo prazo</th>
+          <th>Responsável</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @client_legal_cases.any? %>
+          <% @client_legal_cases.each do |legal_case| %>
+            <tr>
+              <td><%= link_to legal_case.internal_number, legal_case_path(legal_case) %></td>
+              <td><%= enum_label(LegalCase, :phase, legal_case.phase) %></td>
+              <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
+              <td><%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></td>
+              <td><%= legal_case.responsible_name.presence || "-" %></td>
+              <td><%= link_to "Ver processo", legal_case_path(legal_case), class: "btn btn-secondary" %></td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="6" class="table-empty-state">Este cliente ainda não possui processos cadastrados.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <div class="case-actions case-actions--footer">
   <%= link_to "Voltar", clients_path, class: "btn btn-secondary" %>
   <%= link_to "Editar", edit_client_path(@client), class: "btn btn-secondary" %>
