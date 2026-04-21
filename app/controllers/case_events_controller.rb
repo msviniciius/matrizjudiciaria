@@ -2,11 +2,31 @@ class CaseEventsController < ApplicationController
   before_action :set_case_event, only: %i[ show edit update destroy ]
 
   def index
-    @case_events = CaseEvent
+    @filters = case_event_filters
+    scope = CaseEvent
       .joins(:legal_case)
       .where(legal_cases: { office_id: current_office.id })
       .includes(:legal_case, :movement_type, :process_exam)
       .order(occurred_at: :desc)
+
+    if @filters[:q].present?
+      term = "%#{@filters[:q].strip}%"
+      scope = scope.where(
+        "COALESCE(case_events.description, '') ILIKE :term
+         OR COALESCE(legal_cases.internal_number, '') ILIKE :term",
+        term: term
+      )
+    end
+
+    scope = scope.where(entry_kind: @filters[:entry_kind]) if @filters[:entry_kind].present?
+    scope = scope.where(event_type: @filters[:event_type]) if @filters[:event_type].present?
+    scope = scope.where(movement_type_id: @filters[:movement_type_id]) if @filters[:movement_type_id].present?
+    scope = scope.where("case_events.occurred_at >= ?", @filters[:from].to_date.beginning_of_day) if @filters[:from].present?
+    scope = scope.where("case_events.occurred_at <= ?", @filters[:to].to_date.end_of_day) if @filters[:to].present?
+
+    @case_events = scope
+    @movement_types = MovementType.where(active: true).order(:name)
+    @advanced_filters_open = false
   end
 
   def show
@@ -87,5 +107,9 @@ class CaseEventsController < ApplicationController
     return if @case_event.legal_case.office_id == current_office.id
 
     raise ActiveRecord::RecordNotFound
+  end
+
+  def case_event_filters
+    params.permit(:q, :entry_kind, :event_type, :movement_type_id, :from, :to)
   end
 end

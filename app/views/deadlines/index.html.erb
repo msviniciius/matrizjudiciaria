@@ -1,6 +1,59 @@
 <% content_for :title, "Prazos" %>
 
-<section class="case-section">
+<section class="case-section case-section--filters">
+  <%= form_with url: deadlines_path, method: :get, local: true, class: "main-filters", data: { main_filters: true, filters_open: @advanced_filters_open } do |form| %>
+    <div class="main-filters__bar">
+      <button
+        type="button"
+        class="main-filters__toggle"
+        data-main-filters-toggle
+        aria-expanded="<%= @advanced_filters_open ? 'true' : 'false' %>"
+      >
+        <span aria-hidden="true"><%= @advanced_filters_open ? "▾" : "▸" %></span>
+        Filtrar
+      </button>
+
+      <%= form.text_field :q, value: @filters[:q], placeholder: "Processo, título ou responsável", class: "main-filters__q" %>
+
+      <%= form.submit "Buscar", class: "main-filters__submit" %>
+    </div>
+
+    <div class="main-filters__advanced <%= "is-open" if @advanced_filters_open %>" data-main-filters-advanced>
+      <div class="form-grid">
+        <div>
+          <%= form.label :status, "Status" %>
+          <%= form.select :status, enum_options_for(Deadline, :status), { include_blank: "Todos", selected: @filters[:status] } %>
+        </div>
+        <div>
+          <%= form.label :priority, "Prioridade" %>
+          <%= form.select :priority, enum_options_for(Deadline, :priority), { include_blank: "Todas", selected: @filters[:priority] } %>
+        </div>
+        <div>
+          <%= form.label :deadline_type, "Tipo de prazo" %>
+          <%= form.select :deadline_type, enum_options_for(Deadline, :deadline_type), { include_blank: "Todos", selected: @filters[:deadline_type] } %>
+        </div>
+        <div>
+          <%= form.label :due_state, "Situação da data" %>
+          <%= form.select :due_state,
+                          [["Atrasado", "overdue"], ["Hoje", "today"], ["Próximos 7 dias", "upcoming"], ["Sem data", "without_due_date"]],
+                          { include_blank: "Todas", selected: @filters[:due_state] } %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= link_to "Limpar filtros", deadlines_path, class: "btn btn-secondary" %>
+        <%= form.submit "Buscar", class: "btn btn-primary" %>
+      </div>
+    </div>
+  <% end %>
+</section>
+
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @deadlines.size %></strong> prazo(s)</p>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>

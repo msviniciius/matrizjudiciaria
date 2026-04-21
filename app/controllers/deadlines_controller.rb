@@ -3,7 +3,40 @@ class DeadlinesController < ApplicationController
 
   # GET /deadlines or /deadlines.json
   def index
-    @deadlines = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
+    @filters = deadline_filters
+    scope = Deadline
+      .joins(:legal_case)
+      .where(legal_cases: { office_id: current_office.id })
+      .includes(:legal_case)
+      .order(due_date: :asc, created_at: :desc)
+
+    if @filters[:q].present?
+      term = "%#{@filters[:q].strip}%"
+      scope = scope.where(
+        "COALESCE(deadlines.title, '') ILIKE :term
+         OR COALESCE(deadlines.responsible_name, '') ILIKE :term
+         OR COALESCE(legal_cases.internal_number, '') ILIKE :term",
+        term: term
+      )
+    end
+
+    scope = scope.where(status: @filters[:status]) if @filters[:status].present?
+    scope = scope.where(priority: @filters[:priority]) if @filters[:priority].present?
+    scope = scope.where(deadline_type: @filters[:deadline_type]) if @filters[:deadline_type].present?
+
+    case @filters[:due_state]
+    when "overdue"
+      scope = scope.where("deadlines.due_date < ?", Date.current)
+    when "today"
+      scope = scope.where(due_date: Date.current)
+    when "upcoming"
+      scope = scope.where(due_date: Date.current..(Date.current + 7.days))
+    when "without_due_date"
+      scope = scope.where(due_date: nil)
+    end
+
+    @deadlines = scope
+    @advanced_filters_open = false
   end
 
   # GET /deadlines/1 or /deadlines/1.json
@@ -138,5 +171,9 @@ class DeadlinesController < ApplicationController
         .minimum(:due_date)
 
       legal_case.update_column(:next_deadline_on, next_due_date)
+    end
+
+    def deadline_filters
+      params.permit(:q, :status, :priority, :deadline_type, :due_state)
     end
 end

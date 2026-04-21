@@ -1,4 +1,200 @@
 (() => {
+  const initMainFiltersToggle = () => {
+    document.querySelectorAll("[data-main-filters]").forEach((container) => {
+      const toggle = container.querySelector("[data-main-filters-toggle]");
+      const advanced = container.querySelector("[data-main-filters-advanced]");
+      if (!toggle || !advanced) return;
+      if (toggle.dataset.mainFiltersBound === "true") return;
+      toggle.dataset.mainFiltersBound = "true";
+
+      const initiallyOpen = container.dataset.filtersOpen === "true";
+      advanced.classList.toggle("is-open", initiallyOpen);
+      toggle.setAttribute("aria-expanded", String(initiallyOpen));
+
+      const icon = toggle.querySelector("span[aria-hidden='true']");
+      if (icon) icon.textContent = initiallyOpen ? "▾" : "▸";
+
+      toggle.addEventListener("click", () => {
+        const isOpen = !advanced.classList.contains("is-open");
+        advanced.classList.toggle("is-open", isOpen);
+        toggle.setAttribute("aria-expanded", String(isOpen));
+        if (icon) icon.textContent = isOpen ? "▾" : "▸";
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initMainFiltersToggle);
+  document.addEventListener("DOMContentLoaded", initMainFiltersToggle);
+})();
+
+(() => {
+  const PALETTE = [ "#1f4e79", "#4472c4", "#2f7d5b", "#9a6b2f", "#8b3a3a", "#6b5ca5", "#5d6775", "#264653", "#7f8c8d" ];
+
+  const setupCanvas = (canvas) => {
+    if (!canvas) return null;
+
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = Math.max(100, canvas.clientWidth || 300);
+    const cssHeight = Math.max(100, canvas.clientHeight || 250);
+
+    canvas.width = Math.floor(cssWidth * dpr);
+    canvas.height = Math.floor(cssHeight * dpr);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssWidth, cssHeight);
+    return { ctx, width: cssWidth, height: cssHeight };
+  };
+
+  const drawVerticalBars = (canvasId, labels, values, colors = []) => {
+    const canvas = document.getElementById(canvasId);
+    const chart = setupCanvas(canvas);
+    if (!chart) return;
+    const { ctx, width, height } = chart;
+    if (!values.length) return;
+
+    const maxValue = Math.max(...values, 1);
+    const left = 32;
+    const right = width - 10;
+    const top = 10;
+    const bottom = height - 36;
+    const chartWidth = right - left;
+    const chartHeight = bottom - top;
+    const gap = 10;
+    const barWidth = Math.max(14, (chartWidth - gap * (values.length - 1)) / values.length);
+
+    ctx.strokeStyle = "#d8cfbe";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(left, bottom);
+    ctx.lineTo(right, bottom);
+    ctx.stroke();
+
+    values.forEach((value, index) => {
+      const x = left + index * (barWidth + gap);
+      const h = (value / maxValue) * chartHeight;
+      const y = bottom - h;
+
+      ctx.fillStyle = colors[index] || colors[0] || "#2f5f8f";
+      ctx.fillRect(x, y, barWidth, h);
+
+      ctx.fillStyle = "#23364e";
+      ctx.font = "12px Manrope, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(String(value), x + barWidth / 2, y - 4);
+
+      const label = String(labels[index] || "");
+      const shortLabel = label.length > 14 ? `${label.slice(0, 12)}...` : label;
+      ctx.fillStyle = "#5f6674";
+      ctx.font = "11px Manrope, sans-serif";
+      ctx.fillText(shortLabel, x + barWidth / 2, bottom + 14);
+    });
+  };
+
+  const drawHorizontalBars = (canvasId, labels, values, color = "#0f3b61") => {
+    const canvas = document.getElementById(canvasId);
+    const chart = setupCanvas(canvas);
+    if (!chart) return;
+    const { ctx, width, height } = chart;
+    if (!values.length) return;
+
+    const maxValue = Math.max(...values, 1);
+    const left = 110;
+    const right = width - 16;
+    const top = 8;
+    const bottom = height - 8;
+    const chartWidth = right - left;
+    const rowHeight = (bottom - top) / values.length;
+
+    values.forEach((value, index) => {
+      const y = top + index * rowHeight;
+      const barY = y + 6;
+      const barH = Math.max(14, rowHeight - 12);
+      const barW = (value / maxValue) * chartWidth;
+      const label = String(labels[index] || "");
+
+      ctx.fillStyle = color;
+      ctx.fillRect(left, barY, barW, barH);
+
+      ctx.fillStyle = "#23364e";
+      ctx.font = "11px Manrope, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(label.length > 22 ? `${label.slice(0, 20)}...` : label, left - 8, barY + barH - 2);
+
+      ctx.textAlign = "left";
+      ctx.fillText(String(value), left + barW + 6, barY + barH - 2);
+    });
+  };
+
+  const drawDonut = (canvasId, labels, values) => {
+    const canvas = document.getElementById(canvasId);
+    const chart = setupCanvas(canvas);
+    if (!chart) return;
+    const { ctx, width, height } = chart;
+    if (!values.length) return;
+
+    const total = values.reduce((sum, value) => sum + value, 0);
+    if (total <= 0) return;
+
+    const cx = Math.min(width * 0.35, width - 120);
+    const cy = height * 0.5;
+    const radius = Math.min(72, Math.min(width, height) * 0.28);
+    const lineWidth = 30;
+    let angle = -Math.PI / 2;
+
+    values.forEach((value, index) => {
+      const slice = (value / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.strokeStyle = PALETTE[index % PALETTE.length];
+      ctx.lineWidth = lineWidth;
+      ctx.arc(cx, cy, radius, angle, angle + slice);
+      ctx.stroke();
+      angle += slice;
+    });
+
+    ctx.fillStyle = "#23364e";
+    ctx.font = "700 14px Manrope, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(String(total), cx, cy + 4);
+
+    let legendY = 18;
+    labels.forEach((label, index) => {
+      const x = Math.max(cx + radius + 28, width * 0.55);
+      ctx.fillStyle = PALETTE[index % PALETTE.length];
+      ctx.fillRect(x, legendY - 8, 10, 10);
+      ctx.fillStyle = "#23364e";
+      ctx.font = "11px Manrope, sans-serif";
+      const itemLabel = `${label} (${values[index] || 0})`;
+      ctx.fillText(itemLabel.length > 28 ? `${itemLabel.slice(0, 26)}...` : itemLabel, x + 16, legendY);
+      legendY += 16;
+    });
+  };
+
+  const initDashboardCharts = () => {
+    const root = document.getElementById("dashboard-charts-root");
+    const dataNode = document.getElementById("dashboard-charts-data");
+    if (!root || !dataNode) return;
+
+    let data;
+    try {
+      data = JSON.parse(dataNode.textContent || "{}");
+    } catch (_error) {
+      return;
+    }
+
+    drawVerticalBars("dashboard-chart-phase", data.phase?.labels || [], data.phase?.values || [], [ "#2f5f8f" ]);
+    drawDonut("dashboard-chart-status", data.status?.labels || [], data.status?.values || []);
+    drawVerticalBars("dashboard-chart-deadlines", data.deadlines?.labels || [], data.deadlines?.values || [], [ "#8b3a3a", "#b08a45", "#2f5f8f", "#4e7f59" ]);
+    drawHorizontalBars("dashboard-chart-responsible", data.responsible?.labels || [], data.responsible?.values || [], "#0f3b61");
+  };
+
+  document.addEventListener("turbo:load", initDashboardCharts);
+  document.addEventListener("DOMContentLoaded", initDashboardCharts);
+  window.addEventListener("resize", initDashboardCharts);
+})();
+
+(() => {
   const openModal = (modal) => {
     if (!modal) return;
     modal.hidden = false;
@@ -611,6 +807,24 @@
 
 (() => {
   const STORAGE_KEY = "matrizjuridica.sidebar.collapsed";
+  let sidebarCollapsedMemory = false;
+
+  const safeGetCollapsedState = () => {
+    try {
+      return window.localStorage.getItem(STORAGE_KEY) === "true";
+    } catch (_error) {
+      return sidebarCollapsedMemory;
+    }
+  };
+
+  const safeSetCollapsedState = (value) => {
+    sidebarCollapsedMemory = !!value;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, String(!!value));
+    } catch (_error) {
+      // no-op
+    }
+  };
 
   const applySidebarState = (collapsed) => {
     const layout = document.querySelector("[data-sidebar-layout]");
@@ -658,7 +872,7 @@
     const toggle = document.querySelector("[data-sidebar-toggle]");
     if (!layout || !toggle) return;
 
-    const savedState = window.localStorage.getItem(STORAGE_KEY) === "true";
+    const savedState = safeGetCollapsedState();
     applySidebarState(savedState);
 
     if (toggle.dataset.sidebarBound === "true") return;
@@ -667,7 +881,7 @@
     toggle.addEventListener("click", () => {
       const nextState = !layout.classList.contains("is-sidebar-collapsed");
       applySidebarState(nextState);
-      window.localStorage.setItem(STORAGE_KEY, String(nextState));
+      safeSetCollapsedState(nextState);
     });
   };
 
@@ -677,6 +891,7 @@
 
 (() => {
   const STORAGE_KEY = "matrizjuridica.sidebar.sections";
+  let sidebarSectionsMemory = {};
 
   const setSectionState = (section, open) => {
     const toggle = section.querySelector("[data-sidebar-section-toggle]");
@@ -688,7 +903,7 @@
     try {
       return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
     } catch (_error) {
-      return {};
+      return sidebarSectionsMemory;
     }
   };
 
@@ -699,7 +914,12 @@
       if (!key) return;
       state[key] = section.classList.contains("is-open");
     });
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    sidebarSectionsMemory = state;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (_error) {
+      // no-op
+    }
   };
 
   const initSidebarSections = () => {

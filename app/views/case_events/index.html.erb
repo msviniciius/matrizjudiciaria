@@ -4,46 +4,103 @@
   <%= link_to "Novo andamento", new_case_event_path, class: "btn btn-primary" %>
 <% end %>
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Processo</th>
-        <th>Tipo de registro</th>
-        <th>Evento</th>
-        <th>Categoria</th>
-        <th>Perícia</th>
-        <th>Data</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if @case_events.any? %>
-        <% @case_events.each do |case_event| %>
+<section class="case-section case-section--filters">
+  <%= form_with url: case_events_path, method: :get, local: true, class: "main-filters", data: { main_filters: true, filters_open: @advanced_filters_open } do |form| %>
+    <div class="main-filters__bar">
+      <button
+        type="button"
+        class="main-filters__toggle"
+        data-main-filters-toggle
+        aria-expanded="<%= @advanced_filters_open ? 'true' : 'false' %>"
+      >
+        <span aria-hidden="true"><%= @advanced_filters_open ? "▾" : "▸" %></span>
+        Filtrar
+      </button>
+
+      <%= form.text_field :q, value: @filters[:q], placeholder: "Processo ou descrição do andamento", class: "main-filters__q" %>
+
+      <%= form.submit "Buscar", class: "main-filters__submit" %>
+    </div>
+
+    <div class="main-filters__advanced <%= "is-open" if @advanced_filters_open %>" data-main-filters-advanced>
+      <div class="form-grid">
+        <div>
+          <%= form.label :entry_kind, "Tipo de registro" %>
+          <%= form.select :entry_kind, enum_options_for(CaseEvent, :entry_kind), { include_blank: "Todos", selected: @filters[:entry_kind] } %>
+        </div>
+        <div>
+          <%= form.label :event_type, "Evento" %>
+          <%= form.select :event_type, enum_options_for(CaseEvent, :event_type), { include_blank: "Todos", selected: @filters[:event_type] } %>
+        </div>
+        <div>
+          <%= form.label :movement_type_id, "Categoria" %>
+          <%= form.collection_select :movement_type_id, @movement_types, :id, :name, { include_blank: "Todas", selected: @filters[:movement_type_id] } %>
+        </div>
+        <div>
+          <%= form.label :from, "Data inicial" %>
+          <%= form.date_field :from, value: @filters[:from] %>
+        </div>
+        <div>
+          <%= form.label :to, "Data final" %>
+          <%= form.date_field :to, value: @filters[:to] %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= link_to "Limpar filtros", case_events_path, class: "btn btn-secondary" %>
+        <%= form.submit "Buscar", class: "btn btn-primary" %>
+      </div>
+    </div>
+  <% end %>
+</section>
+
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @case_events.size %></strong> andamento(s)</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Processo</th>
+          <th>Tipo de registro</th>
+          <th>Evento</th>
+          <th>Categoria</th>
+          <th>Perícia</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @case_events.any? %>
+          <% @case_events.each do |case_event| %>
+            <tr>
+              <td>
+                <% if case_event.legal_case.present? %>
+                  <%= link_to case_event.legal_case.internal_number, legal_case_path(case_event.legal_case) %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td><%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %></td>
+              <td><%= enum_label(CaseEvent, :event_type, case_event.event_type) %></td>
+              <td><%= case_event.movement_type&.name || "-" %></td>
+              <td><%= case_event.process_exam&.summary_label || "-" %></td>
+              <td><%= case_event.occurred_at %></td>
+              <td class="table-actions">
+                <%= link_to "Ver", case_event_path(case_event), class: "btn btn-secondary" %>
+                <%= link_to "Editar", edit_case_event_path(case_event), class: "btn btn-secondary" %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
           <tr>
-            <td>
-              <% if case_event.legal_case.present? %>
-                <%= link_to case_event.legal_case.internal_number, legal_case_path(case_event.legal_case) %>
-              <% else %>
-                -
-              <% end %>
-            </td>
-            <td><%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %></td>
-            <td><%= enum_label(CaseEvent, :event_type, case_event.event_type) %></td>
-            <td><%= case_event.movement_type&.name || "-" %></td>
-            <td><%= case_event.process_exam&.summary_label || "-" %></td>
-            <td><%= case_event.occurred_at %></td>
-            <td class="table-actions">
-              <%= link_to "Ver", case_event_path(case_event), class: "btn btn-secondary" %>
-              <%= link_to "Editar", edit_case_event_path(case_event), class: "btn btn-secondary" %>
-            </td>
+            <td colspan="7" class="table-empty-state">Nenhum andamento cadastrado.</td>
           </tr>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="7" class="table-empty-state">Nenhum andamento cadastrado.</td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div>
+      </tbody>
+    </table>
+  </div>
+</section>

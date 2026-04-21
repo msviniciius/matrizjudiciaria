@@ -3,7 +3,41 @@ class TasksController < ApplicationController
 
   # GET /tasks or /tasks.json
   def index
-    @tasks = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
+    @filters = task_filters
+    scope = Task
+      .joins(:legal_case)
+      .where(legal_cases: { office_id: current_office.id })
+      .includes(:legal_case)
+      .order(due_date: :asc, created_at: :desc)
+
+    if @filters[:q].present?
+      term = "%#{@filters[:q].strip}%"
+      scope = scope.where(
+        "COALESCE(tasks.title, '') ILIKE :term
+         OR COALESCE(tasks.description, '') ILIKE :term
+         OR COALESCE(tasks.responsible_name, '') ILIKE :term
+         OR COALESCE(legal_cases.internal_number, '') ILIKE :term",
+        term: term
+      )
+    end
+
+    scope = scope.where(status: @filters[:status]) if @filters[:status].present?
+    scope = scope.where(priority: @filters[:priority]) if @filters[:priority].present?
+    scope = scope.where("COALESCE(tasks.responsible_name, '') ILIKE ?", "%#{@filters[:responsible_name].strip}%") if @filters[:responsible_name].present?
+
+    case @filters[:due_state]
+    when "overdue"
+      scope = scope.where("tasks.due_date < ?", Date.current)
+    when "today"
+      scope = scope.where(due_date: Date.current)
+    when "upcoming"
+      scope = scope.where(due_date: Date.current..(Date.current + 7.days))
+    when "without_due_date"
+      scope = scope.where(due_date: nil)
+    end
+
+    @tasks = scope
+    @advanced_filters_open = false
   end
 
   # GET /tasks/1 or /tasks/1.json
@@ -74,5 +108,9 @@ class TasksController < ApplicationController
       return if @task.legal_case.office_id == current_office.id
 
       raise ActiveRecord::RecordNotFound
+    end
+
+    def task_filters
+      params.permit(:q, :status, :priority, :responsible_name, :due_state)
     end
 end

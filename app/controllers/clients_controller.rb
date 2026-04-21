@@ -2,7 +2,30 @@ class ClientsController < ApplicationController
   before_action :set_client, only: %i[ show edit update destroy ]
 
   def index
-    @clients = current_office.clients.ordered.includes(:legal_cases)
+    @filters = client_filters
+    scope = current_office.clients.ordered.includes(:legal_cases)
+
+    if @filters[:q].present?
+      term = "%#{@filters[:q].strip}%"
+      scope = scope.where(
+        "full_name ILIKE :term
+         OR COALESCE(cpf_cnpj, '') ILIKE :term
+         OR COALESCE(phone, '') ILIKE :term
+         OR COALESCE(email, '') ILIKE :term",
+        term: term
+      )
+    end
+
+    if @filters[:cadastro_pendente].present?
+      scope = scope.where(cadastro_pendente: ActiveModel::Type::Boolean.new.cast(@filters[:cadastro_pendente]))
+    end
+
+    if @filters[:city].present?
+      scope = scope.where("COALESCE(city, '') ILIKE ?", "%#{@filters[:city].strip}%")
+    end
+
+    @clients = scope
+    @advanced_filters_open = false
   end
 
   def show
@@ -97,5 +120,9 @@ class ClientsController < ApplicationController
 
   def quick_client_params
     params.expect(client: [ :full_name, :cpf_cnpj, :phone, :whatsapp, :email, :dados_gov ])
+  end
+
+  def client_filters
+    params.permit(:q, :cadastro_pendente, :city)
   end
 end
