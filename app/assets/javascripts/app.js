@@ -267,6 +267,117 @@
 })();
 
 (() => {
+  let pendingConfirmAction = null;
+
+  const getConfirmElements = () => {
+    const modal = document.getElementById("app-confirm-modal");
+    if (!modal) return null;
+
+    return {
+      modal,
+      message: document.getElementById("app-confirm-modal-message"),
+      accept: modal.querySelector("[data-confirm-accept]"),
+      cancel: modal.querySelector("[data-confirm-cancel]")
+    };
+  };
+
+  const closeConfirmModal = (elements) => {
+    if (!elements?.modal) return;
+
+    if (typeof elements.modal.close === "function" && elements.modal.open) {
+      elements.modal.close();
+    }
+
+    elements.modal.removeAttribute("open");
+    if (typeof elements.modal.showModal !== "function") elements.modal.hidden = true;
+  };
+
+  const openConfirmModal = (message, onAccept) => {
+    const elements = getConfirmElements();
+    if (!elements) return;
+
+    pendingConfirmAction = onAccept;
+    if (elements.message) elements.message.textContent = message || "Tem certeza que deseja continuar?";
+
+    elements.modal.hidden = false;
+    if (typeof elements.modal.showModal === "function") {
+      if (!elements.modal.open) elements.modal.showModal();
+    } else {
+      elements.modal.setAttribute("open", "open");
+    }
+  };
+
+  const initConfirmModal = () => {
+    const elements = getConfirmElements();
+    if (!elements || elements.modal.dataset.confirmBound === "true") return;
+    elements.modal.dataset.confirmBound = "true";
+
+    const confirmAndClose = () => {
+      const action = pendingConfirmAction;
+      pendingConfirmAction = null;
+      closeConfirmModal(elements);
+      if (typeof action === "function") action();
+    };
+
+    const cancelAndClose = () => {
+      pendingConfirmAction = null;
+      closeConfirmModal(elements);
+    };
+
+    elements.accept?.addEventListener("click", confirmAndClose);
+    elements.cancel?.addEventListener("click", cancelAndClose);
+    elements.modal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      cancelAndClose();
+    });
+
+    document.addEventListener("submit", (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.dataset.confirmBypassed === "true") return;
+
+      const message = form.dataset.turboConfirm || event.submitter?.dataset?.turboConfirm;
+      if (!message) return;
+
+      event.preventDefault();
+      openConfirmModal(message, () => {
+        form.dataset.confirmBypassed = "true";
+        if (event.submitter) {
+          form.requestSubmit(event.submitter);
+        } else {
+          form.requestSubmit();
+        }
+        window.setTimeout(() => { delete form.dataset.confirmBypassed; }, 0);
+      });
+    }, true);
+
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[data-turbo-confirm]");
+      if (!link) return;
+      if (link.dataset.confirmBypassed === "true") return;
+
+      const message = link.dataset.turboConfirm;
+      if (!message) return;
+
+      event.preventDefault();
+      openConfirmModal(message, () => {
+        link.dataset.confirmBypassed = "true";
+        const original = link.getAttribute("data-turbo-confirm");
+        link.removeAttribute("data-turbo-confirm");
+        link.click();
+        window.setTimeout(() => {
+          if (original) link.setAttribute("data-turbo-confirm", original);
+          delete link.dataset.confirmBypassed;
+        }, 0);
+      });
+    }, true);
+  };
+
+  document.addEventListener("turbo:load", initConfirmModal);
+  document.addEventListener("DOMContentLoaded", initConfirmModal);
+})();
+
+(() => {
   const togglePasswordVisibility = (button) => {
     const targetId = button.dataset.passwordTarget;
     if (!targetId) return;
@@ -807,6 +918,7 @@
 
 (() => {
   const STORAGE_KEY = "matrizjuridica.sidebar.collapsed";
+  const MOBILE_BREAKPOINT = "(max-width: 980px)";
   let sidebarCollapsedMemory = false;
 
   const safeGetCollapsedState = () => {
@@ -826,6 +938,24 @@
     }
   };
 
+  const isMobileViewport = () => window.matchMedia(MOBILE_BREAKPOINT).matches;
+
+  const updateToggleState = ({ toggle, collapsed, mobileOpen }) => {
+    const mobile = isMobileViewport();
+    if (mobile) {
+      toggle.setAttribute("aria-expanded", String(!!mobileOpen));
+      const nextLabel = mobileOpen ? "Fechar menu lateral" : "Abrir menu lateral";
+      toggle.setAttribute("aria-label", nextLabel);
+      toggle.title = nextLabel;
+      return;
+    }
+
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    const nextLabel = collapsed ? "Expandir menu lateral" : "Minimizar menu lateral";
+    toggle.setAttribute("aria-label", nextLabel);
+    toggle.title = nextLabel;
+  };
+
   const applySidebarState = (collapsed) => {
     const layout = document.querySelector("[data-sidebar-layout]");
     const toggle = document.querySelector("[data-sidebar-toggle]");
@@ -833,18 +963,21 @@
     const body = document.body;
     if (!layout || !toggle) return;
 
-    layout.classList.toggle("is-sidebar-collapsed", collapsed);
-    body?.classList.toggle("is-sidebar-collapsed", collapsed);
-    toggle.setAttribute("aria-expanded", String(!collapsed));
-    const nextLabel = collapsed ? "Expandir menu lateral" : "Minimizar menu lateral";
-    toggle.setAttribute("aria-label", nextLabel);
-    toggle.title = nextLabel;
+    const mobile = isMobileViewport();
+    const effectiveCollapsed = mobile ? false : collapsed;
+    layout.classList.toggle("is-sidebar-collapsed", effectiveCollapsed);
+    if (!mobile) {
+      layout.classList.remove("is-sidebar-mobile-open");
+      body?.classList.remove("is-sidebar-mobile-open");
+    }
+    body?.classList.toggle("is-sidebar-collapsed", effectiveCollapsed);
+    updateToggleState({ toggle, collapsed: effectiveCollapsed, mobileOpen: layout.classList.contains("is-sidebar-mobile-open") });
 
     if (toggleIcon) {
       toggleIcon.textContent = "☰";
     }
 
-    if (collapsed) {
+    if (effectiveCollapsed && !mobile) {
       const sections = Array.from(document.querySelectorAll("[data-sidebar-section]"));
       const openSections = sections.filter((section) => section.classList.contains("is-open"));
 
@@ -867,21 +1000,69 @@
     }
   };
 
+  const setMobileSidebarOpen = (open) => {
+    const layout = document.querySelector("[data-sidebar-layout]");
+    const toggle = document.querySelector("[data-sidebar-toggle]");
+    const body = document.body;
+    if (!layout || !toggle) return;
+
+    layout.classList.toggle("is-sidebar-mobile-open", open);
+    body?.classList.toggle("is-sidebar-mobile-open", open);
+    updateToggleState({
+      toggle,
+      collapsed: layout.classList.contains("is-sidebar-collapsed"),
+      mobileOpen: open
+    });
+  };
+
   const initSidebarToggle = () => {
     const layout = document.querySelector("[data-sidebar-layout]");
     const toggle = document.querySelector("[data-sidebar-toggle]");
+    const overlay = document.querySelector("[data-sidebar-overlay]");
     if (!layout || !toggle) return;
 
     const savedState = safeGetCollapsedState();
     applySidebarState(savedState);
+    if (isMobileViewport()) setMobileSidebarOpen(false);
+
+    if (overlay && overlay.dataset.sidebarOverlayBound !== "true") {
+      overlay.dataset.sidebarOverlayBound = "true";
+      overlay.addEventListener("click", () => setMobileSidebarOpen(false));
+    }
 
     if (toggle.dataset.sidebarBound === "true") return;
     toggle.dataset.sidebarBound = "true";
 
     toggle.addEventListener("click", () => {
+      if (isMobileViewport()) {
+        const nextMobileOpen = !layout.classList.contains("is-sidebar-mobile-open");
+        setMobileSidebarOpen(nextMobileOpen);
+        return;
+      }
+
       const nextState = !layout.classList.contains("is-sidebar-collapsed");
       applySidebarState(nextState);
       safeSetCollapsedState(nextState);
+    });
+
+    window.addEventListener("resize", () => {
+      if (!isMobileViewport()) {
+        setMobileSidebarOpen(false);
+      } else {
+        updateToggleState({
+          toggle,
+          collapsed: layout.classList.contains("is-sidebar-collapsed"),
+          mobileOpen: layout.classList.contains("is-sidebar-mobile-open")
+        });
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!isMobileViewport()) return;
+      if (!layout.classList.contains("is-sidebar-mobile-open")) return;
+      if (event.target.closest(".app-sidebar")) return;
+      if (event.target.closest("[data-sidebar-toggle]")) return;
+      setMobileSidebarOpen(false);
     });
   };
 

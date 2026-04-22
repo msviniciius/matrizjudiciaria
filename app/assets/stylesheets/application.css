@@ -109,6 +109,10 @@ body {
   transition: grid-template-columns 0.22s ease;
 }
 
+.app-sidebar-overlay {
+  display: none;
+}
+
 .app-layout.is-sidebar-collapsed {
   grid-template-columns: 92px minmax(0, 1fr);
 }
@@ -414,6 +418,7 @@ button {
 .btn {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   text-decoration: none;
 }
 
@@ -609,27 +614,60 @@ textarea:focus {
 }
 
 @media (max-width: 980px) {
+  body.is-sidebar-mobile-open {
+    overflow: hidden;
+  }
+
   .app-layout {
-    grid-template-columns: 1fr;
+    display: block;
     min-height: 100vh;
   }
 
   .app-layout.is-sidebar-collapsed {
-    grid-template-columns: 1fr;
+    grid-template-columns: none;
   }
 
   .app-sidebar {
-    position: relative;
-    top: auto;
-    height: auto;
-    overflow-y: visible;
-    border-right: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(84vw, 320px);
+    height: 100vh;
+    z-index: 32;
+    overflow-y: auto;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
     padding: 0 12px 16px;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 18px 34px rgba(6, 18, 35, 0.4);
   }
 
   .app-sidebar__brand {
     margin: 0 -12px;
+  }
+
+  .app-layout.is-sidebar-mobile-open .app-sidebar {
+    transform: translateX(0);
+  }
+
+  .app-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 31;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: rgba(7, 16, 28, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .app-layout.is-sidebar-mobile-open .app-sidebar-overlay {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .app-main {
@@ -837,6 +875,22 @@ tbody tr:last-child td {
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+  width: max-content;
+}
+
+td.table-actions {
+  display: table-cell;
+  width: 1%;
+  white-space: nowrap;
+}
+
+td.table-actions > * {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+td.table-actions > *:not(:last-child) {
+  margin-right: 8px;
 }
 
 .table-actions .btn-icon {
@@ -844,6 +898,17 @@ tbody tr:last-child td {
   height: 34px;
   border-radius: 6px;
   font-size: 1rem;
+}
+
+.table-actions .btn-icon.btn-danger {
+  background: #efe7d7;
+  color: #1c2d40;
+}
+
+.actions-col,
+table td.table-actions {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .table-action-form {
@@ -1673,6 +1738,37 @@ tbody tr:last-child td {
   margin-top: 12px;
 }
 
+.confirm-modal {
+  width: min(420px, calc(100vw - 24px));
+  border: 1px solid #d7ccb8;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fffdfa;
+  color: var(--text);
+}
+
+.confirm-modal::backdrop {
+  background: rgba(12, 20, 24, 0.45);
+}
+
+.confirm-modal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #23364e;
+}
+
+.confirm-modal__message {
+  margin: 10px 0 0;
+  color: #2c3d52;
+}
+
+.confirm-modal__actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .navbar-user-badge {
   display: flex;
   flex-direction: column;
@@ -1859,9 +1955,9 @@ tbody tr:last-child td {
   line-height: 1;
 }
 
-.office-users-table td:last-child,
-.office-users-table th:last-child {
-  width: 180px;
+.office-users-table .actions-col,
+.office-users-table td.table-actions {
+  width: 1%;
 }
 
 .office-users-actions {
