@@ -57,7 +57,7 @@
           <th>Telefone</th>
           <th>E-mail</th>
           <th>Status</th>
-          <th>Ações</th>
+          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -129,7 +129,7 @@
             <th>Fase</th>
             <th>Status</th>
             <th>Próximo prazo</th>
-            <th>Ações</th>
+            <th class="actions-col">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -140,7 +140,11 @@
                 <td><%= enum_label(LegalCase, :phase, legal_case.phase) %></td>
                 <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
                 <td><%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></td>
-                <td><%= link_to "Ver", legal_case_path(legal_case), class: "btn btn-secondary btn-xs" %></td>
+                <td class="table-actions">
+                  <%= link_to legal_case_path(legal_case), class: "btn btn-secondary btn-icon btn-xs", aria: { label: "Ver processo" }, title: "Ver processo" do %>
+                    <span aria-hidden="true">&#128065;</span>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           <% else %>

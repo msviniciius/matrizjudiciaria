@@ -11,7 +11,7 @@
         <th>Nome</th>
         <th>Código</th>
         <th>Ativo</th>
-        <th>Ações</th>
+        <th class="actions-col">Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -21,11 +21,13 @@
             <td><%= movement_type.name %></td>
             <td><%= movement_type.code %></td>
             <td><%= movement_type.active ? "Sim" : "Não" %></td>
-            <td>
-              <div class="table-actions">
-                <%= link_to "Editar", edit_movement_type_path(movement_type), class: "btn btn-secondary" %>
-                <%= button_to "Excluir", movement_type_path(movement_type), method: :delete, class: "btn btn-danger", form: { class: "table-action-form", data: { turbo_confirm: "Confirma a exclusão?" } } %>
-              </div>
+            <td class="table-actions">
+              <%= link_to edit_movement_type_path(movement_type), class: "btn btn-secondary btn-icon", aria: { label: "Editar tipo de andamento" }, title: "Editar tipo de andamento" do %>
+                <span aria-hidden="true">&#9998;</span>
+              <% end %>
+              <%= button_to movement_type_path(movement_type), method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Confirma a exclusão?" } }, aria: { label: "Excluir tipo de andamento" }, title: "Excluir tipo de andamento" do %>
+                <span aria-hidden="true">&#128465;</span>
+              <% end %>
             </td>
           </tr>
         <% end %>

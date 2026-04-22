@@ -147,7 +147,7 @@
           <th>Status</th>
           <th>Próximo prazo</th>
           <th>Responsável</th>
-          <th>Ações</th>
+          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -159,7 +159,11 @@
               <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
               <td><%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></td>
               <td><%= legal_case.responsible_name.presence || "-" %></td>
-              <td><%= link_to "Ver processo", legal_case_path(legal_case), class: "btn btn-secondary" %></td>
+              <td class="table-actions">
+                <%= link_to legal_case_path(legal_case), class: "btn btn-secondary btn-icon", aria: { label: "Ver processo" }, title: "Ver processo" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
+              </td>
             </tr>
           <% end %>
         <% else %>

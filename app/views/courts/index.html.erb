@@ -11,7 +11,7 @@
         <tr>
           <th>Nome</th>
           <th>Comarca</th>
-          <th>Ações</th>
+          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -20,11 +20,13 @@
             <tr>
               <td><%= court.name %></td>
               <td><%= court.district&.name || "-" %></td>
-              <td>
-                <div class="table-actions">
-                  <%= link_to "Editar", edit_court_path(court), class: "btn btn-secondary" %>
-                  <%= button_to "Excluir", court, method: :delete, class: "btn btn-danger", form: { class: "table-action-form", data: { turbo_confirm: "Excluir este órgão/vara/tribunal?" } } %>
-                </div>
+              <td class="table-actions">
+                <%= link_to edit_court_path(court), class: "btn btn-secondary btn-icon", aria: { label: "Editar órgão/vara/tribunal" }, title: "Editar órgão/vara/tribunal" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+                <%= button_to court, method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Excluir este órgão/vara/tribunal?" } }, aria: { label: "Excluir órgão/vara/tribunal" }, title: "Excluir órgão/vara/tribunal" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
               </td>
             </tr>
           <% end %>

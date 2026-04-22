@@ -13,7 +13,7 @@
         <th>Tipo</th>
         <th>Status</th>
         <th>Último acesso</th>
-        <th>Ações</th>
+        <th class="actions-col">Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -25,10 +25,14 @@
             <td><%= user.admin? ? "Administrador" : "Atendente" %></td>
             <td><%= user.active? ? "Ativo" : "Inativo" %></td>
             <td><%= user.last_sign_in_at.present? ? l(user.last_sign_in_at, format: :short) : "-" %></td>
-            <td class="office-users-actions">
-              <%= link_to "Editar", edit_office_setting_user_path(user), class: "btn btn-secondary" %>
+            <td class="table-actions office-users-actions">
+              <%= link_to edit_office_setting_user_path(user), class: "btn btn-secondary btn-icon", aria: { label: "Editar usuário" }, title: "Editar usuário" do %>
+                <span aria-hidden="true">&#9998;</span>
+              <% end %>
               <% unless user == current_user %>
-                <%= link_to "Excluir", office_setting_user_path(user), class: "btn btn-secondary", data: { turbo_method: :delete, turbo_confirm: "Excluir este usuário?" } %>
+                <%= link_to office_setting_user_path(user), class: "btn btn-secondary btn-icon", data: { turbo_method: :delete, turbo_confirm: "Excluir este usuário?" }, aria: { label: "Excluir usuário" }, title: "Excluir usuário" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
               <% end %>
             </td>
           </tr>

@@ -13,7 +13,7 @@
         <th>Fase</th>
         <th>Tipo</th>
         <th>Ativo</th>
-        <th>Ações</th>
+        <th class="actions-col">Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -25,9 +25,13 @@
             <td><%= template.phase&.name %></td>
             <td><%= template.movement_type&.name %></td>
             <td><%= template.active? ? "Sim" : "Não" %></td>
-            <td>
-              <%= link_to "Ver", template, class: "btn btn-secondary" %>
-              <%= link_to "Editar", edit_movement_template_path(template), class: "btn btn-secondary" %>
+            <td class="table-actions">
+              <%= link_to template, class: "btn btn-secondary btn-icon", aria: { label: "Ver modelo de andamento" }, title: "Ver modelo de andamento" do %>
+                <span aria-hidden="true">&#128065;</span>
+              <% end %>
+              <%= link_to edit_movement_template_path(template), class: "btn btn-secondary btn-icon", aria: { label: "Editar modelo de andamento" }, title: "Editar modelo de andamento" do %>
+                <span aria-hidden="true">&#9998;</span>
+              <% end %>
             </td>
           </tr>
         <% end %>

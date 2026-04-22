@@ -14,7 +14,7 @@
           <th>Dias</th>
           <th>Prioridade</th>
           <th>Status</th>
-          <th>Ações</th>
+          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -27,8 +27,12 @@
               <td><%= enum_label(DeadlineSetting, :default_priority, setting.default_priority) %></td>
               <td><%= setting.active? ? "Ativo" : "Inativo" %></td>
               <td class="table-actions">
-                <%= link_to "Editar", edit_deadline_setting_path(setting), class: "btn btn-secondary" %>
-                <%= button_to "Excluir", deadline_setting_path(setting), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Excluir este cadastro de prazo?" } } %>
+                <%= link_to edit_deadline_setting_path(setting), class: "btn btn-secondary btn-icon", aria: { label: "Editar cadastro de prazo" }, title: "Editar cadastro de prazo" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+                <%= button_to deadline_setting_path(setting), method: :delete, class: "btn btn-danger btn-icon", form: { data: { turbo_confirm: "Excluir este cadastro de prazo?" } }, aria: { label: "Excluir cadastro de prazo" }, title: "Excluir cadastro de prazo" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
               </td>
             </tr>
           <% end %>

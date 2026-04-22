@@ -93,7 +93,7 @@
         <th>Título</th>
         <th>Data</th>
         <th>Situação Adm.</th>
-        <th>Ações</th>
+        <th class="actions-col">Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -113,9 +113,13 @@
             <td><%= movement.display_title %></td>
             <td><%= l(movement.event_date, format: :short) %></td>
             <td><%= movement.administrative_situation.present? ? enum_label(ProcessMovement, :administrative_situation, movement.administrative_situation) : "-" %></td>
-            <td>
-              <%= link_to "Ver", movement, class: "btn btn-secondary" %>
-              <%= link_to "Editar", edit_process_movement_path(movement), class: "btn btn-secondary" %>
+            <td class="table-actions">
+              <%= link_to movement, class: "btn btn-secondary btn-icon", aria: { label: "Ver andamento processual" }, title: "Ver andamento processual" do %>
+                <span aria-hidden="true">&#128065;</span>
+              <% end %>
+              <%= link_to edit_process_movement_path(movement), class: "btn btn-secondary btn-icon", aria: { label: "Editar andamento processual" }, title: "Editar andamento processual" do %>
+                <span aria-hidden="true">&#9998;</span>
+              <% end %>
             </td>
           </tr>
         <% end %>

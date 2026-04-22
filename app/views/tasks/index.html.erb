@@ -68,7 +68,7 @@
           <th>Prioridade</th>
           <th>Data limite</th>
           <th>Responsável</th>
-          <th>Ações</th>
+          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -87,12 +87,16 @@
               <td><%= task.priority.present? ? enum_label(Task, :priority, task.priority) : "-" %></td>
               <td><%= task.due_date || "-" %></td>
               <td><%= task.responsible_name.presence || "-" %></td>
-              <td>
-                <div class="table-actions">
-                  <%= link_to "Ver", task_path(task), class: "btn btn-secondary" %>
-                  <%= link_to "Editar", edit_task_path(task), class: "btn btn-secondary" %>
-                  <%= button_to "Excluir", task_path(task), method: :delete, class: "btn btn-danger", form: { class: "table-action-form", data: { turbo_confirm: "Excluir esta tarefa?" } } %>
-                </div>
+              <td class="table-actions">
+                <%= link_to task_path(task), class: "btn btn-secondary btn-icon", aria: { label: "Ver tarefa" }, title: "Ver tarefa" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
+                <%= link_to edit_task_path(task), class: "btn btn-secondary btn-icon", aria: { label: "Editar tarefa" }, title: "Editar tarefa" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+                <%= button_to task_path(task), method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Excluir esta tarefa?" } }, aria: { label: "Excluir tarefa" }, title: "Excluir tarefa" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
               </td>
             </tr>
           <% end %>

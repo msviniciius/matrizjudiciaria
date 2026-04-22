@@ -78,7 +78,7 @@
           <th>Próximo prazo</th>
           <th>Responsável</th>
           <th>Saúde</th>
-          <th>Ações</th>
+          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -101,7 +101,11 @@
                   <%= legal_case_health_label(legal_case) %>
                 </span>
               </td>
-              <td><%= link_to "Ver processo", legal_case, class: "btn btn-secondary" %></td>
+              <td class="table-actions">
+                <%= link_to legal_case, class: "btn btn-secondary btn-icon", aria: { label: "Ver processo" }, title: "Ver processo" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
+              </td>
             </tr>
           <% end %>
         <% else %>
