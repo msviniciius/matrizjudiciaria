@@ -1133,3 +1133,127 @@
   document.addEventListener("turbo:load", initSidebarSections);
   document.addEventListener("DOMContentLoaded", initSidebarSections);
 })();
+
+(() => {
+  if (window.__mobileInstallBannerBound) return;
+  window.__mobileInstallBannerBound = true;
+
+  const STORAGE_KEY = "matrizjuridica.mobile_install_banner.dismissed";
+  let deferredPrompt = null;
+
+  const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const isMobileViewport = () => window.matchMedia("(max-width: 980px)").matches;
+  const isIosDevice = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent || "");
+
+  const isDismissed = () => {
+    try {
+      return window.localStorage.getItem(STORAGE_KEY) === "true";
+    } catch (_error) {
+      return false;
+    }
+  };
+
+  const setDismissed = (value) => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, String(!!value));
+    } catch (_error) {
+      // no-op
+    }
+  };
+
+  const registerServiceWorker = () => {
+    if (!("serviceWorker" in window.navigator)) return;
+    window.navigator.serviceWorker.register("/service-worker").catch(() => {
+      // no-op: app funciona sem service worker
+    });
+  };
+
+  const setupBanner = () => {
+    const banner = document.querySelector("[data-mobile-install-banner]");
+    if (!banner) return;
+
+    const installButton = banner.querySelector("[data-mobile-install-action='install']");
+    const iosButton = banner.querySelector("[data-mobile-install-action='ios-help']");
+    const iosHelp = banner.querySelector("[data-mobile-install-ios-help]");
+    const dismissButton = banner.querySelector("[data-mobile-install-dismiss]");
+
+    const showBanner = () => {
+      if (isStandalone() || isDismissed() || !isMobileViewport()) {
+        banner.hidden = true;
+        return;
+      }
+      banner.hidden = false;
+    };
+
+    if (isIosDevice()) {
+      iosButton?.removeAttribute("hidden");
+      installButton?.setAttribute("hidden", "hidden");
+    } else if (deferredPrompt) {
+      installButton?.removeAttribute("hidden");
+      iosButton?.setAttribute("hidden", "hidden");
+    } else {
+      installButton?.setAttribute("hidden", "hidden");
+      iosButton?.setAttribute("hidden", "hidden");
+    }
+
+    if (iosButton && iosButton.dataset.installBound !== "true") {
+      iosButton.dataset.installBound = "true";
+      iosButton.addEventListener("click", () => {
+        if (!iosHelp) return;
+        iosHelp.hidden = !iosHelp.hidden;
+      });
+    }
+
+    if (installButton && installButton.dataset.installBound !== "true") {
+      installButton.dataset.installBound = "true";
+      installButton.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        try {
+          const choice = await deferredPrompt.userChoice;
+          if (choice.outcome === "accepted") {
+            banner.hidden = true;
+          }
+        } catch (_error) {
+          // no-op
+        } finally {
+          deferredPrompt = null;
+          installButton.setAttribute("hidden", "hidden");
+        }
+      });
+    }
+
+    if (dismissButton && dismissButton.dataset.installBound !== "true") {
+      dismissButton.dataset.installBound = "true";
+      dismissButton.addEventListener("click", () => {
+        setDismissed(true);
+        banner.hidden = true;
+      });
+    }
+
+    showBanner();
+    window.addEventListener("resize", showBanner);
+  };
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    setupBanner();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    setDismissed(true);
+    const banner = document.querySelector("[data-mobile-install-banner]");
+    if (banner) banner.hidden = true;
+  });
+
+  document.addEventListener("turbo:load", () => {
+    registerServiceWorker();
+    setupBanner();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    registerServiceWorker();
+    setupBanner();
+  });
+})();
