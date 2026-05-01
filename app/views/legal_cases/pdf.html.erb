@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>Processo <%= @legal_case.internal_number %></title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #1f2937;
+        margin: 24px;
+      }
+
+      h1, h2 {
+        margin: 0 0 10px;
+      }
+
+      .meta {
+        margin-bottom: 18px;
+        color: #4b5563;
+        font-size: 12px;
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+
+      th, td {
+        border: 1px solid #d1d5db;
+        padding: 6px 8px;
+        font-size: 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f3f4f6;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 16px;
+      }
+
+      .item strong {
+        display: inline-block;
+        min-width: 140px;
+      }
+
+      .print-actions {
+        margin-bottom: 16px;
+      }
+
+      .print-actions button {
+        border: 0;
+        padding: 8px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        background: #123254;
+        color: #fff;
+        border-radius: 6px;
+      }
+
+      @media print {
+        .print-actions {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="print-actions">
+      <button type="button" onclick="window.print()">Salvar como PDF</button>
+    </div>
+
+    <h1>Processo <%= @legal_case.internal_number %></h1>
+    <p class="meta">
+      Cliente: <%= @legal_case.client&.full_name || "-" %> |
+      Emitido em: <%= l(Time.current, format: :short) %>
+    </p>
+
+    <section class="section">
+      <h2>Resumo</h2>
+      <div class="grid">
+        <div class="item"><strong>Fase:</strong> <%= enum_label(LegalCase, :phase, @legal_case.phase) %></div>
+        <div class="item"><strong>Status:</strong> <%= enum_label(LegalCase, :status, @legal_case.status) %></div>
+        <div class="item"><strong>Prioridade:</strong> <%= enum_label(LegalCase, :priority, @legal_case.priority) %></div>
+        <div class="item"><strong>Responsável:</strong> <%= @legal_case.responsible_name.presence || "-" %></div>
+        <div class="item"><strong>Último andamento:</strong> <%= @legal_case.last_movement.presence || "-" %></div>
+        <div class="item"><strong>Próxima providência:</strong> <%= @legal_case.next_action.presence || "-" %></div>
+        <div class="item"><strong>Próximo prazo:</strong> <%= @legal_case.next_deadline_on.present? ? l(@legal_case.next_deadline_on, format: :short) : "-" %></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Classificação</h2>
+      <div class="grid">
+        <div class="item"><strong>Fase:</strong> <%= enum_label(LegalCase, :phase, @legal_case.phase) %></div>
+        <div class="item"><strong>Status:</strong> <%= enum_label(LegalCase, :status, @legal_case.status) %></div>
+        <div class="item"><strong>Prioridade:</strong> <%= enum_label(LegalCase, :priority, @legal_case.priority) %></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Dados do Processo</h2>
+      <div class="grid">
+        <div class="item"><strong>Número interno:</strong> <%= @legal_case.internal_number %></div>
+        <div class="item"><strong>Cliente:</strong> <%= @legal_case.client&.full_name || "-" %></div>
+        <div class="item"><strong>Área:</strong> <%= @legal_case.legal_area&.name || "-" %></div>
+        <div class="item"><strong>Tipo:</strong> <%= @legal_case.process_type&.name || "-" %></div>
+        <div class="item"><strong>Subárea:</strong> <%= @legal_case.subarea.presence || "-" %></div>
+        <div class="item"><strong>Assunto:</strong> <%= @legal_case.main_subject.presence || "-" %></div>
+        <div class="item"><strong>Comarca:</strong> <%= @legal_case.district&.name || "-" %></div>
+        <div class="item"><strong>Órgão/Vara/Tribunal:</strong> <%= @legal_case.court&.name || "-" %></div>
+        <div class="item"><strong>Parte contrária:</strong> <%= @legal_case.opposing_party.presence || "-" %></div>
+        <div class="item"><strong>Valor da causa:</strong> <%= @legal_case.claim_value.presence || "-" %></div>
+        <div class="item"><strong>Data de entrada:</strong> <%= @legal_case.entry_date.present? ? l(@legal_case.entry_date) : "-" %></div>
+        <div class="item"><strong>Data de protocolo:</strong> <%= @legal_case.protocol_date.present? ? l(@legal_case.protocol_date) : "-" %></div>
+        <div class="item"><strong>Equipe de apoio:</strong> <%= @legal_case.support_team.presence || "-" %></div>
+      </div>
+      <p><strong>Observações estratégicas:</strong> <%= @legal_case.strategic_notes.presence || "-" %></p>
+    </section>
+
+    <section class="section">
+      <h2>Situação Atual</h2>
+      <div class="grid">
+        <div class="item"><strong>Último andamento:</strong> <%= @legal_case.last_movement.presence || "-" %></div>
+        <div class="item"><strong>Data do último andamento:</strong> <%= @legal_case.last_movement_at.present? ? l(@legal_case.last_movement_at, format: :short) : "-" %></div>
+        <div class="item"><strong>Próxima providência:</strong> <%= @legal_case.next_action.presence || "-" %></div>
+        <div class="item"><strong>Próximo prazo:</strong> <%= @legal_case.next_deadline_on.present? ? l(@legal_case.next_deadline_on, format: :short) : "-" %></div>
+        <div class="item"><strong>Responsável atual:</strong> <%= @legal_case.responsible_name.presence || "-" %></div>
+      </div>
+    </section>
+
+    <% if @legal_case.tem_pericia? %>
+      <section class="section">
+        <h2>Perícias do Processo</h2>
+        <% if @process_exams.any? %>
+          <table>
+            <thead>
+              <tr>
+                <th>Natureza</th>
+                <th>Esfera</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Local</th>
+                <th>Perito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @process_exams.each do |exam| %>
+                <tr>
+                  <td><%= enum_label(ProcessExam, :exam_nature, exam.exam_nature) %></td>
+                  <td><%= enum_label(ProcessExam, :exam_scope, exam.exam_scope) %></td>
+                  <td><%= exam.scheduled_label %></td>
+                  <td><%= enum_label(ProcessExam, :status, exam.status) %></td>
+                  <td><%= exam.location.presence || "-" %></td>
+                  <td><%= exam.expert_name.presence || "-" %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p>Nenhuma perícia cadastrada.</p>
+        <% end %>
+        <p><strong>Observação geral de perícia:</strong> <%= @legal_case.observacao_geral_pericia.presence || "-" %></p>
+      </section>
+    <% end %>
+
+    <section class="section">
+      <h2>Timeline Unificada</h2>
+      <% if @timeline_items.any? %>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Título</th>
+              <th>Descrição</th>
+              <th>Tipo</th>
+              <th>Origem</th>
+              <th>Natureza</th>
+              <th>Situação administrativa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @timeline_items.each do |item| %>
+              <tr>
+                <td><%= item[:date].present? ? l(item[:date], format: :short) : "-" %></td>
+                <td><%= item[:title].presence || "-" %></td>
+                <td><%= item[:description].presence || "-" %></td>
+                <td><%= item[:movement_type].presence || "-" %></td>
+                <td><%= item[:origin].to_s.humanize %></td>
+                <td><%= item[:nature].to_s.humanize.presence || "-" %></td>
+                <td><%= item[:administrative_situation].present? ? enum_label(ProcessMovement, :administrative_situation, item[:administrative_situation]) : "-" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p>Nenhum andamento cadastrado.</p>
+      <% end %>
+    </section>
+
+    <section class="section">
+      <h2>Prazos</h2>
+      <% if @deadlines.any? %>
+        <table>
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Data final</th>
+              <th>Status</th>
+              <th>Prioridade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @deadlines.each do |deadline| %>
+              <tr>
+                <td><%= deadline.title %></td>
+                <td><%= l(deadline.due_date) %></td>
+                <td><%= enum_label(Deadline, :status, deadline.status) %></td>
+                <td><%= enum_label(Deadline, :priority, deadline.priority) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p>Sem prazos.</p>
+      <% end %>
+    </section>
+
+    <section class="section">
+      <h2>Tarefas</h2>
+      <% if @tasks.any? %>
+        <table>
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Responsável</th>
+              <th>Data limite</th>
+              <th>Status</th>
+              <th>Prioridade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tasks.each do |task| %>
+              <tr>
+                <td><%= task.title %></td>
+                <td><%= task.responsible_name.presence || "-" %></td>
+                <td><%= l(task.due_date) %></td>
+                <td><%= enum_label(Task, :status, task.status) %></td>
+                <td><%= enum_label(Task, :priority, task.priority) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p>Sem tarefas.</p>
+      <% end %>
+    </section>
+  </body>
+</html>

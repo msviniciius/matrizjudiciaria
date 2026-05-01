@@ -30,7 +30,8 @@ Rails.application.routes.draw do
     end
 
     member do
-      get :calendar
+      get :print
+      get :pdf
       get :google_calendar
     end
 

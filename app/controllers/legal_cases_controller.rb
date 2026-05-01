@@ -1,5 +1,5 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy calendar google_calendar ]
+  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar ]
 
   def index
     @filters = legal_case_filters
@@ -42,35 +42,38 @@ class LegalCasesController < ApplicationController
   end
 
   def show
-    @process_movements = @legal_case.process_movements
-      .includes(:movement_type, :movement_template, :exam, :phase, :next_phase)
-      .recent
+    load_case_related_collections
+  end
 
-    @legacy_case_events = @legal_case.case_events
-      .includes(:movement_type, :process_exam)
-      .order(occurred_at: :desc)
+  def pdf
+    load_case_related_collections
+    exporter = LegalCasePdfExporter.new(
+      legal_case: @legal_case,
+      timeline_items: @timeline_items,
+      deadlines: @deadlines,
+      tasks: @tasks,
+      process_exams: @process_exams
+    )
 
-    @timeline_items = build_timeline(@process_movements, @legacy_case_events)
+    send_data(
+      exporter.to_pdf,
+      type: "application/pdf",
+      disposition: "attachment",
+      filename: "processo-#{@legal_case.internal_number.parameterize}.pdf"
+    )
+  rescue LoadError, NameError
+    flash[:warning] = "Exportação em PDF indisponível no momento. Abra a versão para impressão e salve como PDF."
+    redirect_to print_legal_case_path(@legal_case)
+  end
 
-    @deadlines = @legal_case.deadlines.order(due_date: :asc)
-    @tasks = @legal_case.tasks.order(due_date: :asc)
-    @process_exams = @legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC"))
+  def print
+    load_case_related_collections
+    render :pdf, layout: false
   end
 
   def daily_closure
     @reference_date = parse_reference_date(params[:reference_date])
     @closure_rows = DailyClosureReport.new(reference_date: @reference_date, scope: current_office.legal_cases).rows
-  end
-
-  def calendar
-    exporter = LegalCaseCalendarExporter.new(@legal_case)
-
-    send_data(
-      exporter.to_ics,
-      type: "text/calendar; charset=utf-8",
-      disposition: "attachment",
-      filename: "processo-#{@legal_case.internal_number.parameterize}.ics"
-    )
   end
 
   def google_calendar
@@ -164,6 +167,22 @@ class LegalCasesController < ApplicationController
       :tem_pericia,
       :observacao_geral_pericia
     ])
+  end
+
+  def load_case_related_collections
+    @process_movements = @legal_case.process_movements
+      .includes(:movement_type, :movement_template, :exam, :phase, :next_phase)
+      .recent
+
+    @legacy_case_events = @legal_case.case_events
+      .includes(:movement_type, :process_exam)
+      .order(occurred_at: :desc)
+
+    @timeline_items = build_timeline(@process_movements, @legacy_case_events)
+
+    @deadlines = @legal_case.deadlines.order(due_date: :asc)
+    @tasks = @legal_case.tasks.order(due_date: :asc)
+    @process_exams = @legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC"))
   end
 
   def build_timeline(process_movements, legacy_case_events)

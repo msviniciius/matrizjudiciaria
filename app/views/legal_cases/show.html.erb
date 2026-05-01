@@ -6,10 +6,6 @@
       <p class="case-kicker">Processo</p>
       <h1><%= @legal_case.internal_number %></h1>
     </div>
-    <div class="case-actions">
-      <%= link_to "Sincronizar", google_calendar_legal_case_path(@legal_case), class: "btn btn-primary", target: "_blank", rel: "noopener" %>
-      <%= link_to "Baixar .ics", calendar_legal_case_path(@legal_case, format: :ics), class: "btn btn-secondary" %>
-    </div>
   </div>
 
   <div class="case-headline-grid">
@@ -231,6 +227,8 @@
 </section>
 
 <div class="case-actions case-actions--footer">
+  <%= link_to "Sincronizar", google_calendar_legal_case_path(@legal_case), class: "btn btn-primary", target: "_blank", rel: "noopener" %>
+  <%= link_to "Exportar PDF", pdf_legal_case_path(@legal_case), class: "btn btn-secondary", target: "_blank", rel: "noopener" %>
   <%= link_to "Editar processo", edit_legal_case_path(@legal_case), class: "btn btn-secondary" %>
   <%= link_to "Voltar", legal_cases_path, class: "btn btn-secondary" %>
   <%= button_to "Excluir processo", @legal_case, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Tem certeza que deseja excluir este processo?" } } %>
