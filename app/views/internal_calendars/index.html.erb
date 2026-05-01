@@ -1,0 +1,103 @@
+<% content_for :title, "Calendário interno" %>
+
+<% content_for :topbar_actions do %>
+  <%= link_to "Calendário", internal_calendar_path(month: @reference_month.strftime("%Y-%m"), view: "month"), class: "btn #{@view_mode == 'month' ? 'btn-primary' : 'btn-secondary'}" %>
+  <%= link_to "Lista", internal_calendar_path(month: @reference_month.strftime("%Y-%m"), view: "list"), class: "btn #{@view_mode == 'list' ? 'btn-primary' : 'btn-secondary'}" %>
+  <%= link_to "Hoje", internal_calendar_path(month: Date.current.strftime("%Y-%m"), view: @view_mode), class: "btn btn-secondary" %>
+<% end %>
+
+<section class="case-section case-section--listing">
+  <div class="listing-head listing-head--calendar">
+    <h3><%= @month_label %></h3>
+    <div class="calendar-nav">
+      <%= link_to "◀ Mês anterior", internal_calendar_path(month: @previous_month_param, view: @view_mode), class: "btn btn-secondary" %>
+      <%= link_to "Próximo mês ▶", internal_calendar_path(month: @next_month_param, view: @view_mode), class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <% if @view_mode == "month" %>
+    <div class="internal-calendar">
+      <div class="internal-calendar__weekdays">
+        <% %w[Seg Ter Qua Qui Sex Sáb Dom].each do |weekday| %>
+          <div class="internal-calendar__weekday"><%= weekday %></div>
+        <% end %>
+      </div>
+
+      <% @calendar_weeks.each do |week| %>
+        <div class="internal-calendar__week">
+          <% week.each do |day| %>
+            <% day_events = @events_by_day.fetch(day, []) %>
+            <article class="internal-calendar__day <%= "is-outside-month" if day.month != @reference_month.month %> <%= "is-today" if day == Date.current %>">
+              <header class="internal-calendar__day-head">
+                <strong><%= day.day %></strong>
+                <% if day == Date.current %>
+                  <span class="status-pill status-pill--info">Hoje</span>
+                <% end %>
+              </header>
+
+              <% if day_events.any? %>
+                <ul class="internal-calendar__events">
+                  <% day_events.first(2).each do |event| %>
+                    <li>
+                      <%= link_to event[:url], class: "internal-calendar__event-link internal-calendar__event-link--#{event[:type]}" do %>
+                        <span class="internal-calendar__event-title"><%= [ event[:title], event[:process_label].presence ].compact.join(" - ") %></span>
+                        <% if event[:time_label].present? %>
+                          <small><%= event[:time_label] %></small>
+                        <% end %>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+
+                <% if day_events.size > 2 %>
+                  <p class="internal-calendar__more">+<%= day_events.size - 2 %> item(ns)</p>
+                <% end %>
+              <% else %>
+                <p class="internal-calendar__empty">Sem itens.</p>
+              <% end %>
+            </article>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Hora</th>
+            <th>Tipo</th>
+            <th>Título</th>
+            <th>Processo</th>
+            <th>Detalhe</th>
+            <th class="actions-col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @list_events.any? %>
+            <% @list_events.each do |event| %>
+              <tr>
+                <td><%= l(event[:date], format: :short) %></td>
+                <td><%= event[:time_label].presence || "-" %></td>
+                <td><%= event[:type_label] %></td>
+                <td><%= event[:title] %></td>
+                <td><%= event[:process_label] %></td>
+                <td><%= event[:detail] %></td>
+                <td class="table-actions">
+                  <%= link_to event[:url], class: "btn btn-secondary btn-icon", aria: { label: "Ver item" }, title: "Ver item" do %>
+                    <span aria-hidden="true">&#128065;</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="7" class="table-empty-state">Nenhum item no período selecionado.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>

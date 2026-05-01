@@ -3,6 +3,7 @@ class LegalCase < ApplicationRecord
   INTERNAL_NUMBER_PREFIX = "SEI"
   INTERNAL_NUMBER_MIN_DIGITS = 2
   INTERNAL_NUMBER_START = 1
+  CALENDAR_FEED_PURPOSE = :google_calendar_feed
 
   OFFICIAL_PHASES = %w[
     atendimento_inicial
@@ -255,6 +256,14 @@ class LegalCase < ApplicationRecord
 
   def observacoes_estrategicas
     strategic_notes
+  end
+
+  def calendar_feed_token(expires_in: 5.years)
+    signed_id(purpose: CALENDAR_FEED_PURPOSE, expires_in: expires_in)
+  end
+
+  def self.find_by_calendar_feed_token!(token)
+    find_signed!(token, purpose: CALENDAR_FEED_PURPOSE)
   end
 
   private

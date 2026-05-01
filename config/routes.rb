@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   get "/painel", to: "dashboard#index"
+  get "/calendario_interno", to: "internal_calendars#index", as: :internal_calendar
   get "/login", to: "sessions#new"
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
@@ -30,10 +31,14 @@ Rails.application.routes.draw do
 
     member do
       get :calendar
+      get :google_calendar
     end
 
     resources :process_exams, only: [ :new, :create ]
   end
+
+  get "calendar_feeds/legal_case/:token.ics", to: "calendar_feeds#legal_case", as: :legal_case_calendar_feed
+  get "calendar_feeds/legal_case", to: "calendar_feeds#legal_case"
 
   resources :process_exams, only: [ :edit, :update, :destroy ]
   resources :clients do

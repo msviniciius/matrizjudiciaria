@@ -77,6 +77,11 @@
                 <span class="nav-link__label">Prazos</span>
               <% end %>
 
+              <%= link_to internal_calendar_path, class: "nav-link #{'is-active' if controller_name == 'internal_calendars'}", aria: { label: "Calendário interno" }, title: "Calendário interno" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128197;</span>
+                <span class="nav-link__label">Calendário interno</span>
+              <% end %>
+
               <%= link_to tasks_path, class: "nav-link #{'is-active' if controller_name == 'tasks'}", aria: { label: "Tarefas" }, title: "Tarefas" do %>
                 <span class="nav-link__icon" aria-hidden="true">&#10003;</span>
                 <span class="nav-link__label">Tarefas</span>

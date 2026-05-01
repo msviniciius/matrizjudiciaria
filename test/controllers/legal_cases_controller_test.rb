@@ -1,4 +1,6 @@
 require "test_helper"
+require "rack/utils"
+require "uri"
 
 class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -91,6 +93,36 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/calendar", @response.media_type
     assert_includes @response.body, "BEGIN:VCALENDAR"
     assert_includes @response.body, @legal_case.internal_number
+  end
+
+  test "should redirect to google calendar integration url" do
+    get google_calendar_legal_case_url(@legal_case)
+
+    assert_response :redirect
+    uri = URI.parse(@response.location)
+    assert_equal "calendar.google.com", uri.host
+    assert_equal "/calendar/r", uri.path
+
+    query = Rack::Utils.parse_query(uri.query)
+    feed_url = URI.decode_www_form_component(query.fetch("cid"))
+    assert_includes feed_url, "webcal://"
+    assert_includes feed_url, "/calendar_feeds/legal_case/"
+    assert_includes feed_url, ".ics"
+  end
+
+  test "should serve calendar feed in ics format with signed token" do
+    get legal_case_calendar_feed_url(token: @legal_case.calendar_feed_token)
+
+    assert_response :success
+    assert_equal "text/calendar", @response.media_type
+    assert_includes @response.body, "BEGIN:VCALENDAR"
+    assert_includes @response.body, @legal_case.internal_number
+  end
+
+  test "should return not found with invalid calendar feed token" do
+    get legal_case_calendar_feed_url(token: "token-invalido")
+
+    assert_response :not_found
   end
 
   test "should get edit" do

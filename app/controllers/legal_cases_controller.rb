@@ -1,5 +1,5 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy calendar ]
+  before_action :set_legal_case, only: %i[ show edit update destroy calendar google_calendar ]
 
   def index
     @filters = legal_case_filters
@@ -71,6 +71,15 @@ class LegalCasesController < ApplicationController
       disposition: "attachment",
       filename: "processo-#{@legal_case.internal_number.parameterize}.ics"
     )
+  end
+
+  def google_calendar
+    public_base_url = ENV["APP_PUBLIC_URL"].presence || request.base_url
+    feed_url = "#{public_base_url.chomp('/')}#{legal_case_calendar_feed_path(token: @legal_case.calendar_feed_token)}"
+    subscribe_url = feed_url.sub(/\Ahttps?:\/\//, "webcal://")
+    google_url = GoogleCalendarLinkBuilder.subscribe_url(subscribe_url)
+
+    redirect_to google_url, allow_other_host: true
   end
 
   def new
