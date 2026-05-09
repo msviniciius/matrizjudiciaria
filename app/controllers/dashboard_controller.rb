@@ -2,6 +2,8 @@ class DashboardController < ApplicationController
   def index
     @legal_cases = current_office.legal_cases.order(updated_at: :desc)
     operational_scope = current_office.legal_cases.operational
+    deadlines_scope = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
+    tasks_scope = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
 
     @report_counts = {
       por_fase: current_office.legal_cases.group(:phase).count,
@@ -25,6 +27,20 @@ class DashboardController < ApplicationController
       atrasados: operational_scope.deadline_overdue.order(:next_deadline_on, :updated_at).limit(6),
       sem_proxima_providencia: operational_scope.without_next_action.order(updated_at: :desc).limit(6)
     }
+
+    @today_counts = {
+      deadlines_today: deadlines_scope.where(due_date: Date.current).where.not(status: :completed).count,
+      deadlines_overdue: deadlines_scope.where("due_date < ?", Date.current).where.not(status: :completed).count,
+      tasks_today: tasks_scope.where(due_date: Date.current).where.not(status: :completed).count,
+      tasks_overdue: tasks_scope.where("due_date < ?", Date.current).where.not(status: :completed).count
+    }
+
+    @recent_movements = ProcessMovement
+      .joins(:process)
+      .where(legal_cases: { office_id: current_office.id })
+      .includes(:process, :movement_type)
+      .order(event_date: :desc, created_at: :desc)
+      .limit(8)
 
     @chart_data = build_chart_data
   end

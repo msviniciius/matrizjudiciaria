@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_21_112000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_09_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -234,6 +234,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_112000) do
     t.string "default_priority", default: "medium", null: false
     t.string "default_status", default: "em_analise", null: false
     t.string "email"
+    t.string "enabled_tribunals", default: [], null: false, array: true
     t.string "legal_name"
     t.string "name", null: false
     t.string "oab_registration"
@@ -247,6 +248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_112000) do
     t.string "zip_code"
     t.index ["cnpj"], name: "index_offices_on_cnpj"
     t.index ["email"], name: "index_offices_on_email"
+    t.index ["enabled_tribunals"], name: "index_offices_on_enabled_tribunals", using: :gin
     t.index ["slug"], name: "index_offices_on_slug", unique: true
     t.index ["zip_code"], name: "index_offices_on_zip_code"
   end

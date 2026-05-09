@@ -40,6 +40,7 @@ class OfficeSettingsController < ApplicationController
       :logo,
       :primary_color,
       :secondary_color,
+      { enabled_tribunals: [] },
       :default_phase,
       :default_status,
       :default_priority,

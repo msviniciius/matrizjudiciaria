@@ -16,7 +16,10 @@
   <% pending_client_ids = clients.select(&:cadastro_pendente?).map(&:id) %>
 
   <section class="form-section">
-    <h3>Dados do cliente</h3>
+    <div class="dashboard-section__head">
+      <h3>Dados do cliente</h3>
+      <p>Selecione o cliente responsável pelo processo.</p>
+    </div>
     <div class="form-grid">
       <div class="field-full">
         <%= form.label :client_id %>
@@ -48,7 +51,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Dados do Processo</h3>
+    <div class="dashboard-section__head">
+      <h3>Dados do Processo</h3>
+      <p>Preencha as informações principais do caso.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :internal_number %>
@@ -109,7 +115,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Classificação</h3>
+    <div class="dashboard-section__head">
+      <h3>Classificação</h3>
+      <p>Defina fase, status e prioridade operacional.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :phase, "Fase" %>
@@ -129,7 +138,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Situação Atual</h3>
+    <div class="dashboard-section__head">
+      <h3>Situação Atual</h3>
+      <p>Snapshot de acompanhamento do processo.</p>
+    </div>
     <div class="form-grid">
       <div class="field-full">
         <%= form.label :last_movement, "Último andamento" %>
@@ -159,7 +171,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Perícias</h3>
+    <div class="dashboard-section__head">
+      <h3>Perícias</h3>
+      <p>Ative para controlar perícias vinculadas ao processo.</p>
+    </div>
     <div class="form-grid">
       <div class="field-full">
         <label class="checkbox-field">

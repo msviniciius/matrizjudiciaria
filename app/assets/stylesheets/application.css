@@ -839,6 +839,12 @@ textarea:focus {
   margin: 4px 0 0;
 }
 
+.case-summary__subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .case-kicker {
   margin: 0;
   font-size: 0.75rem;
@@ -1559,11 +1565,84 @@ table td.table-actions {
   gap: 10px;
 }
 
+.dashboard-section__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dashboard-section__head h3 {
+  margin: 0;
+}
+
+.dashboard-section__head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.section-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.report-grid--kpi {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.report-grid--phases {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .report-card {
   border: 1px solid #ddd2bf;
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px;
   background: #fffcf8;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(22, 36, 52, 0.08);
+}
+
+.report-icon {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+.report-card--danger {
+  border-color: #d8a09c;
+  background: linear-gradient(180deg, #fff8f8 0%, #fff3f2 100%);
+}
+
+.report-card--warning {
+  border-color: #e4cfa4;
+  background: linear-gradient(180deg, #fffdf6 0%, #fff8ea 100%);
+}
+
+.report-card--attention {
+  border-color: #e1c7a2;
+  background: linear-gradient(180deg, #fffdf6 0%, #fcf5e8 100%);
+}
+
+.report-card--info {
+  border-color: #b8c9df;
+  background: linear-gradient(180deg, #f9fcff 0%, #f2f8ff 100%);
+}
+
+.report-card--neutral {
+  border-color: #d7d0c3;
+  background: linear-gradient(180deg, #fffdf9 0%, #fbf7f0 100%);
 }
 
 .risk-grid {
@@ -1577,6 +1656,28 @@ table td.table-actions {
   border-radius: 12px;
   padding: 12px;
   background: #fffcf8;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.risk-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(22, 36, 52, 0.08);
+}
+
+.risk-card--warning {
+  border-left: 4px solid #c59a4c;
+}
+
+.risk-card--info {
+  border-left: 4px solid #3a6e9f;
+}
+
+.risk-card--danger {
+  border-left: 4px solid #ab3f37;
+}
+
+.risk-card--muted {
+  border-left: 4px solid #7e7486;
 }
 
 .risk-card__head {
@@ -1602,6 +1703,56 @@ table td.table-actions {
 .risk-list li {
   display: grid;
   gap: 2px;
+}
+
+.dashboard-feed {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-feed__item {
+  border: 1px solid #ddd2bf;
+  border-radius: 12px;
+  background: #fffcf8;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-feed__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dashboard-feed__head strong {
+  color: #23364e;
+  font-size: 0.94rem;
+}
+
+.dashboard-feed__head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.dashboard-feed__item p {
+  margin: 0;
+  color: #2e3d52;
+  font-size: 0.88rem;
+}
+
+.dashboard-feed__link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #24476f;
+  text-decoration: none;
+}
+
+.dashboard-feed__link:hover {
+  text-decoration: underline;
 }
 
 .dashboard-charts-grid {
@@ -1846,7 +1997,7 @@ table td.table-actions {
 
 .report-value {
   margin: 4px 0 0;
-  font-size: 1.4rem;
+  font-size: 1.55rem;
   font-weight: 800;
 }
 
@@ -1855,10 +2006,16 @@ table td.table-actions {
   .case-headline-grid,
   .report-grid,
   .dashboard-charts-grid,
+  .dashboard-feed,
   .exam-cards,
   .risk-grid,
   .health-guidance-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .report-grid--kpi,
+  .report-grid--phases {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .client-details-grid {
@@ -1871,11 +2028,22 @@ table td.table-actions {
   .case-headline-grid,
   .report-grid,
   .dashboard-charts-grid,
+  .dashboard-feed,
   .exam-cards,
   .risk-grid,
   .health-guidance-grid,
   .client-details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-section__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .report-grid--kpi,
+  .report-grid--phases {
+    grid-template-columns: 1fr 1fr;
   }
 
   .listing-head--calendar {
@@ -2302,6 +2470,156 @@ table td.table-actions {
   padding: 10px;
 }
 
+.office-settings-shell {
+  padding: 18px;
+}
+
+.office-settings-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.office-settings-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: start;
+}
+
+.office-settings-nav {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  top: 86px;
+}
+
+.office-settings-nav__item {
+  border: 1px solid #ddcfbc;
+  background: #fffdfa;
+  color: #2a3e56;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.office-settings-nav__item.is-active {
+  background: linear-gradient(180deg, var(--nav-start) 0%, var(--nav-end) 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.office-settings-content {
+  min-width: 0;
+}
+
+.office-tab-panel {
+  margin-bottom: 0;
+}
+
+.office-tab-panel:not(.is-active) {
+  display: none;
+}
+
+.office-settings-preview {
+  position: sticky;
+  top: 86px;
+}
+
+.office-preview-card {
+  border: 1px solid #ddcfbc;
+  border-radius: 12px;
+  background: #fffcf8;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.office-preview-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.office-preview-card h4 {
+  margin: 0;
+  color: #23364e;
+}
+
+.office-preview-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.office-preview-swatches span {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.office-settings-actions {
+  position: sticky;
+  bottom: 10px;
+  z-index: 2;
+  padding: 10px 12px;
+  border: 1px solid #ddcfbc;
+  border-radius: 12px;
+  background: rgba(255, 252, 248, 0.96);
+  backdrop-filter: blur(4px);
+}
+
+.office-integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.office-integration-option {
+  border: 1px solid #ddcfbc;
+  border-radius: 10px;
+  background: #fffdfa;
+  padding: 10px 12px;
+  width: 100%;
+  align-items: flex-start;
+  transition: border-color 0.14s ease, background-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.office-integration-option:hover {
+  border-color: #ccb185;
+  background: #fffbf3;
+}
+
+.office-integration-option:has(input:checked) {
+  border-color: #b08a45;
+  background: #fcf6ea;
+  box-shadow: inset 0 0 0 1px rgba(176, 138, 69, 0.2);
+}
+
+.office-integration-option__content {
+  display: grid;
+  gap: 2px;
+}
+
+.office-integration-option__content strong {
+  color: #20344d;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.office-integration-option__content small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 760px) {
   .inline-client-actions {
     flex-direction: column;
@@ -2343,5 +2661,38 @@ table td.table-actions {
 
   .app-navbar__logout-label {
     display: none;
+  }
+
+  .office-settings-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .office-settings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .office-settings-nav {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .office-settings-preview {
+    position: static;
+  }
+
+  .office-integrations-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .office-settings-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .office-settings-preview {
+    grid-column: 1 / -1;
+    position: static;
   }
 }

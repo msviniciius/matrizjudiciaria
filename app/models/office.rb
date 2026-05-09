@@ -1,4 +1,11 @@
 class Office < ApplicationRecord
+  TRIBUNAL_INTEGRATIONS = {
+    "TJMA (Tribunal de Justiça do Maranhão)" => "tjma",
+    "TRF1 (Tribunal Regional Federal da 1ª Região)" => "trf1",
+    "TRF5 (Tribunal Regional Federal da 5ª Região)" => "trf5",
+    "TJPI (Tribunal de Justiça do Piauí)" => "tjpi"
+  }.freeze
+
   has_one_attached :logo
 
   has_many :users, dependent: :destroy
@@ -17,12 +24,35 @@ class Office < ApplicationRecord
   validates :default_priority, inclusion: { in: LegalCase.priorities.keys }
   validates :deadline_alert_days, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 60 }
   validates :task_alert_days, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 60 }
+  validate :enabled_tribunals_must_be_allowed
 
   def logo_attached?
     logo.attached?
   end
 
+  def enabled_tribunal_codes
+    return [] unless respond_to?(:enabled_tribunals)
+
+    Array(enabled_tribunals).map(&:to_s).reject(&:blank?)
+  end
+
+  def tribunal_enabled?(code)
+    enabled_tribunal_codes.include?(code.to_s)
+  end
+
   private
+
+  def enabled_tribunals_must_be_allowed
+    return unless respond_to?(:enabled_tribunals)
+
+    normalized_codes = Array(enabled_tribunals).map(&:to_s).reject(&:blank?)
+    self.enabled_tribunals = normalized_codes
+
+    invalid_codes = normalized_codes - TRIBUNAL_INTEGRATIONS.values
+    return if invalid_codes.empty?
+
+    errors.add(:enabled_tribunals, "contém integrações inválidas")
+  end
 
   def normalize_slug
     return if slug.blank? && name.blank?

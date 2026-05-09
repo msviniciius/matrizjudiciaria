@@ -1,4 +1,93 @@
 (() => {
+  const initOfficeSettingsInteractions = () => {
+    const form = document.querySelector("[data-office-settings-form]");
+    if (!form) return;
+
+    const navButtons = Array.from(form.querySelectorAll("[data-office-tab]"));
+    const panels = Array.from(form.querySelectorAll("[data-office-panel]"));
+    const cleanBadge = form.querySelector("[data-office-settings-clean]");
+    const dirtyBadge = form.querySelector("[data-office-settings-dirty]");
+    const previewName = form.querySelector("[data-office-preview-name]");
+    const previewPrimary = form.querySelector("[data-office-preview-primary]");
+    const previewSecondary = form.querySelector("[data-office-preview-secondary]");
+    const integrationsCount = form.querySelector("[data-office-integrations-count]");
+    const integrationChecks = Array.from(form.querySelectorAll("[data-office-integrations-group] input[type='checkbox']"));
+
+    const activateTab = (tabKey) => {
+      navButtons.forEach((button) => {
+        const active = button.dataset.officeTab === tabKey;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+
+      panels.forEach((panel) => {
+        const active = panel.dataset.officePanel === tabKey;
+        panel.classList.toggle("is-active", active);
+        panel.hidden = !active;
+      });
+    };
+
+    navButtons.forEach((button) => {
+      if (button.dataset.officeTabBound === "true") return;
+      button.dataset.officeTabBound = "true";
+      button.addEventListener("click", () => activateTab(button.dataset.officeTab));
+    });
+
+    const initialState = new FormData(form);
+    const normalize = (formData) => {
+      const map = {};
+      for (const [ key, value ] of formData.entries()) {
+        if (!map[key]) map[key] = [];
+        map[key].push(value instanceof File ? value.name : String(value));
+      }
+      Object.keys(map).forEach((key) => map[key].sort());
+      return JSON.stringify(map);
+    };
+    const initialSerialized = normalize(initialState);
+
+    const updateDirtyState = () => {
+      const currentSerialized = normalize(new FormData(form));
+      const dirty = currentSerialized !== initialSerialized;
+      if (cleanBadge) cleanBadge.hidden = dirty;
+      if (dirtyBadge) dirtyBadge.hidden = !dirty;
+    };
+
+    const updatePreview = () => {
+      const nameField = form.querySelector("[data-office-preview-name='true']");
+      const primaryField = form.querySelector("[data-office-preview-primary='true']");
+      const secondaryField = form.querySelector("[data-office-preview-secondary='true']");
+      if (previewName && nameField) previewName.textContent = nameField.value.trim() || "Nome do escritório";
+      if (previewPrimary && primaryField) previewPrimary.style.background = primaryField.value || "#112f4e";
+      if (previewSecondary && secondaryField) previewSecondary.style.background = secondaryField.value || "#b08a45";
+    };
+
+    const updateIntegrationsCount = () => {
+      if (!integrationsCount) return;
+      const total = integrationChecks.filter((checkbox) => checkbox.checked).length;
+      integrationsCount.textContent = String(total);
+    };
+
+    form.addEventListener("input", () => {
+      updateDirtyState();
+      updatePreview();
+      updateIntegrationsCount();
+    });
+    form.addEventListener("change", () => {
+      updateDirtyState();
+      updatePreview();
+      updateIntegrationsCount();
+    });
+
+    updateDirtyState();
+    updatePreview();
+    updateIntegrationsCount();
+  };
+
+  document.addEventListener("turbo:load", initOfficeSettingsInteractions);
+  document.addEventListener("DOMContentLoaded", initOfficeSettingsInteractions);
+})();
+
+(() => {
   const initMainFiltersToggle = () => {
     document.querySelectorAll("[data-main-filters]").forEach((container) => {
       const toggle = container.querySelector("[data-main-filters-toggle]");
@@ -29,6 +118,67 @@
 
 (() => {
   const PALETTE = [ "#1f4e79", "#4472c4", "#2f7d5b", "#9a6b2f", "#8b3a3a", "#6b5ca5", "#5d6775", "#264653", "#7f8c8d" ];
+  const CHART_HIT_MAP = new Map();
+
+  const getOrCreateTooltip = () => {
+    let tooltip = document.getElementById("dashboard-chart-tooltip");
+    if (tooltip) return tooltip;
+
+    tooltip = document.createElement("div");
+    tooltip.id = "dashboard-chart-tooltip";
+    tooltip.style.position = "fixed";
+    tooltip.style.zIndex = "9999";
+    tooltip.style.pointerEvents = "none";
+    tooltip.style.padding = "6px 8px";
+    tooltip.style.borderRadius = "8px";
+    tooltip.style.font = "600 12px Manrope, sans-serif";
+    tooltip.style.background = "rgba(17, 33, 53, 0.92)";
+    tooltip.style.color = "#fff";
+    tooltip.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.25)";
+    tooltip.style.transform = "translate(-50%, -110%)";
+    tooltip.style.whiteSpace = "nowrap";
+    tooltip.style.display = "none";
+    document.body.appendChild(tooltip);
+    return tooltip;
+  };
+
+  const bindChartHover = (canvas, hitAreas) => {
+    if (!canvas) return;
+    CHART_HIT_MAP.set(canvas.id, hitAreas);
+    if (canvas.dataset.chartHoverBound === "true") return;
+    canvas.dataset.chartHoverBound = "true";
+
+    const tooltip = getOrCreateTooltip();
+
+    const findHit = (x, y) => {
+      const areas = CHART_HIT_MAP.get(canvas.id) || [];
+      return areas.find((area) => area.contains(x, y));
+    };
+
+    canvas.addEventListener("mousemove", (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const hit = findHit(x, y);
+
+      if (!hit) {
+        tooltip.style.display = "none";
+        canvas.style.cursor = "default";
+        return;
+      }
+
+      canvas.style.cursor = "pointer";
+      tooltip.textContent = hit.text;
+      tooltip.style.left = `${event.clientX}px`;
+      tooltip.style.top = `${event.clientY}px`;
+      tooltip.style.display = "block";
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      canvas.style.cursor = "default";
+      tooltip.style.display = "none";
+    });
+  };
 
   const setupCanvas = (canvas) => {
     if (!canvas) return null;
@@ -53,6 +203,7 @@
     if (!chart) return;
     const { ctx, width, height } = chart;
     if (!values.length) return;
+    const hitAreas = [];
 
     const maxValue = Math.max(...values, 1);
     const left = 32;
@@ -75,6 +226,7 @@
       const x = left + index * (barWidth + gap);
       const h = (value / maxValue) * chartHeight;
       const y = bottom - h;
+      const fullLabel = String(labels[index] || "Item");
 
       ctx.fillStyle = colors[index] || colors[0] || "#2f5f8f";
       ctx.fillRect(x, y, barWidth, h);
@@ -84,12 +236,18 @@
       ctx.textAlign = "center";
       ctx.fillText(String(value), x + barWidth / 2, y - 4);
 
-      const label = String(labels[index] || "");
-      const shortLabel = label.length > 14 ? `${label.slice(0, 12)}...` : label;
+      const shortLabel = fullLabel.length > 14 ? `${fullLabel.slice(0, 12)}...` : fullLabel;
       ctx.fillStyle = "#5f6674";
       ctx.font = "11px Manrope, sans-serif";
       ctx.fillText(shortLabel, x + barWidth / 2, bottom + 14);
+
+      hitAreas.push({
+        text: `${fullLabel}: ${value}`,
+        contains: (mx, my) => mx >= x && mx <= x + barWidth && my >= y && my <= bottom
+      });
     });
+
+    bindChartHover(canvas, hitAreas);
   };
 
   const drawHorizontalBars = (canvasId, labels, values, color = "#0f3b61") => {
@@ -98,6 +256,7 @@
     if (!chart) return;
     const { ctx, width, height } = chart;
     if (!values.length) return;
+    const hitAreas = [];
 
     const maxValue = Math.max(...values, 1);
     const left = 110;
@@ -124,7 +283,14 @@
 
       ctx.textAlign = "left";
       ctx.fillText(String(value), left + barW + 6, barY + barH - 2);
+
+      hitAreas.push({
+        text: `${label}: ${value}`,
+        contains: (mx, my) => mx >= left && mx <= left + barW && my >= barY && my <= barY + barH
+      });
     });
+
+    bindChartHover(canvas, hitAreas);
   };
 
   const drawDonut = (canvasId, labels, values) => {
@@ -133,6 +299,7 @@
     if (!chart) return;
     const { ctx, width, height } = chart;
     if (!values.length) return;
+    const hitAreas = [];
 
     const total = values.reduce((sum, value) => sum + value, 0);
     if (total <= 0) return;
@@ -145,12 +312,36 @@
 
     values.forEach((value, index) => {
       const slice = (value / total) * Math.PI * 2;
+      const startAngle = angle;
+      const endAngle = angle + slice;
       ctx.beginPath();
       ctx.strokeStyle = PALETTE[index % PALETTE.length];
       ctx.lineWidth = lineWidth;
-      ctx.arc(cx, cy, radius, angle, angle + slice);
+      ctx.arc(cx, cy, radius, startAngle, endAngle);
       ctx.stroke();
-      angle += slice;
+      angle = endAngle;
+
+      const label = String(labels[index] || "Item");
+      const innerRadius = radius - lineWidth / 2;
+      const outerRadius = radius + lineWidth / 2;
+      hitAreas.push({
+        text: `${label}: ${value}`,
+        contains: (mx, my) => {
+          const dx = mx - cx;
+          const dy = my - cy;
+          const dist = Math.sqrt((dx ** 2) + (dy ** 2));
+          if (dist < innerRadius || dist > outerRadius) return false;
+          let pointAngle = Math.atan2(dy, dx);
+          if (pointAngle < -Math.PI / 2) pointAngle += Math.PI * 2;
+          let normalizedStart = startAngle;
+          let normalizedEnd = endAngle;
+          if (normalizedStart < -Math.PI / 2) normalizedStart += Math.PI * 2;
+          if (normalizedEnd < -Math.PI / 2) normalizedEnd += Math.PI * 2;
+          if (normalizedEnd < normalizedStart) normalizedEnd += Math.PI * 2;
+          if (pointAngle < normalizedStart) pointAngle += Math.PI * 2;
+          return pointAngle >= normalizedStart && pointAngle <= normalizedEnd;
+        }
+      });
     });
 
     ctx.fillStyle = "#23364e";
@@ -169,6 +360,8 @@
       ctx.fillText(itemLabel.length > 28 ? `${itemLabel.slice(0, 26)}...` : itemLabel, x + 16, legendY);
       legendY += 16;
     });
+
+    bindChartHover(canvas, hitAreas);
   };
 
   const initDashboardCharts = () => {

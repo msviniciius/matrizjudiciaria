@@ -5,35 +5,112 @@
   <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
 <% end %>
 
-<section class="case-section">
-  <h3>Relatórios Rápidos</h3>
-  <div class="report-grid">
-    <article class="report-card">
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Resumo Operacional</h3>
+    <p>Visão rápida para priorizar o dia.</p>
+  </div>
+
+  <div class="report-grid report-grid--kpi">
+    <article class="report-card report-card--warning">
+      <span class="report-icon" aria-hidden="true">&#9200;</span>
       <p class="report-label">Com prazo próximo</p>
       <p class="report-value"><%= @report_counts[:prazo_proximo] %></p>
     </article>
-    <article class="report-card">
+    <article class="report-card report-card--neutral">
+      <span class="report-icon" aria-hidden="true">&#128197;</span>
       <p class="report-label">Sem prazo</p>
       <p class="report-value"><%= @report_counts[:sem_prazo] %></p>
     </article>
-    <article class="report-card">
+    <article class="report-card report-card--info">
+      <span class="report-icon" aria-hidden="true">&#9877;</span>
       <p class="report-label">Com perícia</p>
       <p class="report-value"><%= @report_counts[:com_pericia] %></p>
     </article>
-    <article class="report-card">
+    <article class="report-card report-card--attention">
+      <span class="report-icon" aria-hidden="true">&#9888;</span>
       <p class="report-label">Com exigência pendente</p>
       <p class="report-value"><%= @report_counts[:com_exigencia_pendente] %></p>
     </article>
-    <article class="report-card">
+    <article class="report-card report-card--danger">
+      <span class="report-icon" aria-hidden="true">&#10071;</span>
       <p class="report-label">Processos em risco</p>
       <p class="report-value"><%= @report_counts[:saude_critica] %></p>
     </article>
   </div>
 </section>
 
-<section class="case-section">
-  <h3>Processos por fase</h3>
-  <div class="report-grid">
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Agenda de Hoje</h3>
+    <p>O que exige atenção imediata na operação.</p>
+  </div>
+
+  <div class="report-grid report-grid--kpi">
+    <article class="report-card report-card--danger">
+      <span class="report-icon" aria-hidden="true">&#9888;</span>
+      <p class="report-label">Prazos vencidos</p>
+      <p class="report-value"><%= @today_counts[:deadlines_overdue] %></p>
+    </article>
+    <article class="report-card report-card--warning">
+      <span class="report-icon" aria-hidden="true">&#9200;</span>
+      <p class="report-label">Prazos para hoje</p>
+      <p class="report-value"><%= @today_counts[:deadlines_today] %></p>
+    </article>
+    <article class="report-card report-card--danger">
+      <span class="report-icon" aria-hidden="true">&#10071;</span>
+      <p class="report-label">Tarefas atrasadas</p>
+      <p class="report-value"><%= @today_counts[:tasks_overdue] %></p>
+    </article>
+    <article class="report-card report-card--info">
+      <span class="report-icon" aria-hidden="true">&#10003;</span>
+      <p class="report-label">Tarefas para hoje</p>
+      <p class="report-value"><%= @today_counts[:tasks_today] %></p>
+    </article>
+    <article class="report-card report-card--neutral">
+      <span class="report-icon" aria-hidden="true">&#128197;</span>
+      <p class="report-label">Data de referência</p>
+      <p class="report-value"><%= l(Date.current, format: :short) %></p>
+    </article>
+  </div>
+</section>
+
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Últimos Andamentos</h3>
+    <p>Registros mais recentes do histórico operacional.</p>
+  </div>
+
+  <% if @recent_movements.any? %>
+    <div class="dashboard-feed">
+      <% @recent_movements.each do |movement| %>
+        <article class="dashboard-feed__item">
+          <header class="dashboard-feed__head">
+            <strong><%= movement.display_title.presence || "Andamento sem título" %></strong>
+            <span><%= movement.event_date.present? ? l(movement.event_date, format: :short) : "-" %></span>
+          </header>
+          <p>
+            <%= movement.process.internal_number %>
+            <% if movement.movement_type.present? %>
+              • <%= movement.movement_type.name %>
+            <% end %>
+          </p>
+          <%= link_to "Ver processo", legal_case_path(movement.process), class: "dashboard-feed__link" %>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="empty-state">Ainda não há andamentos registrados para exibir.</p>
+  <% end %>
+</section>
+
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Distribuição por Fase</h3>
+    <p>Entenda onde está a maior carga do escritório.</p>
+  </div>
+
+  <div class="report-grid report-grid--phases">
     <% @report_counts[:por_fase].each do |phase, count| %>
       <article class="report-card">
         <p class="report-label"><%= enum_label(LegalCase, :phase, phase) %></p>
@@ -43,10 +120,14 @@
   </div>
 </section>
 
-<section class="case-section">
-  <h3>Central de Risco</h3>
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Central de Risco</h3>
+    <p>Filas que exigem ação imediata.</p>
+  </div>
+
   <div class="risk-grid">
-    <article class="risk-card">
+    <article class="risk-card risk-card--warning">
       <div class="risk-card__head">
         <p>Vence hoje</p>
         <span class="status-pill status-pill--warning"><%= @risk_counts[:vence_hoje] %></span>
@@ -65,7 +146,7 @@
       <% end %>
     </article>
 
-    <article class="risk-card">
+    <article class="risk-card risk-card--info">
       <div class="risk-card__head">
         <p>Próximas 48h</p>
         <span class="status-pill status-pill--info"><%= @risk_counts[:vence_48h] %></span>
@@ -84,7 +165,7 @@
       <% end %>
     </article>
 
-    <article class="risk-card">
+    <article class="risk-card risk-card--danger">
       <div class="risk-card__head">
         <p>Atrasados</p>
         <span class="status-pill status-pill--danger"><%= @risk_counts[:atrasados] %></span>
@@ -103,7 +184,7 @@
       <% end %>
     </article>
 
-    <article class="risk-card">
+    <article class="risk-card risk-card--muted">
       <div class="risk-card__head">
         <p>Sem próxima providência</p>
         <span class="status-pill status-pill--muted"><%= @risk_counts[:sem_proxima_providencia] %></span>
@@ -124,111 +205,35 @@
   </div>
 </section>
 
-<section class="case-section">
-  <h3>Visão Gráfica</h3>
-  <% palette = [ "#1f4e79", "#4472c4", "#2f7d5b", "#9a6b2f", "#8b3a3a", "#6b5ca5", "#5d6775", "#264653", "#7f8c8d" ] %>
-  <% phase_labels = @chart_data.dig(:phase, :labels) || [] %>
-  <% phase_values = @chart_data.dig(:phase, :values) || [] %>
-  <% phase_max = [ phase_values.max.to_i, 1 ].max %>
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Visão Gráfica</h3>
+    <p>Distribuição operacional resumida.</p>
+  </div>
 
-  <% status_labels = @chart_data.dig(:status, :labels) || [] %>
-  <% status_values = @chart_data.dig(:status, :values) || [] %>
-  <% status_total = status_values.sum %>
-  <% cursor = 0.0 %>
-  <% status_slices = status_values.each_with_index.map do |value, idx|
-       pct = status_total.positive? ? (value.to_f / status_total * 100) : 0.0
-       next_cursor = cursor + pct
-       slice = "#{palette[idx % palette.length]} #{cursor.round(2)}% #{next_cursor.round(2)}%"
-       cursor = next_cursor
-       slice
-     end %>
-  <% donut_background = status_slices.any? ? "conic-gradient(#{status_slices.join(', ')})" : "conic-gradient(#d8cfbe 0% 100%)" %>
-
-  <% deadline_labels = @chart_data.dig(:deadlines, :labels) || [] %>
-  <% deadline_values = @chart_data.dig(:deadlines, :values) || [] %>
-  <% deadline_max = [ deadline_values.max.to_i, 1 ].max %>
-
-  <% responsible_labels = @chart_data.dig(:responsible, :labels) || [] %>
-  <% responsible_values = @chart_data.dig(:responsible, :values) || [] %>
-  <% responsible_max = [ responsible_values.max.to_i, 1 ].max %>
-
-  <div class="dashboard-charts-grid">
+  <div id="dashboard-charts-root" class="dashboard-charts-grid">
     <article class="dashboard-chart-card">
       <h4>Processos por fase</h4>
-      <% if phase_values.any? %>
-        <div class="chart-bars chart-bars--vertical">
-          <% phase_values.each_with_index do |value, idx| %>
-            <div class="chart-bars__item has-tooltip" data-tooltip="<%= "#{phase_labels[idx]}: #{value} processos" %>">
-              <span class="chart-bars__value"><%= value %></span>
-              <div class="chart-bars__bar-wrap">
-                <div class="chart-bars__bar" style="height: <%= ((value.to_f / phase_max) * 100).round(2) %>%; background-color: #2f5f8f;"></div>
-              </div>
-              <span class="chart-bars__label" title="<%= phase_labels[idx] %>"><%= phase_labels[idx].to_s.truncate(18) %></span>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="empty-state">Sem dados para o gráfico.</p>
-      <% end %>
+      <canvas id="dashboard-chart-phase"></canvas>
     </article>
 
     <article class="dashboard-chart-card">
       <h4>Status operacional</h4>
-      <% if status_values.any? %>
-        <div class="chart-donut-wrap">
-          <div class="chart-donut" style="background: <%= donut_background %>;">
-            <span><%= status_total %></span>
-          </div>
-          <ul class="chart-legend">
-            <% status_labels.each_with_index do |label, idx| %>
-              <li class="has-tooltip" data-tooltip="<%= "#{label}: #{status_values[idx]} processos" %>">
-                <span class="chart-legend__color" style="background-color: <%= palette[idx % palette.length] %>;"></span>
-                <span><%= label %> (<%= status_values[idx] %>)</span>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% else %>
-        <p class="empty-state">Sem dados para o gráfico.</p>
-      <% end %>
+      <canvas id="dashboard-chart-status"></canvas>
     </article>
 
     <article class="dashboard-chart-card">
       <h4>Risco de prazos</h4>
-      <% if deadline_values.any? %>
-        <div class="chart-bars chart-bars--vertical">
-          <% deadline_values.each_with_index do |value, idx| %>
-            <div class="chart-bars__item has-tooltip" data-tooltip="<%= "#{deadline_labels[idx]}: #{value}" %>">
-              <span class="chart-bars__value"><%= value %></span>
-              <div class="chart-bars__bar-wrap">
-                <div class="chart-bars__bar" style="height: <%= ((value.to_f / deadline_max) * 100).round(2) %>%; background-color: <%= palette[idx % palette.length] %>;"></div>
-              </div>
-              <span class="chart-bars__label" title="<%= deadline_labels[idx] %>"><%= deadline_labels[idx] %></span>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="empty-state">Sem dados para o gráfico.</p>
-      <% end %>
+      <canvas id="dashboard-chart-deadlines"></canvas>
     </article>
 
     <article class="dashboard-chart-card">
       <h4>Carga por responsável</h4>
-      <% if responsible_values.any? %>
-        <div class="chart-bars chart-bars--horizontal">
-          <% responsible_values.each_with_index do |value, idx| %>
-            <div class="chart-bars__row has-tooltip" data-tooltip="<%= "#{responsible_labels[idx]}: #{value} processos" %>">
-              <span class="chart-bars__row-label" title="<%= responsible_labels[idx] %>"><%= responsible_labels[idx].to_s.truncate(24) %></span>
-              <div class="chart-bars__row-track">
-                <div class="chart-bars__row-bar" style="width: <%= ((value.to_f / responsible_max) * 100).round(2) %>%;"></div>
-              </div>
-              <span class="chart-bars__row-value"><%= value %></span>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="empty-state">Sem dados para o gráfico.</p>
-      <% end %>
+      <canvas id="dashboard-chart-responsible"></canvas>
     </article>
   </div>
+
+  <script id="dashboard-charts-data" type="application/json">
+    <%= raw(@chart_data.to_json) %>
+  </script>
 </section>

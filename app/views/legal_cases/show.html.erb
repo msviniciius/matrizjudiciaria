@@ -5,6 +5,7 @@
     <div>
       <p class="case-kicker">Processo</p>
       <h1><%= @legal_case.internal_number %></h1>
+      <p class="case-summary__subtitle">Visão consolidada do andamento, riscos e próximas ações.</p>
     </div>
   </div>
 
@@ -50,7 +51,10 @@
 
 <div class="case-layout-grid">
   <section class="case-section">
-    <h3>Classificação</h3>
+    <div class="dashboard-section__head">
+      <h3>Classificação</h3>
+      <p>Macroetapa e condição operacional do processo.</p>
+    </div>
     <div class="case-summary__grid">
       <div><strong>Fase:</strong> <span><%= enum_label(LegalCase, :phase, @legal_case.phase) %></span></div>
       <div><strong>Status:</strong> <span><%= enum_label(LegalCase, :status, @legal_case.status) %></span></div>
@@ -59,7 +63,10 @@
   </section>
 
   <section class="case-section">
-    <h3>Dados do Processo</h3>
+    <div class="dashboard-section__head">
+      <h3>Dados do Processo</h3>
+      <p>Dados estruturais e informações estratégicas do caso.</p>
+    </div>
     <div class="case-summary__grid">
       <div><strong>Valor da causa:</strong> <span><%= @legal_case.claim_value.presence || "-" %></span></div>
       <div><strong>Área:</strong> <span><%= @legal_case.legal_area&.name || "-" %></span></div>
@@ -71,41 +78,53 @@
   </section>
 </div>
 
-<% if @legal_case.tem_pericia? %>
-  <section class="case-section">
-    <div class="section-head">
+<section class="case-section">
+  <div class="section-head">
+    <div>
       <h3>Perícias do Processo</h3>
-      <%= link_to "Nova perícia", new_legal_case_process_exam_path(@legal_case), class: "btn btn-secondary" %>
+      <p class="section-subtitle">Controle de perícias e laudos vinculados.</p>
     </div>
-
-    <% if @process_exams.any? %>
-      <div class="exam-cards">
-        <% @process_exams.each do |exam| %>
-          <article class="exam-card <%= 'exam-card--warning' if exam.near_schedule? %> <%= 'exam-card--danger' if exam.status_laudo_pendente? %>">
-            <p><strong>Natureza:</strong> <%= enum_label(ProcessExam, :exam_nature, exam.exam_nature) %></p>
-            <p><strong>Esfera:</strong> <%= enum_label(ProcessExam, :exam_scope, exam.exam_scope) %></p>
-            <p><strong>Data:</strong> <%= exam.scheduled_label %></p>
-            <p><strong>Status:</strong> <%= enum_label(ProcessExam, :status, exam.status) %></p>
-            <p><strong>Local:</strong> <%= exam.location.presence || "-" %></p>
-            <div class="form-inline-actions">
-              <%= link_to "Editar", edit_process_exam_path(exam), class: "btn btn-secondary" %>
-              <%= button_to "Excluir", process_exam_path(exam), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Confirma a exclusão da perícia?" } } %>
-            </div>
-          </article>
-        <% end %>
-      </div>
+    <% if @legal_case.tem_pericia? %>
+      <%= link_to "Nova perícia", new_legal_case_process_exam_path(@legal_case), class: "btn btn-secondary" %>
     <% else %>
-      <p class="empty-state">Nenhuma perícia cadastrada.</p>
+      <%= link_to "Habilitar perícia", edit_legal_case_path(@legal_case), class: "btn btn-secondary" %>
     <% end %>
+  </div>
 
-    <% if @legal_case.observacao_geral_pericia.present? %>
-      <p><strong>Observação geral:</strong> <%= @legal_case.observacao_geral_pericia %></p>
-    <% end %>
-  </section>
-<% end %>
+  <% unless @legal_case.tem_pericia? %>
+    <p class="empty-state">Perícias desativadas neste processo. Edite o processo e marque "Tem perícia?".</p>
+  <% end %>
+
+  <% if @process_exams.any? %>
+    <div class="exam-cards">
+      <% @process_exams.each do |exam| %>
+        <article class="exam-card <%= 'exam-card--warning' if exam.near_schedule? %> <%= 'exam-card--danger' if exam.status_laudo_pendente? %>">
+          <p><strong>Natureza:</strong> <%= enum_label(ProcessExam, :exam_nature, exam.exam_nature) %></p>
+          <p><strong>Esfera:</strong> <%= enum_label(ProcessExam, :exam_scope, exam.exam_scope) %></p>
+          <p><strong>Data:</strong> <%= exam.scheduled_label %></p>
+          <p><strong>Status:</strong> <%= enum_label(ProcessExam, :status, exam.status) %></p>
+          <p><strong>Local:</strong> <%= exam.location.presence || "-" %></p>
+          <div class="form-inline-actions">
+            <%= link_to "Editar", edit_process_exam_path(exam), class: "btn btn-secondary" %>
+            <%= button_to "Excluir", process_exam_path(exam), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Confirma a exclusão da perícia?" } } %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% elsif @legal_case.tem_pericia? %>
+    <p class="empty-state">Nenhuma perícia cadastrada.</p>
+  <% end %>
+
+  <% if @legal_case.observacao_geral_pericia.present? %>
+    <p><strong>Observação geral:</strong> <%= @legal_case.observacao_geral_pericia %></p>
+  <% end %>
+</section>
 
 <section class="case-section">
-  <h3>Situação Atual</h3>
+  <div class="dashboard-section__head">
+    <h3>Situação Atual</h3>
+    <p>Resumo operacional para decisão rápida.</p>
+  </div>
   <div class="case-summary__grid">
     <div><strong>Último andamento:</strong> <span><%= @legal_case.last_movement.presence || "-" %></span></div>
     <div><strong>Data do último andamento:</strong> <span><%= @legal_case.last_movement_at.present? ? l(@legal_case.last_movement_at, format: :short) : "-" %></span></div>
@@ -117,7 +136,10 @@
 
 <section class="case-section">
   <div class="section-head">
-    <h3>Timeline Unificada</h3>
+    <div>
+      <h3>Timeline Unificada</h3>
+      <p class="section-subtitle">Histórico de andamentos, notas e eventos relevantes.</p>
+    </div>
     <%= link_to "Novo andamento", new_process_movement_path(process_id: @legal_case.id), class: "btn btn-secondary" %>
   </div>
 
@@ -156,7 +178,10 @@
 
 <section class="case-section">
   <div class="section-head">
-    <h3>Prazos</h3>
+    <div>
+      <h3>Prazos</h3>
+      <p class="section-subtitle">Datas limite para providências judiciais e internas.</p>
+    </div>
     <%= link_to "Novo prazo", new_deadline_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
   </div>
 
@@ -192,7 +217,10 @@
 
 <section class="case-section">
   <div class="section-head">
-    <h3>Tarefas</h3>
+    <div>
+      <h3>Tarefas</h3>
+      <p class="section-subtitle">Ações da equipe para manter o processo em dia.</p>
+    </div>
     <%= link_to "Nova tarefa", new_task_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
   </div>
 
