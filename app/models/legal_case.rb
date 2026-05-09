@@ -50,6 +50,9 @@ class LegalCase < ApplicationRecord
   has_many :deadlines, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :process_exams, dependent: :destroy
+  accepts_nested_attributes_for :process_exams,
+    reject_if: proc { |attrs| attrs.values_at("exam_nature", "exam_scope", "status", "scheduled_at", "location", "expert_name", "notes").all?(&:blank?) },
+    allow_destroy: true
 
   enum :status, OFFICIAL_STATUSES.index_with(&:itself), prefix: true
 

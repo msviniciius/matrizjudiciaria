@@ -16,6 +16,7 @@
   <% clients = current_office.clients.ordered.to_a %>
   <% pending_client_ids = clients.select(&:cadastro_pendente?).map(&:id) %>
   <% office_users = current_office.users.active.order(:name).to_a %>
+  <% modal_exam = legal_case.process_exams.find(&:new_record?) || legal_case.process_exams.first || legal_case.process_exams.build %>
 
   <section class="form-section">
     <div class="dashboard-section__head">
@@ -166,7 +167,7 @@
     <div class="form-grid">
       <div class="field-full">
         <label class="checkbox-field">
-          <%= form.check_box :tem_pericia, data: { pericia_toggle: true } %>
+          <%= form.check_box :tem_pericia, data: { pericia_toggle: true, pericia_open_modal_on_check: true } %>
           <span>Tem perícia?</span>
         </label>
       </div>
@@ -175,9 +176,7 @@
         <%= form.label :observacao_geral_pericia %>
         <%= form.text_area :observacao_geral_pericia %>
 
-        <% if legal_case.persisted? %>
-          <%= link_to "Nova perícia", new_legal_case_process_exam_path(legal_case), class: "btn btn-secondary" %>
-        <% end %>
+        <button type="button" class="btn btn-secondary" data-open-pericia-modal>Adicionar/editar dados da perícia</button>
       </div>
     </div>
   </section>
@@ -189,6 +188,72 @@
     <% end %>
     <%= form.submit %>
   </div>
+
+  <dialog class="quick-client-modal" data-pericia-modal>
+    <div class="quick-client-modal__header">
+      <h3>Dados da Perícia</h3>
+      <button
+        type="button"
+        class="btn btn-secondary btn-icon"
+        data-close-pericia-modal
+        aria-label="Fechar"
+        title="Fechar"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <div class="form-grid">
+      <%= form.fields_for :process_exams, modal_exam do |exam_form| %>
+        <%= exam_form.hidden_field :id if exam_form.object.persisted? %>
+        <div>
+          <%= exam_form.label :exam_nature, "Natureza" %>
+          <%= exam_form.select :exam_nature, enum_options_for(ProcessExam, :exam_nature), include_blank: "Selecione a natureza" %>
+        </div>
+
+        <div>
+          <%= exam_form.label :exam_scope, "Esfera" %>
+          <%= exam_form.select :exam_scope, enum_options_for(ProcessExam, :exam_scope), include_blank: "Selecione a esfera" %>
+        </div>
+
+        <div>
+          <%= exam_form.label :status, "Status" %>
+          <%= exam_form.select :status, enum_options_for(ProcessExam, :status), include_blank: "Selecione o status" %>
+        </div>
+
+        <div>
+          <%= exam_form.label :scheduled_at, "Data/hora" %>
+          <%= exam_form.datetime_field :scheduled_at %>
+        </div>
+
+        <div>
+          <%= exam_form.label :location, "Local" %>
+          <%= exam_form.text_field :location %>
+        </div>
+
+        <div>
+          <%= exam_form.label :expert_name, "Perito" %>
+          <%= exam_form.text_field :expert_name %>
+        </div>
+
+        <div class="field-full">
+          <%= exam_form.label :notes, "Observações" %>
+          <%= exam_form.text_area :notes %>
+        </div>
+
+        <div>
+          <label class="checkbox-field">
+            <%= exam_form.check_box :active %>
+            <span>Ativa</span>
+          </label>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" data-save-pericia-modal>Salvar perícia no formulário</button>
+    </div>
+  </dialog>
 <% end %>
 
 <dialog class="quick-client-modal" data-quick-client-modal data-endpoint="<%= quick_create_clients_path %>">

@@ -93,14 +93,17 @@ class LegalCasesController < ApplicationController
       priority: current_office.default_priority,
       responsible_name: current_user&.name
     )
+    @legal_case.process_exams.build if @legal_case.process_exams.empty?
   end
 
   def edit
+    @legal_case.process_exams.build if @legal_case.process_exams.empty?
   end
 
   def create
     @legal_case = current_office.legal_cases.new(legal_case_params)
     @legal_case.responsible_name = current_user&.name
+    @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
     ensure_legal_case_office_scope!
 
     respond_to do |format|
@@ -116,9 +119,11 @@ class LegalCasesController < ApplicationController
 
   def update
     ensure_legal_case_office_scope!
+    @legal_case.assign_attributes(legal_case_params)
+    @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
 
     respond_to do |format|
-      if @legal_case.update(legal_case_params)
+      if @legal_case.save
         format.html { redirect_to @legal_case, status: :see_other, flash: success_flash("Processo atualizado com sucesso.", @legal_case) }
         format.json { render :show, status: :ok, location: @legal_case }
       else
@@ -149,12 +154,10 @@ class LegalCasesController < ApplicationController
       :protocol_date,
       :process_type_id,
       :legal_area_id,
-      :subarea,
       :court_id,
       :district_id,
       :phase,
       :status,
-      :support_team,
       :opposing_party,
       :claim_value,
       :priority,
@@ -164,7 +167,19 @@ class LegalCasesController < ApplicationController
       :last_movement_at,
       :next_deadline_on,
       :tem_pericia,
-      :observacao_geral_pericia
+      :observacao_geral_pericia,
+      process_exams_attributes: [
+        :id,
+        :exam_nature,
+        :exam_scope,
+        :status,
+        :scheduled_at,
+        :location,
+        :expert_name,
+        :notes,
+        :active,
+        :_destroy
+      ]
     ]
 
     permitted << :responsible_name if current_user&.admin?

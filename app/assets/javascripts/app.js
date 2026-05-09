@@ -1074,6 +1074,26 @@
 
 
 (() => {
+  const openDialog = (dialog) => {
+    if (!dialog) return;
+
+    dialog.hidden = false;
+    if (typeof dialog.showModal === "function") {
+      if (!dialog.open) dialog.showModal();
+      return;
+    }
+
+    dialog.setAttribute("open", "open");
+  };
+
+  const closeDialog = (dialog) => {
+    if (!dialog) return;
+
+    if (typeof dialog.close === "function" && dialog.open) dialog.close();
+    dialog.removeAttribute("open");
+    if (typeof dialog.showModal !== "function") dialog.hidden = true;
+  };
+
   const togglePericiaSection = (checkbox) => {
     const form = checkbox.closest("form");
     const section = form?.querySelector("[data-pericia-section]");
@@ -1095,10 +1115,56 @@
       }
 
       checkbox.dataset.periciaBound = "true";
+      checkbox.dataset.periciaPrevChecked = checkbox.checked ? "true" : "false";
       togglePericiaSection(checkbox);
-      checkbox.addEventListener("change", () => togglePericiaSection(checkbox));
+      checkbox.addEventListener("change", () => {
+        togglePericiaSection(checkbox);
+
+        const form = checkbox.closest("form");
+        const modal = form?.querySelector("[data-pericia-modal]");
+        const wasChecked = checkbox.dataset.periciaPrevChecked === "true";
+        const isChecked = checkbox.checked;
+        checkbox.dataset.periciaPrevChecked = isChecked ? "true" : "false";
+
+        if (!wasChecked && isChecked && checkbox.dataset.periciaOpenModalOnCheck === "true") {
+          openDialog(modal);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-pericia-modal]").forEach((modal) => {
+      if (modal.dataset.periciaModalBound === "true") return;
+
+      modal.dataset.periciaModalBound = "true";
+
+      if (typeof modal.showModal !== "function") modal.hidden = true;
+
+      modal.addEventListener("click", (event) => {
+        if (event.target.closest("[data-close-pericia-modal]")) {
+          closeDialog(modal);
+          return;
+        }
+
+        if (event.target.closest("[data-save-pericia-modal]")) {
+          closeDialog(modal);
+          return;
+        }
+
+        if (event.target === modal) {
+          closeDialog(modal);
+        }
+      });
     });
   };
+
+  document.addEventListener("click", (event) => {
+    const openButton = event.target.closest("[data-open-pericia-modal]");
+    if (!openButton) return;
+
+    const form = openButton.closest("form");
+    const modal = form?.querySelector("[data-pericia-modal]");
+    openDialog(modal);
+  });
 
   document.addEventListener("turbo:load", initPericiaToggle);
   document.addEventListener("DOMContentLoaded", initPericiaToggle);

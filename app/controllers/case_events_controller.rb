@@ -97,8 +97,7 @@ class CaseEventsController < ApplicationController
       :responsible_name,
       :movement_type_id,
       :entry_kind,
-      :next_action,
-      :process_exam_id
+      :next_action
     ])
   end
 

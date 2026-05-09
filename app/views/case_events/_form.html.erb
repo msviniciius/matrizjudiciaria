@@ -45,19 +45,6 @@
       </div>
 
       <div class="field-full">
-        <label>
-          <%= check_box_tag :link_process_exam, "1", case_event.process_exam_id.present?, data: { process_exam_toggle: true } %>
-          Vincular este registro a uma perícia
-        </label>
-      </div>
-
-      <div data-process-exam-field>
-        <%= form.label :process_exam_id, "Perícia vinculada" %>
-        <% exams = case_event.legal_case_id.present? ? ProcessExam.where(legal_case_id: case_event.legal_case_id, active: true).order(:scheduled_at) : ProcessExam.none %>
-        <%= form.collection_select :process_exam_id, exams, :id, :summary_label, { include_blank: "Selecione a perícia" }, data: { process_exam_select: true } %>
-      </div>
-
-      <div class="field-full">
         <p class="form-hint">
           Fase após o registro: definida automaticamente pelo <strong>tipo de andamento</strong>.
           Status após o registro: definido automaticamente pelo <strong>evento</strong>.

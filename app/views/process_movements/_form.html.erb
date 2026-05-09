@@ -86,12 +86,6 @@
     <h4 class="form-step-title">2. Vínculos e contexto</h4>
     <div class="form-grid">
       <div>
-        <%= form.label :exam_id, "Perícia vinculada (opcional)" %>
-        <% exams = process_movement.process_id.present? ? ProcessExam.where(legal_case_id: process_movement.process_id, active: true).order(:scheduled_at) : ProcessExam.none %>
-        <%= form.collection_select :exam_id, exams, :id, :summary_label, include_blank: (exams.any? ? "Sem vínculo" : "Nenhuma perícia ativa neste processo"), data: { movement_exam: true } %>
-      </div>
-
-      <div>
         <%= form.label :administrative_situation, "Situação administrativa (opcional)" %>
         <%= form.select :administrative_situation, enum_options_for(ProcessMovement, :administrative_situation), include_blank: "Não se aplica" %>
       </div>

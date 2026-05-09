@@ -54,6 +54,7 @@ class ProcessMovement < ApplicationRecord
 
   before_validation :apply_defaults_from_template
   before_validation :fallback_phase_from_process
+  before_validation :fallback_exam_from_process
 
   after_commit :sync_modules!, on: [ :create, :update ]
   after_create_commit { create_audit!("create", previous_changes) }
@@ -91,7 +92,16 @@ class ProcessMovement < ApplicationRecord
     return if movement_template.blank?
     return unless movement_template.requires_exam_id?
 
-    errors.add(:exam_id, "é obrigatório para este modelo de andamento") if exam_id.blank?
+    if exam_id.blank?
+      errors.add(:base, "Este modelo exige perícia ativa no processo. Cadastre a perícia no processo antes de salvar o andamento.")
+    end
+  end
+
+  def fallback_exam_from_process
+    return if exam_id.present?
+    return if process.blank?
+
+    self.exam = process.process_exams.active.order(:scheduled_at).first
   end
 
   def administrative_situation_required_for_administrative_previdenciario
