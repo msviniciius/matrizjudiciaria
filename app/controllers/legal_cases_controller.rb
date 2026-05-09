@@ -90,7 +90,8 @@ class LegalCasesController < ApplicationController
       internal_number: LegalCase.next_internal_number_preview(current_office),
       phase: current_office.default_phase,
       status: current_office.default_status,
-      priority: current_office.default_priority
+      priority: current_office.default_priority,
+      responsible_name: current_user&.name
     )
   end
 
@@ -99,6 +100,7 @@ class LegalCasesController < ApplicationController
 
   def create
     @legal_case = current_office.legal_cases.new(legal_case_params)
+    @legal_case.responsible_name = current_user&.name
     ensure_legal_case_office_scope!
 
     respond_to do |format|
@@ -142,18 +144,16 @@ class LegalCasesController < ApplicationController
   end
 
   def legal_case_params
-    params.expect(legal_case: [
+    permitted = [
       :entry_date,
       :protocol_date,
       :process_type_id,
       :legal_area_id,
       :subarea,
-      :main_subject,
       :court_id,
       :district_id,
       :phase,
       :status,
-      :responsible_name,
       :support_team,
       :opposing_party,
       :claim_value,
@@ -162,11 +162,14 @@ class LegalCasesController < ApplicationController
       :client_id,
       :last_movement,
       :last_movement_at,
-      :next_action,
       :next_deadline_on,
       :tem_pericia,
       :observacao_geral_pericia
-    ])
+    ]
+
+    permitted << :responsible_name if current_user&.admin?
+
+    params.expect(legal_case: permitted)
   end
 
   def load_case_related_collections

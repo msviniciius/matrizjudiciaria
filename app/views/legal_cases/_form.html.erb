@@ -10,10 +10,12 @@
     </div>
   <% end %>
 
-  <% grouped_areas = LegalArea.order(:justice_branch, :name).group_by(&:justice_branch) %>
+  <% filtered_areas = LegalArea.order(:justice_branch, :name).reject { |area| area.name.to_s.strip.casecmp("Administrativo").zero? } %>
+  <% grouped_areas = filtered_areas.group_by(&:justice_branch) %>
   <% grouped_options = grouped_areas.transform_values { |areas| areas.map { |area| [area.name, area.id] } } %>
   <% clients = current_office.clients.ordered.to_a %>
   <% pending_client_ids = clients.select(&:cadastro_pendente?).map(&:id) %>
+  <% office_users = current_office.users.active.order(:name).to_a %>
 
   <section class="form-section">
     <div class="dashboard-section__head">
@@ -73,16 +75,6 @@
       </div>
 
       <div>
-        <%= form.label :subarea %>
-        <%= form.text_field :subarea %>
-      </div>
-
-      <div>
-        <%= form.label :main_subject %>
-        <%= form.text_field :main_subject %>
-      </div>
-
-      <div>
         <%= form.label :entry_date %>
         <%= form.date_field :entry_date %>
       </div>
@@ -95,11 +87,6 @@
       <div>
         <%= form.label :claim_value, "Valor da causa" %>
         <%= form.text_field :claim_value, data: { mask: "currency-br" }, inputmode: "numeric" %>
-      </div>
-
-      <div class="field-full">
-        <%= form.label :support_team, "Equipe de apoio" %>
-        <%= form.text_field :support_team %>
       </div>
 
       <div class="field-full">
@@ -158,14 +145,15 @@
         <%= form.date_field :next_deadline_on %>
       </div>
 
-      <div class="field-full">
-        <%= form.label :next_action, "Próxima providência" %>
-        <%= form.text_field :next_action %>
-      </div>
-
       <div>
         <%= form.label :responsible_name, "Responsável atual" %>
-        <%= form.text_field :responsible_name %>
+        <% if current_user&.admin? %>
+          <%= form.select :responsible_name,
+                          options_for_select(office_users.map { |user| [user.name, user.name] }, legal_case.responsible_name),
+                          { include_blank: "Selecione o responsável" } %>
+        <% else %>
+          <%= form.text_field :responsible_name, readonly: true %>
+        <% end %>
       </div>
     </div>
   </section>

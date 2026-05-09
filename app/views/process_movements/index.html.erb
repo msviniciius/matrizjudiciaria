@@ -111,6 +111,7 @@
       <thead>
         <tr>
           <th>Processo</th>
+          <th>Cliente</th>
           <th>Fase</th>
           <th>Status</th>
           <th>Tipo</th>
@@ -131,6 +132,7 @@
                   -
                 <% end %>
               </td>
+              <td><%= movement.process&.client&.full_name || "-" %></td>
               <td><%= movement.phase&.name %></td>
               <td><%= movement.process&.status.present? ? enum_label(LegalCase, :status, movement.process.status) : "-" %></td>
               <td><%= movement.movement_type&.name %></td>
@@ -149,7 +151,7 @@
           <% end %>
         <% else %>
           <tr>
-            <td colspan="8" class="table-empty-state">Nenhum andamento processual cadastrado.</td>
+            <td colspan="9" class="table-empty-state">Nenhum andamento processual cadastrado.</td>
           </tr>
         <% end %>
       </tbody>

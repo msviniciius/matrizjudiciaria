@@ -246,6 +246,10 @@ class LegalCase < ApplicationRecord
     next_deadline_on
   end
 
+  def display_number_and_client
+    "#{internal_number} - #{client&.full_name.presence || 'Cliente não informado'}"
+  end
+
   def next_deadline_required?
     next_deadline_expected?
   end

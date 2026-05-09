@@ -65,6 +65,7 @@
       <thead>
         <tr>
           <th>Processo</th>
+          <th>Cliente</th>
           <th>Tipo de registro</th>
           <th>Evento</th>
           <th>Categoria</th>
@@ -84,6 +85,7 @@
                   -
                 <% end %>
               </td>
+              <td><%= case_event.legal_case&.client&.full_name || "-" %></td>
               <td><%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %></td>
               <td><%= enum_label(CaseEvent, :event_type, case_event.event_type) %></td>
               <td><%= case_event.movement_type&.name || "-" %></td>
@@ -101,7 +103,7 @@
           <% end %>
         <% else %>
           <tr>
-            <td colspan="7" class="table-empty-state">Nenhum andamento cadastrado.</td>
+            <td colspan="8" class="table-empty-state">Nenhum andamento cadastrado.</td>
           </tr>
         <% end %>
       </tbody>
