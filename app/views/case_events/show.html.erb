@@ -1,4 +1,59 @@
-<%= render @case_event %>
+<% content_for :title, "Andamento Processual" %>
+
+<section class="case-section">
+  <header class="section-head">
+    <h3>Detalhes do andamento</h3>
+  </header>
+
+  <div class="details-table-wrap">
+    <table class="details-table">
+      <tbody>
+        <tr>
+          <th>Processo</th>
+          <td>
+            <% if @case_event.legal_case.present? %>
+              <%= link_to @case_event.legal_case.internal_number, legal_case_path(@case_event.legal_case) %>
+            <% else %>
+              -
+            <% end %>
+          </td>
+        </tr>
+        <tr>
+          <th>Tipo de registro</th>
+          <td><%= enum_label(CaseEvent, :entry_kind, @case_event.entry_kind) %></td>
+        </tr>
+        <tr>
+          <th>Evento</th>
+          <td><%= enum_label(CaseEvent, :event_type, @case_event.event_type) %></td>
+        </tr>
+        <tr>
+          <th>Categoria</th>
+          <td><%= @case_event.movement_type&.name || "-" %></td>
+        </tr>
+        <tr>
+          <th>Perícia vinculada</th>
+          <td><%= @case_event.process_exam&.summary_label || "-" %></td>
+        </tr>
+        <tr>
+          <th>Data/hora</th>
+          <td><%= @case_event.occurred_at %></td>
+        </tr>
+        <tr>
+          <th>Próxima providência</th>
+          <td><%= @case_event.next_action.presence || "-" %></td>
+        </tr>
+        <tr>
+          <th>Responsável</th>
+          <td><%= @case_event.responsible_name.presence || "-" %></td>
+        </tr>
+        <tr>
+          <th>Descrição</th>
+          <td><%= @case_event.description.presence || "-" %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <div class="case-actions case-actions--footer">
   <%= link_to "Editar andamento", edit_case_event_path(@case_event), class: "btn btn-secondary" %>

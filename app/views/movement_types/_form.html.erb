@@ -1,3 +1,5 @@
+<% back_path = local_assigns[:back_path] %>
+
 <%= form_with(model: movement_type, class: "app-form") do |form| %>
   <% if movement_type.errors.any? %>
     <div class="form-errors">
@@ -31,6 +33,9 @@
   </section>
 
   <div class="form-actions">
-    <%= form.submit %>
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
+    <%= form.submit movement_type.persisted? ? "Salvar tipo de andamento" : "Cadastrar tipo de andamento", class: "btn btn-primary" %>
   </div>
 <% end %>

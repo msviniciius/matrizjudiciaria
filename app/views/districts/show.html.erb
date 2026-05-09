@@ -1,0 +1,29 @@
+<% content_for :title, "Comarca" %>
+
+<section class="case-section">
+  <h3>Detalhes</h3>
+  <div class="table-wrap details-table">
+    <table>
+      <tbody>
+        <tr>
+          <th>Nome</th>
+          <td><%= @district.name %></td>
+        </tr>
+        <tr>
+          <th>Órgãos/Varas vinculados</th>
+          <td><%= @district.courts.count %></td>
+        </tr>
+        <tr>
+          <th>Processos vinculados</th>
+          <td><%= @district.legal_cases.count %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="case-actions case-actions--footer">
+  <%= link_to "Editar", edit_district_path(@district), class: "btn btn-secondary" %>
+  <%= link_to "Voltar", districts_path, class: "btn btn-secondary" %>
+  <%= button_to "Excluir", @district, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Confirma a exclusão?" } } %>
+</div>

@@ -1,3 +1,5 @@
+<% back_path = local_assigns[:back_path] %>
+
 <%= form_with(model: [@legal_case || process_exam.legal_case, process_exam], class: "app-form") do |form| %>
   <% if process_exam.errors.any? %>
     <div class="form-errors">
@@ -56,6 +58,9 @@
   </section>
 
   <div class="form-actions">
-    <%= form.submit %>
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
+    <%= form.submit process_exam.persisted? ? "Salvar perícia" : "Cadastrar perícia", class: "btn btn-primary" %>
   </div>
 <% end %>

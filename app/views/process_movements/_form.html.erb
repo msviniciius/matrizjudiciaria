@@ -1,3 +1,5 @@
+<% back_path = local_assigns[:back_path] %>
+
 <%= form_with(model: process_movement, class: "app-form") do |form| %>
   <% if process_movement.errors.any? %>
     <div class="form-errors">
@@ -107,5 +109,10 @@
     </div>
   </div>
 
-  <div class="form-actions"><%= form.submit %></div>
+  <div class="form-actions">
+    <% if back_path.present? %>
+      <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
+    <% end %>
+    <%= form.submit process_movement.persisted? ? "Salvar andamento processual" : "Cadastrar andamento processual", class: "btn btn-primary" %>
+  </div>
 <% end %>

@@ -4,7 +4,12 @@
   <%= link_to "Nova comarca", new_district_path, class: "btn btn-primary" %>
 <% end %>
 
-<section class="case-section">
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @districts.size %></strong> comarca(s)</p>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>
@@ -19,6 +24,9 @@
             <tr>
               <td><%= district.name %></td>
               <td class="table-actions">
+                <%= link_to district_path(district), class: "btn btn-secondary btn-icon", aria: { label: "Ver comarca" }, title: "Ver comarca" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
                 <%= link_to edit_district_path(district), class: "btn btn-secondary btn-icon", aria: { label: "Editar comarca" }, title: "Editar comarca" do %>
                   <span aria-hidden="true">&#9998;</span>
                 <% end %>
