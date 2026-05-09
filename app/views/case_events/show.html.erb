@@ -23,20 +23,12 @@
           <td><%= enum_label(CaseEvent, :entry_kind, @case_event.entry_kind) %></td>
         </tr>
         <tr>
-          <th>Evento</th>
-          <td><%= enum_label(CaseEvent, :event_type, @case_event.event_type) %></td>
-        </tr>
-        <tr>
           <th>Categoria</th>
           <td><%= @case_event.movement_type&.name || "-" %></td>
         </tr>
         <tr>
           <th>Perícia vinculada</th>
           <td><%= @case_event.process_exam&.summary_label || "-" %></td>
-        </tr>
-        <tr>
-          <th>Data/hora</th>
-          <td><%= @case_event.occurred_at %></td>
         </tr>
         <tr>
           <th>Próxima providência</th>

@@ -10,11 +10,6 @@
   </div>
 
   <div>
-    <strong>Evento:</strong>
-    <%= enum_label(CaseEvent, :event_type, case_event.event_type) %>
-  </div>
-
-  <div>
     <strong>Categoria:</strong>
     <%= case_event.movement_type&.name || "-" %>
   </div>
@@ -22,11 +17,6 @@
   <div>
     <strong>Perícia vinculada:</strong>
     <%= case_event.process_exam&.summary_label || "-" %>
-  </div>
-
-  <div>
-    <strong>Data/hora:</strong>
-    <%= case_event.occurred_at %>
   </div>
 
   <div>

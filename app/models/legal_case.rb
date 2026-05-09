@@ -110,12 +110,12 @@ class LegalCase < ApplicationRecord
   def update_snapshot_from_case_event!(event)
     latest_movement = case_events
       .where(entry_kind: "andamento")
-      .order(occurred_at: :desc, id: :desc)
+      .order(created_at: :desc, id: :desc)
       .first
 
     attrs = {
       last_movement: latest_movement&.description,
-      last_movement_at: latest_movement&.occurred_at,
+      last_movement_at: latest_movement&.created_at,
       next_action: event.next_action.presence || next_action,
       next_deadline_on: deadlines.where.not(status: [ "completed", "overdue" ]).order(:due_date).pick(:due_date)
     }

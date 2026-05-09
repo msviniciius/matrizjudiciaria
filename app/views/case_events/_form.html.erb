@@ -34,20 +34,10 @@
         <%= form.collection_select :movement_type_id, MovementType.where(active: true).order(:name), :id, :name, { include_blank: "Selecione a categoria" }, data: { movement_type_select: true } %>
       </div>
 
-      <div>
-        <%= form.label :event_type, "Evento" %>
-        <%= form.select :event_type, enum_options_for(CaseEvent, :event_type) %>
-      </div>
-
-      <div>
-        <%= form.label :occurred_at, "Data e hora do evento" %>
-        <%= form.datetime_field :occurred_at %>
-      </div>
-
       <div class="field-full">
         <p class="form-hint">
           Fase após o registro: definida automaticamente pelo <strong>tipo de andamento</strong>.
-          Status após o registro: definido automaticamente pelo <strong>evento</strong>.
+          Data/hora e status do registro: definidos automaticamente pelo <strong>sistema</strong>.
         </p>
       </div>
 

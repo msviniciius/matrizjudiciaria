@@ -194,7 +194,7 @@ class LegalCasesController < ApplicationController
 
     @legacy_case_events = @legal_case.case_events
       .includes(:movement_type, :process_exam)
-      .order(occurred_at: :desc)
+      .order(created_at: :desc)
 
     @timeline_items = build_timeline(@process_movements, @legacy_case_events)
 
@@ -224,7 +224,7 @@ class LegalCasesController < ApplicationController
         source: :legacy_case_event,
         title: event.description,
         description: "Registro legado (case_events)",
-        date: event.occurred_at,
+        date: event.created_at,
         nature: event.entry_kind,
         highlight: false,
         movement_type: event.movement_type&.name,

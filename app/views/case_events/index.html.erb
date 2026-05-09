@@ -29,10 +29,6 @@
           <%= form.select :entry_kind, enum_options_for(CaseEvent, :entry_kind), { include_blank: "Todos", selected: @filters[:entry_kind] } %>
         </div>
         <div>
-          <%= form.label :event_type, "Evento" %>
-          <%= form.select :event_type, enum_options_for(CaseEvent, :event_type), { include_blank: "Todos", selected: @filters[:event_type] } %>
-        </div>
-        <div>
           <%= form.label :movement_type_id, "Categoria" %>
           <%= form.collection_select :movement_type_id, @movement_types, :id, :name, { include_blank: "Todas", selected: @filters[:movement_type_id] } %>
         </div>
@@ -67,10 +63,8 @@
           <th>Processo</th>
           <th>Cliente</th>
           <th>Tipo de registro</th>
-          <th>Evento</th>
           <th>Categoria</th>
           <th>Perícia</th>
-          <th>Data</th>
           <th class="actions-col">Ações</th>
         </tr>
       </thead>
@@ -87,10 +81,8 @@
               </td>
               <td><%= case_event.legal_case&.client&.full_name || "-" %></td>
               <td><%= enum_label(CaseEvent, :entry_kind, case_event.entry_kind) %></td>
-              <td><%= enum_label(CaseEvent, :event_type, case_event.event_type) %></td>
               <td><%= case_event.movement_type&.name || "-" %></td>
               <td><%= case_event.process_exam&.summary_label || "-" %></td>
-              <td><%= case_event.occurred_at %></td>
               <td class="table-actions">
                 <%= link_to case_event_path(case_event), class: "btn btn-secondary btn-icon", aria: { label: "Ver andamento" }, title: "Ver andamento" do %>
                   <span aria-hidden="true">&#128065;</span>
@@ -103,7 +95,7 @@
           <% end %>
         <% else %>
           <tr>
-            <td colspan="8" class="table-empty-state">Nenhum andamento cadastrado.</td>
+            <td colspan="6" class="table-empty-state">Nenhum andamento cadastrado.</td>
           </tr>
         <% end %>
       </tbody>

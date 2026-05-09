@@ -1,30 +1,4 @@
 class CaseEvent < ApplicationRecord
-  EVENT_STATUS_TRANSITIONS = {
-    initial_contact: "em_analise",
-    documents_received: "em_analise",
-    legal_analysis: "em_analise",
-    filing: "em_analise",
-    hearing: "aguardando_providencia_escritorio",
-    decision: "em_analise",
-    appeal: "em_analise",
-    client_contact: "em_analise",
-    phase_changed: "em_analise",
-    status_changed: "em_analise",
-    case_closed: "encerrado",
-    requerimento_administrativo_protocolado: "em_analise",
-    exigencia_administrativa_emitida: "aguardando_providencia_escritorio",
-    peticao_inicial_protocolada: "em_analise",
-    contestacao_apresentada: "em_analise",
-    audiencia_designada: "aguardando_providencia_escritorio",
-    sentenca_proferida: "em_analise",
-    recurso_interposto: "em_analise",
-    rpv_expedida: "em_analise",
-    pericia_designada: "aguardando_providencia_escritorio",
-    pericia_redesignada: "aguardando_providencia_escritorio",
-    pericia_realizada: "em_analise",
-    laudo_pericial_juntado: "em_analise"
-  }.freeze
-
   MOVEMENT_TYPE_PHASE_TRANSITIONS = {
     "cadastro" => "atendimento_inicial",
     "documentacao" => "analise_juridica",
@@ -46,6 +20,12 @@ class CaseEvent < ApplicationRecord
     "encerramento" => "encerrado"
   }.freeze
 
+  MOVEMENT_TYPE_STATUS_TRANSITIONS = {
+    "exigencia_administrativa" => "aguardando_providencia_escritorio",
+    "audiencia" => "aguardando_providencia_escritorio",
+    "encerramento" => "encerrado"
+  }.freeze
+
   belongs_to :legal_case
   belongs_to :movement_type, optional: true
   belongs_to :process_exam, optional: true
@@ -56,34 +36,7 @@ class CaseEvent < ApplicationRecord
     atualizacao_estrategica: "atualizacao_estrategica"
   }, prefix: true
 
-  enum :event_type, {
-    initial_contact: "initial_contact",
-    documents_received: "documents_received",
-    legal_analysis: "legal_analysis",
-    filing: "filing",
-    hearing: "hearing",
-    decision: "decision",
-    appeal: "appeal",
-    client_contact: "client_contact",
-    phase_changed: "phase_changed",
-    status_changed: "status_changed",
-    case_closed: "case_closed",
-    requerimento_administrativo_protocolado: "requerimento_administrativo_protocolado",
-    exigencia_administrativa_emitida: "exigencia_administrativa_emitida",
-    peticao_inicial_protocolada: "peticao_inicial_protocolada",
-    contestacao_apresentada: "contestacao_apresentada",
-    audiencia_designada: "audiencia_designada",
-    sentenca_proferida: "sentenca_proferida",
-    recurso_interposto: "recurso_interposto",
-    rpv_expedida: "rpv_expedida",
-    pericia_designada: "pericia_designada",
-    pericia_redesignada: "pericia_redesignada",
-    pericia_realizada: "pericia_realizada",
-    laudo_pericial_juntado: "laudo_pericial_juntado"
-  }, prefix: true
-
-  validates :event_type, :occurred_at, :description, presence: true
-  validates :event_type, inclusion: { in: event_types.keys }
+  validates :description, presence: true
   validates :movement_type, presence: true, if: :entry_kind_andamento?
 
   after_commit :sync_modules!, on: [ :create, :update ]
@@ -100,8 +53,8 @@ class CaseEvent < ApplicationRecord
   def status_after_unified
     return unless entry_kind_andamento?
 
-    from_event = EVENT_STATUS_TRANSITIONS[event_type&.to_sym]
-    return from_event if from_event.present?
+    from_type = MOVEMENT_TYPE_STATUS_TRANSITIONS[movement_type&.code]
+    return from_type if from_type.present?
 
     legal_case&.status
   end
@@ -117,18 +70,11 @@ class CaseEvent < ApplicationRecord
 
   def sync_exam_status!
     return if process_exam.blank?
-
-    mapped_status =
-      case event_type
-      when "pericia_designada" then "designada"
-      when "pericia_redesignada" then "redesignada"
-      when "pericia_realizada" then "realizada"
-      when "laudo_pericial_juntado" then "laudo_juntado"
-      end
+    return unless movement_type&.code == "pericia"
 
     attrs = {}
-    attrs[:status] = mapped_status if mapped_status.present?
-    attrs[:scheduled_at] = occurred_at if event_type == "pericia_redesignada" && process_exam.scheduled_at.blank?
+    attrs[:scheduled_at] = created_at if process_exam.scheduled_at.blank?
+    attrs[:status] = "designada" if process_exam.status_nao_designada?
 
     process_exam.update!(attrs) if attrs.any?
   end
@@ -137,14 +83,14 @@ class CaseEvent < ApplicationRecord
     return unless entry_kind_atualizacao_estrategica?
 
     previous = legal_case.strategic_notes.to_s
-    marker = "[#{occurred_at.strftime("%d/%m/%Y %H:%M")}] #{description}"
+    marker = "[#{created_at.strftime("%d/%m/%Y %H:%M")}] #{description}"
     merged = [ previous, marker ].reject(&:blank?).join("\n")
     legal_case.update_column(:strategic_notes, merged)
   end
 
   def create_exam_task_and_deadline_if_needed!
     return if process_exam.blank?
-    return unless [ "pericia_designada", "pericia_redesignada" ].include?(event_type)
+    return unless movement_type&.code == "pericia"
 
     due_date = process_exam.scheduled_at&.to_date
     return if due_date.blank?

@@ -7,7 +7,7 @@ class CaseEventsController < ApplicationController
       .joins(:legal_case)
       .where(legal_cases: { office_id: current_office.id })
       .includes(:legal_case, :movement_type, :process_exam)
-      .order(occurred_at: :desc)
+      .order(created_at: :desc)
 
     if @filters[:q].present?
       term = "%#{@filters[:q].strip}%"
@@ -19,10 +19,9 @@ class CaseEventsController < ApplicationController
     end
 
     scope = scope.where(entry_kind: @filters[:entry_kind]) if @filters[:entry_kind].present?
-    scope = scope.where(event_type: @filters[:event_type]) if @filters[:event_type].present?
     scope = scope.where(movement_type_id: @filters[:movement_type_id]) if @filters[:movement_type_id].present?
-    scope = scope.where("case_events.occurred_at >= ?", @filters[:from].to_date.beginning_of_day) if @filters[:from].present?
-    scope = scope.where("case_events.occurred_at <= ?", @filters[:to].to_date.end_of_day) if @filters[:to].present?
+    scope = scope.where("case_events.created_at >= ?", @filters[:from].to_date.beginning_of_day) if @filters[:from].present?
+    scope = scope.where("case_events.created_at <= ?", @filters[:to].to_date.end_of_day) if @filters[:to].present?
 
     @case_events = scope
     @movement_types = MovementType.where(active: true).order(:name)
@@ -91,8 +90,6 @@ class CaseEventsController < ApplicationController
   def case_event_params
     params.expect(case_event: [
       :legal_case_id,
-      :event_type,
-      :occurred_at,
       :description,
       :responsible_name,
       :movement_type_id,
@@ -109,6 +106,6 @@ class CaseEventsController < ApplicationController
   end
 
   def case_event_filters
-    params.permit(:q, :entry_kind, :event_type, :movement_type_id, :from, :to)
+    params.permit(:q, :entry_kind, :movement_type_id, :from, :to)
   end
 end
