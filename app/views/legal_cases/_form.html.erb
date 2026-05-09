@@ -95,10 +95,6 @@
         <%= form.text_field :opposing_party %>
       </div>
 
-      <div class="field-full">
-        <%= form.label :strategic_notes %>
-        <%= form.textarea :strategic_notes %>
-      </div>
     </div>
   </section>
 
@@ -173,9 +169,6 @@
       </div>
 
       <div class="field-full" data-pericia-section style="display: <%= legal_case.tem_pericia? ? "block" : "none" %>;">
-        <%= form.label :observacao_geral_pericia %>
-        <%= form.text_area :observacao_geral_pericia %>
-
         <button type="button" class="btn btn-secondary" data-open-pericia-modal>Adicionar/editar dados da perícia</button>
       </div>
     </div>

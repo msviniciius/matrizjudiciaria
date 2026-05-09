@@ -161,13 +161,11 @@ class LegalCasesController < ApplicationController
       :opposing_party,
       :claim_value,
       :priority,
-      :strategic_notes,
       :client_id,
       :last_movement,
       :last_movement_at,
       :next_deadline_on,
       :tem_pericia,
-      :observacao_geral_pericia,
       process_exams_attributes: [
         :id,
         :exam_nature,

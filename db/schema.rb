@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_09_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,18 +46,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_103000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.string "entry_kind", default: "andamento", null: false
-    t.string "event_type"
     t.bigint "legal_case_id", null: false
     t.bigint "movement_type_id"
     t.string "next_action"
-    t.datetime "occurred_at"
     t.bigint "process_exam_id"
     t.string "responsible_name"
     t.datetime "updated_at", null: false
     t.index ["entry_kind"], name: "index_case_events_on_entry_kind"
     t.index ["legal_case_id"], name: "index_case_events_on_legal_case_id"
     t.index ["movement_type_id"], name: "index_case_events_on_movement_type_id"
-    t.index ["occurred_at"], name: "index_case_events_on_occurred_at"
     t.index ["process_exam_id"], name: "index_case_events_on_process_exam_id"
   end
 

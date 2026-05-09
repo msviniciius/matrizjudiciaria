@@ -1438,11 +1438,39 @@ table td.table-actions {
 }
 
 .checkbox-field input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 44px;
+  height: 24px;
   margin: 0;
-  accent-color: var(--brand-2);
+  border-radius: 999px;
+  border: 1px solid #b8ae9d;
+  background: #e6dece;
+  position: relative;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
   cursor: pointer;
+}
+
+.checkbox-field input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fffdf9;
+  box-shadow: 0 2px 6px rgba(21, 37, 58, 0.2);
+  transition: transform 0.18s ease;
+}
+
+.checkbox-field input[type="checkbox"]:checked {
+  background: var(--brand-2);
+  border-color: var(--brand-2);
+}
+
+.checkbox-field input[type="checkbox"]:checked::before {
+  transform: translateX(20px);
 }
 
 .checkbox-field span {
