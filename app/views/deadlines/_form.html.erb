@@ -2,7 +2,7 @@
 <% show_path = local_assigns[:show_path] %>
 <% show_label = local_assigns[:show_label] || "Ver" %>
 
-<%= form_with(model: deadline, class: "app-form") do |form| %>
+<%= form_with(model: deadline, class: "app-form", data: { inline_validation_form: true }) do |form| %>
   <% if deadline.errors.any? %>
     <div class="form-errors">
       <h2>Foram encontrados <%= pluralize(deadline.errors.count, "erro", "erros") %> neste cadastro:</h2>
@@ -16,29 +16,33 @@
 
   <section class="form-section">
     <h3>Dados do Prazo</h3>
+    <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
     <div class="form-grid">
       <div class="field-full">
-        <%= form.label :legal_case_id %>
-        <%= form.collection_select :legal_case_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+        <%= form.label :legal_case_id, "Processo *" %>
+        <%= form.collection_select :legal_case_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, { prompt: "Selecione o processo" }, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="deadline_legal_case_id" hidden>Selecione o processo.</p>
       </div>
 
       <div>
-        <%= form.label :title %>
-        <%= form.text_field :title %>
+        <%= form.label :title, "Título *" %>
+        <%= form.text_field :title, required: true, data: { required_field: true } %>
+        <p class="field-inline-warning" data-field-error-for="deadline_title" hidden>Informe o título do prazo.</p>
       </div>
 
       <div>
-        <%= form.label :deadline_type %>
+        <%= form.label :deadline_type, "Tipo de prazo (opcional)" %>
         <%= form.select :deadline_type, enum_options_for(Deadline, :deadline_type), include_blank: true %>
       </div>
 
       <div>
-        <%= form.label :status %>
-        <%= form.select :status, enum_options_for(Deadline, :status) %>
+        <%= form.label :status, "Status *" %>
+        <%= form.select :status, enum_options_for(Deadline, :status), {}, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="deadline_status" hidden>Selecione o status.</p>
       </div>
 
       <div>
-        <%= form.label :priority %>
+        <%= form.label :priority, "Prioridade (opcional)" %>
         <%= form.select :priority, enum_options_for(Deadline, :priority), include_blank: true %>
       </div>
     </div>
@@ -48,12 +52,13 @@
     <h3>Prazo e Justificativa</h3>
     <div class="form-grid">
       <div>
-        <%= form.label :due_date, "Data limite" %>
-        <%= form.date_field :due_date %>
+        <%= form.label :due_date, "Data limite *" %>
+        <%= form.date_field :due_date, required: true, data: { required_field: true } %>
+        <p class="field-inline-warning" data-field-error-for="deadline_due_date" hidden>Informe a data limite.</p>
       </div>
 
       <div class="field-full">
-        <%= form.label :delay_reason, "Justificativa" %>
+        <%= form.label :delay_reason, "Justificativa (opcional)" %>
         <%= form.textarea :delay_reason %>
       </div>
     </div>
@@ -66,6 +71,6 @@
     <% if show_path.present? %>
       <%= link_to show_label, show_path, class: "btn btn-secondary" %>
     <% end %>
-    <%= form.submit %>
+    <%= form.submit deadline.persisted? ? "Salvar prazo" : "Cadastrar prazo", class: "btn btn-primary" %>
   </div>
 <% end %>

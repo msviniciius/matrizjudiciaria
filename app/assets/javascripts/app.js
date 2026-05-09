@@ -117,6 +117,148 @@
 })();
 
 (() => {
+  const initInlineValidationForms = () => {
+    document.querySelectorAll("[data-inline-validation-form]").forEach((form) => {
+      if (form.dataset.inlineValidationBound === "true") return;
+      form.dataset.inlineValidationBound = "true";
+
+      const requiredFields = Array.from(form.querySelectorAll("[data-required-field]"));
+      if (!requiredFields.length) return;
+
+      const validateField = (field) => {
+        const value = String(field.value || "").trim();
+        const isInvalid = value.length === 0;
+        const warning = form.querySelector(`[data-field-error-for='${field.id}']`);
+
+        field.classList.toggle("field-error", isInvalid);
+        if (warning) warning.hidden = !isInvalid;
+      };
+
+      const validateAll = () => requiredFields.forEach((field) => validateField(field));
+
+      requiredFields.forEach((field) => {
+        field.addEventListener("change", () => validateField(field));
+        field.addEventListener("blur", () => validateField(field));
+      });
+
+      form.addEventListener("submit", validateAll);
+    });
+  };
+
+  document.addEventListener("turbo:load", initInlineValidationForms);
+  document.addEventListener("DOMContentLoaded", initInlineValidationForms);
+})();
+
+(() => {
+  const initProcessMovementForm = () => {
+    document.querySelectorAll("[data-movement-form]").forEach((form) => {
+      if (form.dataset.movementFormBound === "true") return;
+      form.dataset.movementFormBound = "true";
+
+      const updatesPhase = form.querySelector("[data-movement-updates-phase]");
+      const createsTask = form.querySelector("[data-movement-creates-task]");
+      const createsDeadline = form.querySelector("[data-movement-creates-deadline]");
+      const nextPhase = form.querySelector("[data-movement-next-phase]");
+      const movementTemplate = form.querySelector("#process_movement_movement_template_id");
+      const eventDate = form.querySelector("[data-movement-event-date]");
+      const nextPhaseWarning = form.querySelector("[data-next-phase-warning]");
+      const createsDeadlineWarning = form.querySelector("[data-creates-deadline-warning]");
+      const previewList = form.querySelector("[data-movement-preview-list]");
+      const requiredFields = Array.from(form.querySelectorAll("[data-required-field]"));
+
+      if (!updatesPhase || !nextPhase || !previewList) return;
+
+      const validateField = (field) => {
+        const isEmpty = String(field.value || "").trim().length === 0;
+        const warning = form.querySelector(`[data-field-error-for='${field.id}']`);
+
+        field.classList.toggle("field-error", isEmpty);
+        if (warning) warning.hidden = !isEmpty;
+      };
+
+      const validateRequiredFields = () => {
+        requiredFields.forEach((field) => validateField(field));
+      };
+
+      const updateState = () => {
+        const warnings = [];
+        const actions = [];
+
+        const willUpdatePhase = updatesPhase.checked;
+        const hasNextPhase = String(nextPhase.value || "").trim().length > 0;
+
+        if (willUpdatePhase) {
+          if (hasNextPhase) {
+            const selected = nextPhase.options[nextPhase.selectedIndex];
+            actions.push(`Atualizar fase para: ${selected ? selected.text : "fase selecionada"}.`);
+            nextPhase.classList.remove("field-error");
+            if (nextPhaseWarning) nextPhaseWarning.hidden = true;
+          } else {
+            warnings.push("Atualizar fase está marcado, mas falta selecionar a próxima fase.");
+            nextPhase.classList.add("field-error");
+            if (nextPhaseWarning) nextPhaseWarning.hidden = false;
+          }
+        } else {
+          nextPhase.classList.remove("field-error");
+          if (nextPhaseWarning) nextPhaseWarning.hidden = true;
+        }
+
+        if (createsTask?.checked) actions.push("Criar tarefa automática.");
+        if (createsDeadline?.checked) {
+          const hasDateBase = String(eventDate?.value || "").trim().length > 0;
+          const hasTemplate = String(movementTemplate?.value || "").trim().length > 0;
+          if (hasDateBase || hasTemplate) {
+            actions.push("Criar prazo automático.");
+            if (createsDeadlineWarning) createsDeadlineWarning.hidden = true;
+          } else {
+            warnings.push("Criar prazo está marcado, mas falta data base ou modelo de andamento.");
+            if (createsDeadlineWarning) createsDeadlineWarning.hidden = false;
+          }
+        } else if (createsDeadlineWarning) {
+          createsDeadlineWarning.hidden = true;
+        }
+
+        const lines = [ ...warnings, ...actions ];
+        previewList.innerHTML = "";
+        if (lines.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "Nenhuma automação selecionada.";
+          previewList.appendChild(li);
+          return;
+        }
+
+        lines.forEach((line) => {
+          const li = document.createElement("li");
+          li.textContent = line;
+          previewList.appendChild(li);
+        });
+
+        validateRequiredFields();
+      };
+
+      [ updatesPhase, createsTask, createsDeadline, nextPhase, eventDate, movementTemplate ].forEach((field) => {
+        if (!field) return;
+        field.addEventListener("change", updateState);
+      });
+
+      requiredFields.forEach((field) => {
+        field.addEventListener("change", () => validateField(field));
+        field.addEventListener("blur", () => validateField(field));
+      });
+
+      form.addEventListener("submit", () => {
+        validateRequiredFields();
+      });
+
+      updateState();
+    });
+  };
+
+  document.addEventListener("turbo:load", initProcessMovementForm);
+  document.addEventListener("DOMContentLoaded", initProcessMovementForm);
+})();
+
+(() => {
   const PALETTE = [ "#1f4e79", "#4472c4", "#2f7d5b", "#9a6b2f", "#8b3a3a", "#6b5ca5", "#5d6775", "#264653", "#7f8c8d" ];
   const CHART_HIT_MAP = new Map();
 

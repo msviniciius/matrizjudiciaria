@@ -1,6 +1,6 @@
 <% back_path = local_assigns[:back_path] %>
 
-<%= form_with(model: process_movement, class: "app-form") do |form| %>
+<%= form_with(model: process_movement, class: "app-form", data: { movement_form: true }) do |form| %>
   <% if process_movement.errors.any? %>
     <div class="form-errors">
       <h2>Foram encontrados <%= pluralize(process_movement.errors.count, "erro", "erros") %>:</h2>
@@ -14,91 +14,131 @@
 
   <section class="form-section">
     <h3>Andamento Processual</h3>
+    <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
+
+    <h4 class="form-step-title">1. Dados básicos</h4>
     <div class="form-grid">
       <div>
-        <%= form.label :process_id, "Processo" %>
-        <%= form.collection_select :process_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+        <%= form.label :process_id, "Processo *" %>
+        <%= form.collection_select :process_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, { prompt: "Selecione o processo" }, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_process_id" hidden>Selecione o processo.</p>
       </div>
 
       <div>
-        <%= form.label :phase_id, "Fase" %>
-        <%= form.collection_select :phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, prompt: "Selecione a fase" %>
+        <%= form.label :phase_id do %>
+          Fase *
+          <span class="field-help" title="Macroetapa do processo, não é o evento." aria-label="Macroetapa do processo, não é o evento.">?</span>
+        <% end %>
+        <%= form.collection_select :phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, { prompt: "Selecione a fase" }, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_phase_id" hidden>Selecione a fase.</p>
       </div>
 
       <div>
-        <%= form.label :movement_type_id, "Tipo de andamento" %>
-        <%= form.collection_select :movement_type_id, MovementType.where(active: true).order(:name), :id, :name, prompt: "Selecione o tipo" %>
+        <%= form.label :movement_type_id, "Tipo de andamento *" %>
+        <%= form.collection_select :movement_type_id, MovementType.where(active: true).order(:name), :id, :name, { prompt: "Selecione o tipo" }, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_movement_type_id" hidden>Selecione o tipo de andamento.</p>
       </div>
 
       <div>
-        <%= form.label :movement_template_id, "Modelo de andamento" %>
+        <%= form.label :movement_template_id, "Modelo de andamento (opcional)" %>
         <%= form.collection_select :movement_template_id, MovementTemplate.where(active: true).order(:order, :name), :id, :name, include_blank: "Sem modelo" %>
       </div>
 
-      <div>
-        <%= form.label :exam_id, "Perícia vinculada" %>
-        <% exams = process_movement.process_id.present? ? ProcessExam.where(legal_case_id: process_movement.process_id, active: true).order(:scheduled_at) : ProcessExam.none %>
-        <%= form.collection_select :exam_id, exams, :id, :summary_label, include_blank: "Sem vínculo" %>
-      </div>
-
-      <div>
-        <%= form.label :event_date, "Data do evento" %>
-        <%= form.datetime_field :event_date %>
+      <div class="field-full">
+        <%= form.label :display_title, "Título *" %>
+        <%= form.text_field :display_title, required: true, data: { required_field: true } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_display_title" hidden>Informe um título para o andamento.</p>
       </div>
 
       <div class="field-full">
-        <%= form.label :display_title, "Título" %>
-        <%= form.text_field :display_title %>
-      </div>
-
-      <div class="field-full">
-        <%= form.label :complementary_description, "Descrição complementar" %>
+        <%= form.label :complementary_description, "Descrição complementar (opcional)" %>
         <%= form.text_area :complementary_description %>
       </div>
 
       <div>
-        <%= form.label :nature, "Natureza" %>
-        <%= form.select :nature, enum_options_for(ProcessMovement, :nature) %>
+        <%= form.label :event_date, "Data do evento *" %>
+        <%= form.datetime_field :event_date, required: true, step: 60, data: { required_field: true, movement_event_date: true } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_event_date" hidden>Informe a data do evento.</p>
       </div>
 
       <div>
-        <%= form.label :impact, "Impacto" %>
-        <%= form.select :impact, enum_options_for(ProcessMovement, :impact) %>
+        <%= form.label :nature, "Natureza *" %>
+        <%= form.select :nature, enum_options_for(ProcessMovement, :nature), {}, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_nature" hidden>Selecione a natureza.</p>
       </div>
 
       <div>
-        <%= form.label :origin, "Origem" %>
-        <%= form.select :origin, enum_options_for(ProcessMovement, :origin) %>
+        <%= form.label :impact do %>
+          Impacto *
+          <span class="field-help" title="Define se este registro muda fase ou exige ação imediata." aria-label="Define se este registro muda fase ou exige ação imediata.">?</span>
+        <% end %>
+        <%= form.select :impact, enum_options_for(ProcessMovement, :impact), {}, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_impact" hidden>Selecione o impacto.</p>
       </div>
 
       <div>
-        <%= form.label :administrative_situation, "Situação administrativa" %>
+        <%= form.label :origin, "Origem *" %>
+        <%= form.select :origin, enum_options_for(ProcessMovement, :origin), {}, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="process_movement_origin" hidden>Selecione a origem.</p>
+      </div>
+    </div>
+
+    <h4 class="form-step-title">2. Vínculos e contexto</h4>
+    <div class="form-grid">
+      <div>
+        <%= form.label :exam_id, "Perícia vinculada (opcional)" %>
+        <% exams = process_movement.process_id.present? ? ProcessExam.where(legal_case_id: process_movement.process_id, active: true).order(:scheduled_at) : ProcessExam.none %>
+        <%= form.collection_select :exam_id, exams, :id, :summary_label, include_blank: (exams.any? ? "Sem vínculo" : "Nenhuma perícia ativa neste processo"), data: { movement_exam: true } %>
+      </div>
+
+      <div>
+        <%= form.label :administrative_situation, "Situação administrativa (opcional)" %>
         <%= form.select :administrative_situation, enum_options_for(ProcessMovement, :administrative_situation), include_blank: "Não se aplica" %>
       </div>
+    </div>
 
+    <h4 class="form-step-title">3. Automação</h4>
+    <div class="form-grid">
       <div class="field-full">
         <%= form.label :next_phase_id, "Próxima fase" %>
-        <%= form.collection_select :next_phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, include_blank: true %>
+        <%= form.collection_select :next_phase_id, ProcessPhase.where(active: true).order(:order, :name), :id, :name, include_blank: true, data: { movement_next_phase: true } %>
+        <p class="field-inline-warning" data-next-phase-warning hidden>
+          Para atualizar fase, selecione a próxima fase.
+        </p>
       </div>
 
       <div class="field-full movement-automation-options">
         <label class="checkbox-field">
-          <%= form.check_box :updates_phase %>
+          <%= form.check_box :updates_phase, data: { movement_updates_phase: true } %>
           <span>Atualiza fase</span>
           <span class="field-help" title="Se marcado, o processo muda para a próxima fase definida neste andamento." aria-label="Se marcado, o processo muda para a próxima fase definida neste andamento.">?</span>
         </label>
 
         <label class="checkbox-field">
-          <%= form.check_box :creates_task %>
+          <%= form.check_box :creates_task, data: { movement_creates_task: true } %>
           <span>Cria tarefa</span>
           <span class="field-help" title="Se marcado, cria uma tarefa automática para acompanhamento deste andamento." aria-label="Se marcado, cria uma tarefa automática para acompanhamento deste andamento.">?</span>
         </label>
 
         <label class="checkbox-field">
-          <%= form.check_box :creates_deadline %>
+          <%= form.check_box :creates_deadline, data: { movement_creates_deadline: true } %>
           <span>Cria prazo</span>
           <span class="field-help" title="Se marcado, cria um prazo automático com base na data do evento ou da perícia vinculada." aria-label="Se marcado, cria um prazo automático com base na data do evento ou da perícia vinculada.">?</span>
         </label>
+      </div>
+      <div class="field-full">
+        <p class="field-inline-warning" data-creates-deadline-warning hidden>
+          Para criar prazo, informe data do evento ou selecione um modelo de andamento.
+        </p>
+      </div>
+
+      <div class="field-full">
+        <div class="movement-preview" data-movement-preview>
+          <p class="movement-preview__title">Resumo automático do que será executado:</p>
+          <ul class="movement-preview__list" data-movement-preview-list>
+            <li>Nenhuma automação selecionada.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>

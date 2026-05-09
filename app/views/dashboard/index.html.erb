@@ -2,6 +2,9 @@
 
 <% content_for :topbar_actions do %>
   <%= link_to "Fechamento diário", daily_closure_legal_cases_path, class: "btn btn-secondary" %>
+  <%= link_to "Novo andamento", new_process_movement_path, class: "btn btn-secondary" %>
+  <%= link_to "Nova tarefa", new_task_path, class: "btn btn-secondary" %>
+  <%= link_to "Novo prazo", new_deadline_path, class: "btn btn-secondary" %>
   <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
 <% end %>
 
@@ -47,31 +50,31 @@
   </div>
 
   <div class="report-grid report-grid--kpi">
-    <article class="report-card report-card--danger">
+    <%= link_to deadlines_path(due_state: "overdue"), class: "report-card report-card--danger report-card--link", title: "Ver prazos vencidos" do %>
       <span class="report-icon" aria-hidden="true">&#9888;</span>
       <p class="report-label">Prazos vencidos</p>
       <p class="report-value"><%= @today_counts[:deadlines_overdue] %></p>
-    </article>
-    <article class="report-card report-card--warning">
+    <% end %>
+    <%= link_to deadlines_path(due_state: "today"), class: "report-card report-card--warning report-card--link", title: "Ver prazos de hoje" do %>
       <span class="report-icon" aria-hidden="true">&#9200;</span>
       <p class="report-label">Prazos para hoje</p>
       <p class="report-value"><%= @today_counts[:deadlines_today] %></p>
-    </article>
-    <article class="report-card report-card--danger">
+    <% end %>
+    <%= link_to tasks_path(due_state: "overdue"), class: "report-card report-card--danger report-card--link", title: "Ver tarefas atrasadas" do %>
       <span class="report-icon" aria-hidden="true">&#10071;</span>
       <p class="report-label">Tarefas atrasadas</p>
       <p class="report-value"><%= @today_counts[:tasks_overdue] %></p>
-    </article>
-    <article class="report-card report-card--info">
+    <% end %>
+    <%= link_to tasks_path(due_state: "today"), class: "report-card report-card--info report-card--link", title: "Ver tarefas de hoje" do %>
       <span class="report-icon" aria-hidden="true">&#10003;</span>
       <p class="report-label">Tarefas para hoje</p>
       <p class="report-value"><%= @today_counts[:tasks_today] %></p>
-    </article>
-    <article class="report-card report-card--neutral">
+    <% end %>
+    <%= link_to daily_closure_legal_cases_path(reference_date: Date.current), class: "report-card report-card--neutral report-card--link", title: "Abrir fechamento diário" do %>
       <span class="report-icon" aria-hidden="true">&#128197;</span>
       <p class="report-label">Data de referência</p>
       <p class="report-value"><%= l(Date.current, format: :short) %></p>
-    </article>
+    <% end %>
   </div>
 </section>
 
@@ -102,6 +105,83 @@
   <% else %>
     <p class="empty-state">Ainda não há andamentos registrados para exibir.</p>
   <% end %>
+</section>
+
+<section class="case-section dashboard-section">
+  <div class="dashboard-section__head">
+    <h3>Pendências Críticas</h3>
+    <p>Itens com risco operacional e ação imediata recomendada.</p>
+  </div>
+
+  <div class="critical-grid">
+    <article class="critical-card critical-card--muted">
+      <div class="risk-card__head">
+        <p>Processos sem responsável</p>
+        <span class="status-pill status-pill--muted"><%= @critical_queues[:without_responsible].size %></span>
+      </div>
+      <% if @critical_queues[:without_responsible].any? %>
+        <ul class="critical-list">
+          <% @critical_queues[:without_responsible].each do |legal_case| %>
+            <li>
+              <div>
+                <%= link_to legal_case.internal_number, legal_case_path(legal_case) %>
+                <small>Atualizado em <%= l(legal_case.updated_at, format: :short) %></small>
+              </div>
+              <%= form_with url: quick_update_case_responsible_path(legal_case), method: :patch, class: "critical-inline-form", local: true do |form| %>
+                <%= form.text_field :responsible_name, value: legal_case.responsible_name, placeholder: "Responsável", required: true %>
+                <%= form.submit "Salvar", class: "btn btn-secondary btn-xs" %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Nenhum processo sem responsável.</p>
+      <% end %>
+    </article>
+
+    <article class="critical-card critical-card--warning">
+      <div class="risk-card__head">
+        <p>Sem próxima providência</p>
+        <span class="status-pill status-pill--warning"><%= @critical_queues[:without_next_action].size %></span>
+      </div>
+      <% if @critical_queues[:without_next_action].any? %>
+        <ul class="critical-list">
+          <% @critical_queues[:without_next_action].each do |legal_case| %>
+            <li>
+              <div>
+                <%= link_to legal_case.internal_number, legal_case_path(legal_case) %>
+                <small>Status: <%= enum_label(LegalCase, :status, legal_case.status) %> • Próxima providência não definida</small>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Todos os processos têm próxima providência.</p>
+      <% end %>
+    </article>
+
+    <article class="critical-card critical-card--danger">
+      <div class="risk-card__head">
+        <p>Prazos vencidos sem justificativa</p>
+        <span class="status-pill status-pill--danger"><%= @critical_queues[:overdue_deadlines_without_reason].size %></span>
+      </div>
+      <% if @critical_queues[:overdue_deadlines_without_reason].any? %>
+        <ul class="critical-list">
+          <% @critical_queues[:overdue_deadlines_without_reason].each do |deadline| %>
+            <li>
+              <div>
+                <%= link_to deadline.title, deadline_path(deadline) %>
+                <small><%= deadline.legal_case.internal_number %> • Venceu em <%= l(deadline.due_date, format: :short) %> • Sem justificativa</small>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Não há prazos vencidos sem justificativa.</p>
+      <% end %>
+    </article>
+
+  </div>
 </section>
 
 <section class="case-section dashboard-section">

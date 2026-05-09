@@ -2,7 +2,7 @@
 <% show_path = local_assigns[:show_path] %>
 <% show_label = local_assigns[:show_label] || "Ver" %>
 
-<%= form_with(model: task, class: "app-form") do |form| %>
+<%= form_with(model: task, class: "app-form", data: { inline_validation_form: true }) do |form| %>
   <% if task.errors.any? %>
     <div class="form-errors">
       <h2>Foram encontrados <%= pluralize(task.errors.count, "erro", "erros") %> neste cadastro:</h2>
@@ -16,34 +16,41 @@
 
   <section class="form-section">
     <h3>Dados da Tarefa</h3>
+    <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
     <div class="form-grid">
       <div class="field-full">
-        <%= form.label :legal_case_id %>
-        <%= form.collection_select :legal_case_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, prompt: "Selecione o processo" %>
+        <%= form.label :legal_case_id, "Processo *" %>
+        <%= form.collection_select :legal_case_id, current_office.legal_cases.order(:internal_number), :id, :internal_number, { prompt: "Selecione o processo" }, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="task_legal_case_id" hidden>Selecione o processo.</p>
       </div>
 
       <div>
-        <%= form.label :title %>
-        <%= form.text_field :title %>
+        <%= form.label :title, "Título *" %>
+        <%= form.text_field :title, required: true, data: { required_field: true } %>
+        <p class="field-inline-warning" data-field-error-for="task_title" hidden>Informe o título da tarefa.</p>
       </div>
 
       <div>
-        <%= form.label :responsible_name %>
+        <%= form.label :responsible_name, "Responsável (opcional)" %>
         <%= form.text_field :responsible_name %>
       </div>
 
       <div>
-        <%= form.label :status %>
-        <%= form.select :status, enum_options_for(Task, :status) %>
+        <%= form.label :status, "Status *" %>
+        <%= form.select :status, enum_options_for(Task, :status), {}, { required: true, data: { required_field: true } } %>
+        <p class="field-inline-warning" data-field-error-for="task_status" hidden>Selecione o status.</p>
       </div>
 
       <div>
-        <%= form.label :priority %>
+        <%= form.label :priority, "Prioridade (opcional)" %>
         <%= form.select :priority, enum_options_for(Task, :priority), include_blank: true %>
       </div>
 
       <div>
-        <%= form.label :due_date %>
+        <%= form.label :due_date do %>
+          Data limite (opcional)
+          <span class="field-help" title="Use quando a tarefa tiver prazo operacional." aria-label="Use quando a tarefa tiver prazo operacional.">?</span>
+        <% end %>
         <%= form.date_field :due_date %>
       </div>
     </div>
@@ -53,7 +60,7 @@
     <h3>Descrição</h3>
     <div class="form-grid">
       <div class="field-full">
-        <%= form.label :description %>
+        <%= form.label :description, "Descrição (opcional)" %>
         <%= form.textarea :description %>
       </div>
     </div>
@@ -66,6 +73,6 @@
     <% if show_path.present? %>
       <%= link_to show_label, show_path, class: "btn btn-secondary" %>
     <% end %>
-    <%= form.submit %>
+    <%= form.submit task.persisted? ? "Salvar tarefa" : "Cadastrar tarefa", class: "btn btn-primary" %>
   </div>
 <% end %>

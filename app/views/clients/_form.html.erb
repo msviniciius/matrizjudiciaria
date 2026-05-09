@@ -2,7 +2,7 @@
 <% show_path = local_assigns[:show_path] %>
 <% show_label = local_assigns[:show_label] || "Ver" %>
 
-<%= form_with(model: client, class: "app-form") do |form| %>
+<%= form_with(model: client, class: "app-form", data: { inline_validation_form: true }) do |form| %>
   <% if client.errors.any? %>
     <div class="form-errors">
       <h2>Foram encontrados <%= pluralize(client.errors.count, "erro", "erros") %> neste cadastro:</h2>
@@ -16,29 +16,32 @@
 
   <section class="form-section">
     <h3>Identificação</h3>
+    <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
     <div class="form-grid">
       <div>
-        <%= form.label :full_name %>
-        <%= form.text_field :full_name %>
+        <%= form.label :full_name, "Nome completo *" %>
+        <%= form.text_field :full_name, required: true, data: { required_field: true } %>
+        <p class="field-inline-warning" data-field-error-for="client_full_name" hidden>Informe o nome completo.</p>
       </div>
 
       <div>
-        <%= form.label :cpf_cnpj %>
-        <%= form.text_field :cpf_cnpj, data: { mask: "cpf_cnpj" }, inputmode: "numeric" %>
+        <%= form.label :cpf_cnpj, "CPF/CNPJ *" %>
+        <%= form.text_field :cpf_cnpj, required: true, data: { mask: "cpf_cnpj", required_field: true }, inputmode: "numeric" %>
+        <p class="field-inline-warning" data-field-error-for="client_cpf_cnpj" hidden>Informe CPF/CNPJ.</p>
       </div>
 
       <div>
-        <%= form.label :birth_date %>
+        <%= form.label :birth_date, "Data de nascimento (opcional)" %>
         <%= form.date_field :birth_date %>
       </div>
 
       <div>
-        <%= form.label :marital_status %>
+        <%= form.label :marital_status, "Estado civil (opcional)" %>
         <%= form.text_field :marital_status %>
       </div>
 
       <div>
-        <%= form.label :profession %>
+        <%= form.label :profession, "Profissão (opcional)" %>
         <%= form.text_field :profession %>
       </div>
     </div>
@@ -48,17 +51,17 @@
     <h3>Contato</h3>
     <div class="form-grid">
       <div>
-        <%= form.label :phone %>
+        <%= form.label :phone, "Telefone (opcional)" %>
         <%= form.text_field :phone, data: { mask: "phone" }, inputmode: "numeric" %>
       </div>
 
       <div>
-        <%= form.label :whatsapp %>
+        <%= form.label :whatsapp, "WhatsApp (opcional)" %>
         <%= form.text_field :whatsapp, data: { mask: "phone" }, inputmode: "numeric" %>
       </div>
 
       <div class="field-full">
-        <%= form.label :email %>
+        <%= form.label :email, "E-mail (opcional)" %>
         <%= form.text_field :email %>
       </div>
     </div>
@@ -68,7 +71,10 @@
     <h3>Endereço</h3>
     <div class="form-grid">
       <div>
-        <%= form.label :zip_code, "CEP" %>
+        <%= form.label :zip_code do %>
+          CEP
+          <span class="field-help" title="Ao informar o CEP, endereço/cidade/UF serão preenchidos automaticamente." aria-label="Ao informar o CEP, endereço/cidade/UF serão preenchidos automaticamente.">?</span>
+        <% end %>
         <%= form.text_field :zip_code, data: { mask: "cep", cep_lookup: true }, inputmode: "numeric" %>
       </div>
 
@@ -108,7 +114,7 @@
       </div>
 
       <div class="field-full">
-        <%= form.label :notes %>
+        <%= form.label :notes, "Observações (opcional)" %>
         <%= form.textarea :notes %>
       </div>
 
@@ -128,6 +134,6 @@
     <% if show_path.present? %>
       <%= link_to show_label, show_path, class: "btn btn-secondary" %>
     <% end %>
-    <%= form.submit %>
+    <%= form.submit client.persisted? ? "Salvar cliente" : "Cadastrar cliente", class: "btn btn-primary" %>
   </div>
 <% end %>
