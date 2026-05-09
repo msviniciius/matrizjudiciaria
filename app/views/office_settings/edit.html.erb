@@ -51,7 +51,7 @@
 
             <div>
               <%= form.label :cnpj, "CNPJ" %>
-              <%= form.text_field :cnpj, data: { mask: "cpf_cnpj" }, inputmode: "numeric" %>
+              <%= form.text_field :cnpj, data: { mask: "cnpj" }, inputmode: "numeric" %>
             </div>
 
             <div>
@@ -86,7 +86,7 @@
 
             <div>
               <%= form.label :state, "UF" %>
-              <%= form.text_field :state, data: { cep_lookup_state: true } %>
+              <%= form.text_field :state, data: { cep_lookup_state: true, mask: "uf" }, inputmode: "text" %>
             </div>
 
             <div>

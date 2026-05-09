@@ -771,6 +771,16 @@
     return applyMask(digits, "##.###.###/####-##");
   };
 
+  const formatCpf = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    return applyMask(digits, "###.###.###-##");
+  };
+
+  const formatCnpj = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 14);
+    return applyMask(digits, "##.###.###/####-##");
+  };
+
   const formatPhone = (value) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
     const pattern = digits.length <= 10 ? "(##) ####-####" : "(##) #####-####";
@@ -786,6 +796,8 @@
     const digits = value.replace(/\D/g, "").slice(0, 8);
     return applyMask(digits, "#####-###");
   };
+
+  const formatUf = (value) => value.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 2);
 
   const formatCurrencyBr = (value) => {
     let digits = value.replace(/\D/g, "").replace(/^0+/, "");
@@ -809,6 +821,12 @@
       case "cpf_cnpj":
         element.value = formatCpfCnpj(element.value);
         break;
+      case "cpf":
+        element.value = formatCpf(element.value);
+        break;
+      case "cnpj":
+        element.value = formatCnpj(element.value);
+        break;
       case "phone":
         element.value = formatPhone(element.value);
         break;
@@ -820,6 +838,9 @@
         break;
       case "cep":
         element.value = formatCep(element.value);
+        break;
+      case "uf":
+        element.value = formatUf(element.value);
         break;
       default:
         break;

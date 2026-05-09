@@ -36,8 +36,20 @@
       </div>
 
       <div>
+        <%= form.label :rg, "RG (opcional)" %>
+        <%= form.text_field :rg, data: { mask: "rg" }, inputmode: "numeric" %>
+      </div>
+
+      <div>
         <%= form.label :marital_status, "Estado civil (opcional)" %>
-        <%= form.text_field :marital_status %>
+        <%= form.select :marital_status, [
+          [ "Solteiro(a)", "solteiro" ],
+          [ "Casado(a)", "casado" ],
+          [ "União estável", "uniao_estavel" ],
+          [ "Divorciado(a)", "divorciado" ],
+          [ "Viúvo(a)", "viuvo" ],
+          [ "Separado(a)", "separado" ]
+        ], { include_blank: "Selecione o estado civil" } %>
       </div>
 
       <div>
@@ -90,7 +102,7 @@
 
       <div>
         <%= form.label :state %>
-        <%= form.text_field :state, data: { cep_lookup_state: true } %>
+        <%= form.text_field :state, data: { cep_lookup_state: true, mask: "uf" }, inputmode: "text" %>
       </div>
     </div>
   </section>
