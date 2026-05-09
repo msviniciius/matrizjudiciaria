@@ -4,7 +4,12 @@
   <%= link_to "Novo cadastro de prazo", new_deadline_setting_path, class: "btn btn-primary" %>
 <% end %>
 
-<section class="case-section">
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @deadline_settings.size %></strong> cadastro(s)</p>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>

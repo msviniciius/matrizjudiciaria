@@ -1,4 +1,22 @@
-<%= render @deadline %>
+<section class="case-section">
+  <h3>Detalhes do prazo</h3>
+  <div class="table-wrap details-table">
+    <table>
+      <tbody>
+        <tr><th>Processo</th><td><%= @deadline.legal_case&.internal_number || "-" %></td></tr>
+        <tr><th>Título</th><td><%= @deadline.title %></td></tr>
+        <tr><th>Tipo</th><td><%= @deadline.deadline_type.present? ? enum_label(Deadline, :deadline_type, @deadline.deadline_type) : "-" %></td></tr>
+        <tr><th>Data inicial</th><td><%= @deadline.start_date.present? ? l(@deadline.start_date, format: :short) : "-" %></td></tr>
+        <tr><th>Data limite</th><td><%= @deadline.due_date.present? ? l(@deadline.due_date, format: :short) : "-" %></td></tr>
+        <tr><th>Status</th><td><%= enum_label(Deadline, :status, @deadline.status) %></td></tr>
+        <tr><th>Prioridade</th><td><%= @deadline.priority.present? ? enum_label(Deadline, :priority, @deadline.priority) : "-" %></td></tr>
+        <tr><th>Concluído em</th><td><%= @deadline.completed_at.present? ? l(@deadline.completed_at, format: :short) : "-" %></td></tr>
+        <tr><th>Responsável</th><td><%= @deadline.responsible_name.presence || "-" %></td></tr>
+        <tr><th>Justificativa</th><td><%= @deadline.delay_reason.presence || "-" %></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <div class="case-actions case-actions--footer">
   <%= link_to "Editar prazo", edit_deadline_path(@deadline), class: "btn btn-secondary" %>

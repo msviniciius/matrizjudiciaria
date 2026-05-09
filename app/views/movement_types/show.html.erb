@@ -1,7 +1,20 @@
 <% content_for :title, "Tipo de Andamento" %>
-<p><strong>Nome:</strong> <%= @movement_type.name %></p>
-<p><strong>Código:</strong> <%= @movement_type.code %></p>
-<p><strong>Ativo:</strong> <%= @movement_type.active ? "Sim" : "Não" %></p>
+
+<section class="case-section">
+  <h3>Detalhes do tipo</h3>
+  <div class="table-wrap details-table">
+    <table>
+      <tbody>
+        <tr><th>Nome</th><td><%= @movement_type.name %></td></tr>
+        <tr><th>Código</th><td><%= @movement_type.code %></td></tr>
+        <tr><th>Ativo</th><td><%= @movement_type.active ? "Sim" : "Não" %></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <div class="case-actions case-actions--footer">
+  <%= link_to "Editar", edit_movement_type_path(@movement_type), class: "btn btn-secondary" %>
   <%= link_to "Voltar", movement_types_path, class: "btn btn-secondary" %>
+  <%= button_to "Excluir", @movement_type, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Confirma a exclusão?" } } %>
 </div>

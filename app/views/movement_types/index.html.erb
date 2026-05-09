@@ -4,38 +4,48 @@
   <%= link_to "Novo tipo", new_movement_type_path, class: "btn btn-primary" %>
 <% end %>
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Código</th>
-        <th>Ativo</th>
-        <th class="actions-col">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if @movement_types.any? %>
-        <% @movement_types.each do |movement_type| %>
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @movement_types.size %></strong> tipo(s)</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Código</th>
+          <th>Ativo</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @movement_types.any? %>
+          <% @movement_types.each do |movement_type| %>
+            <tr>
+              <td><%= movement_type.name %></td>
+              <td><%= movement_type.code %></td>
+              <td><%= movement_type.active ? "Sim" : "Não" %></td>
+              <td class="table-actions">
+                <%= link_to movement_type_path(movement_type), class: "btn btn-secondary btn-icon", aria: { label: "Ver tipo de andamento" }, title: "Ver tipo de andamento" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
+                <%= link_to edit_movement_type_path(movement_type), class: "btn btn-secondary btn-icon", aria: { label: "Editar tipo de andamento" }, title: "Editar tipo de andamento" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+                <%= button_to movement_type_path(movement_type), method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Confirma a exclusão?" } }, aria: { label: "Excluir tipo de andamento" }, title: "Excluir tipo de andamento" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
           <tr>
-            <td><%= movement_type.name %></td>
-            <td><%= movement_type.code %></td>
-            <td><%= movement_type.active ? "Sim" : "Não" %></td>
-            <td class="table-actions">
-              <%= link_to edit_movement_type_path(movement_type), class: "btn btn-secondary btn-icon", aria: { label: "Editar tipo de andamento" }, title: "Editar tipo de andamento" do %>
-                <span aria-hidden="true">&#9998;</span>
-              <% end %>
-              <%= button_to movement_type_path(movement_type), method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Confirma a exclusão?" } }, aria: { label: "Excluir tipo de andamento" }, title: "Excluir tipo de andamento" do %>
-                <span aria-hidden="true">&#128465;</span>
-              <% end %>
-            </td>
+            <td colspan="4" class="table-empty-state">Nenhum tipo de andamento cadastrado.</td>
           </tr>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="4" class="table-empty-state">Nenhum tipo de andamento cadastrado.</td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div>
+      </tbody>
+    </table>
+  </div>
+</section>

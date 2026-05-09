@@ -42,7 +42,76 @@ class DashboardController < ApplicationController
       .order(event_date: :desc, created_at: :desc)
       .limit(8)
 
+    @critical_queues = {
+      without_responsible: operational_scope
+        .where(responsible_name: [ nil, "" ])
+        .order(Arel.sql("legal_cases.next_deadline_on ASC NULLS LAST, legal_cases.updated_at DESC"))
+        .limit(6),
+      without_next_action: operational_scope
+        .where(next_action: [ nil, "" ])
+        .order(Arel.sql("legal_cases.next_deadline_on ASC NULLS LAST, legal_cases.updated_at DESC"))
+        .limit(6),
+      overdue_deadlines_without_reason: deadlines_scope
+        .where("deadlines.due_date < ?", Date.current)
+        .where.not(status: :completed)
+        .where("COALESCE(deadlines.delay_reason, '') = ''")
+        .order(due_date: :asc)
+        .limit(6)
+    }
+
     @chart_data = build_chart_data
+  end
+
+  def quick_update_case_responsible
+    legal_case = current_office.legal_cases.find(params.expect(:id))
+    responsible_name = params[:responsible_name].to_s.strip
+
+    if responsible_name.blank?
+      redirect_to painel_path, alert: "Informe o responsável para atualizar o processo."
+      return
+    end
+
+    legal_case.update!(responsible_name: responsible_name)
+    redirect_to painel_path, notice: "Responsável do processo atualizado."
+  end
+
+  def quick_update_case_next_action
+    legal_case = current_office.legal_cases.find(params.expect(:id))
+    next_action = params[:next_action].to_s.strip
+
+    if next_action.blank?
+      redirect_to painel_path, alert: "Informe a próxima providência para atualizar o processo."
+      return
+    end
+
+    legal_case.update!(next_action: next_action)
+    redirect_to painel_path, notice: "Próxima providência atualizada."
+  end
+
+  def quick_update_deadline_reason
+    deadline = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+    delay_reason = params[:delay_reason].to_s.strip
+
+    if delay_reason.blank?
+      redirect_to painel_path, alert: "Informe a justificativa para regularizar o prazo."
+      return
+    end
+
+    deadline.update!(delay_reason: delay_reason)
+    redirect_to painel_path, notice: "Justificativa do prazo atualizada."
+  end
+
+  def quick_update_task_responsible
+    task = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+    responsible_name = params[:responsible_name].to_s.strip
+
+    if responsible_name.blank?
+      redirect_to painel_path, alert: "Informe o responsável para regularizar a tarefa."
+      return
+    end
+
+    task.update!(responsible_name: responsible_name)
+    redirect_to painel_path, notice: "Responsável da tarefa atualizado."
   end
 
   private

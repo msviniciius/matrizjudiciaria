@@ -14,6 +14,8 @@ class ProcessMovementsController < ApplicationController
       por_impacto: office_process_movements.group(:impact).count,
       por_origem: office_process_movements.group(:origin).count
     }
+
+    @advanced_filters_open = @filters.except(:q).values.any?(&:present?)
   end
 
   def show
@@ -104,11 +106,23 @@ class ProcessMovementsController < ApplicationController
       scope = scope.where(administrative_situation: @filters[:administrative_situation])
     end
 
+    if @filters[:q].present?
+      term = "%#{@filters[:q].strip}%"
+      scope = scope.joins(:process).where(
+        "COALESCE(process_movements.display_title, '') ILIKE :term
+         OR COALESCE(process_movements.complementary_description, '') ILIKE :term
+         OR COALESCE(legal_cases.internal_number, '') ILIKE :term
+         OR COALESCE(legal_cases.responsible_name, '') ILIKE :term",
+        term: term
+      )
+    end
+
     scope.distinct
   end
 
   def filter_params
     params.permit(
+      :q,
       :phase_id,
       :status,
       :movement_type_id,

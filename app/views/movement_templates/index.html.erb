@@ -4,42 +4,52 @@
   <%= link_to "Novo modelo", new_movement_template_path, class: "btn btn-primary" %>
 <% end %>
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nome</th>
-        <th>Fase</th>
-        <th>Tipo</th>
-        <th>Ativo</th>
-        <th class="actions-col">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if @movement_templates.any? %>
-        <% @movement_templates.each do |template| %>
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @movement_templates.size %></strong> modelo(s)</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nome</th>
+          <th>Fase</th>
+          <th>Tipo</th>
+          <th>Ativo</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @movement_templates.any? %>
+          <% @movement_templates.each do |template| %>
+            <tr>
+              <td><%= template.code %></td>
+              <td><%= template.name %></td>
+              <td><%= template.phase&.name %></td>
+              <td><%= template.movement_type&.name %></td>
+              <td><%= template.active? ? "Sim" : "Não" %></td>
+              <td class="table-actions">
+                <%= link_to template, class: "btn btn-secondary btn-icon", aria: { label: "Ver modelo de andamento" }, title: "Ver modelo de andamento" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
+                <%= link_to edit_movement_template_path(template), class: "btn btn-secondary btn-icon", aria: { label: "Editar modelo de andamento" }, title: "Editar modelo de andamento" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+                <%= button_to movement_template_path(template), method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Confirma a exclusão?" } }, aria: { label: "Excluir modelo de andamento" }, title: "Excluir modelo de andamento" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
           <tr>
-            <td><%= template.code %></td>
-            <td><%= template.name %></td>
-            <td><%= template.phase&.name %></td>
-            <td><%= template.movement_type&.name %></td>
-            <td><%= template.active? ? "Sim" : "Não" %></td>
-            <td class="table-actions">
-              <%= link_to template, class: "btn btn-secondary btn-icon", aria: { label: "Ver modelo de andamento" }, title: "Ver modelo de andamento" do %>
-                <span aria-hidden="true">&#128065;</span>
-              <% end %>
-              <%= link_to edit_movement_template_path(template), class: "btn btn-secondary btn-icon", aria: { label: "Editar modelo de andamento" }, title: "Editar modelo de andamento" do %>
-                <span aria-hidden="true">&#9998;</span>
-              <% end %>
-            </td>
+            <td colspan="6" class="table-empty-state">Nenhum modelo de andamento cadastrado.</td>
           </tr>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="6" class="table-empty-state">Nenhum modelo de andamento cadastrado.</td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div>
+      </tbody>
+    </table>
+  </div>
+</section>
