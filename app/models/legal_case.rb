@@ -51,7 +51,7 @@ class LegalCase < ApplicationRecord
   has_many :tasks, dependent: :destroy
   has_many :process_exams, dependent: :destroy
   accepts_nested_attributes_for :process_exams,
-    reject_if: proc { |attrs| attrs.values_at("exam_nature", "exam_scope", "status", "scheduled_at", "location", "expert_name", "notes").all?(&:blank?) },
+    reject_if: :process_exam_attributes_blank?,
     allow_destroy: true
 
   enum :status, OFFICIAL_STATUSES.index_with(&:itself), prefix: true
@@ -322,6 +322,13 @@ class LegalCase < ApplicationRecord
 
     self.phase = phase_map[phase] || phase
     self.status = status_map[status] || status
+  end
+
+  def process_exam_attributes_blank?(attrs)
+    values = attrs.to_h.with_indifferent_access.values_at(
+      :exam_nature, :exam_scope, :status, :scheduled_at, :location, :expert_name, :notes
+    )
+    values.all?(&:blank?)
   end
 
   def assign_internal_number

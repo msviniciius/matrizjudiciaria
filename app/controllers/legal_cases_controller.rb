@@ -182,7 +182,7 @@ class LegalCasesController < ApplicationController
 
     permitted << :responsible_name if current_user&.admin?
 
-    params.expect(legal_case: permitted)
+    params.require(:legal_case).permit(*permitted)
   end
 
   def load_case_related_collections

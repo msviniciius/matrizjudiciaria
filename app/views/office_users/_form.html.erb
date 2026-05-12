@@ -25,7 +25,7 @@
 
       <div>
         <%= form.label :role, "Tipo de usuário" %>
-        <%= form.select :role, [["Administrador", "admin"], ["Atendente", "attendant"]] %>
+        <%= form.select :role, User::ROLE_LABELS.map { |value, label| [label, value] } %>
       </div>
 
       <div class="field-checkbox">

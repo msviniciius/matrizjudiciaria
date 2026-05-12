@@ -4,7 +4,13 @@ require "securerandom"
 class User < ApplicationRecord
   belongs_to :office
 
-  ROLES = %w[admin attendant].freeze
+  ROLES = %w[admin attendant associate intern].freeze
+  ROLE_LABELS = {
+    "admin" => "Administrador",
+    "attendant" => "Atendente",
+    "associate" => "Associado",
+    "intern" => "Estagiário"
+  }.freeze
 
   attr_reader :password
 
@@ -25,6 +31,10 @@ class User < ApplicationRecord
 
   def attendant?
     role == "attendant"
+  end
+
+  def role_label
+    ROLE_LABELS.fetch(role, role.to_s.humanize)
   end
 
   def password=(value)

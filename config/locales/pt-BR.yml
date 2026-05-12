@@ -66,6 +66,7 @@ pt-BR:
       legal_case: Processo
       deadline: Prazo
       deadline_setting: Cadastro de prazo
+      deadline_settings: Cadastros de prazo
       task: Tarefa
       case_event: Andamento
       process_movement: Andamento processual
@@ -165,6 +166,21 @@ pt-BR:
           laudo_pendente: Laudo pendente
           laudo_juntado: Laudo juntado
           resultado_disponibilizado: Resultado disponibilizado
+      deadline_setting:
+        name: Nome do prazo
+        deadline_type: Tipo de prazo
+        days_to_due: Tempo padrão (dias)
+        default_priority: Prioridade padrão
+        justification_hint: Justificativa
+        active: Ativo
+      deadline_settings:
+        name: Nome do prazo
+        deadline_type: Tipo de prazo
+        days_to_due: Tempo padrão (dias)
+        default_priority: Prioridade padrão
+        justification_hint: Justificativa
+        active: Ativo
+        deadlione: Tipo de prazo
       process_movement:
         natures:
           fato_processual: Fato processual

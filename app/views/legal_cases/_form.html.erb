@@ -27,7 +27,7 @@
       <div class="field-full">
         <%= form.label :client_id %>
         <div class="inline-client-actions">
-          <%= form.collection_select :client_id,
+        <%= form.collection_select :client_id,
                                      clients,
                                      :id,
                                      :display_name_with_status,
@@ -35,7 +35,8 @@
                                      data: {
                                        client_select: true,
                                        pending_client_ids: pending_client_ids.join(",")
-                                     } %>
+                                     },
+                                     required: true %>
           <button
             type="button"
             class="btn btn-secondary btn-icon"
@@ -66,13 +67,13 @@
 
       <div>
         <%= form.label :legal_area_id, LegalCase.human_attribute_name(:legal_area_id) %>
-        <%= form.select :legal_area_id, grouped_options_for_select(grouped_options, legal_case.legal_area_id), { include_blank: "Selecione a área" }, data: { legal_area_select: true } %>
+        <%= form.select :legal_area_id, grouped_options_for_select(grouped_options, legal_case.legal_area_id), { include_blank: "Selecione a área" }, data: { legal_area_select: true }, required: true %>
       </div>
 
       <div>
         <%= form.label :process_type_id, LegalCase.human_attribute_name(:process_type_id) %>
         <% process_types = legal_case.legal_area ? legal_case.legal_area.process_types.order(:name).map { |pt| [pt.name, pt.id] } : [] %>
-        <%= form.select :process_type_id, process_types, { include_blank: "Selecione o tipo" }, data: { process_type_select: true, current_process_type: legal_case.process_type_id } %>
+        <%= form.select :process_type_id, process_types, { include_blank: "Selecione o tipo" }, data: { process_type_select: true, current_process_type: legal_case.process_type_id }, required: true %>
       </div>
 
       <div>
@@ -106,12 +107,12 @@
     <div class="form-grid">
       <div>
         <%= form.label :phase, "Fase" %>
-        <%= form.select :phase, enum_options_for(LegalCase, :phase) %>
+        <%= form.select :phase, enum_options_for(LegalCase, :phase), {}, { required: true } %>
       </div>
 
       <div>
         <%= form.label :status, "Status" %>
-        <%= form.select :status, enum_options_for(LegalCase, :status) %>
+        <%= form.select :status, enum_options_for(LegalCase, :status), {}, { required: true } %>
       </div>
 
       <div>
@@ -139,7 +140,7 @@
 
       <div>
         <%= form.label :next_deadline_on, "Próximo prazo" %>
-        <%= form.date_field :next_deadline_on %>
+        <%= form.date_field :next_deadline_on, required: true %>
       </div>
 
       <div>
@@ -161,15 +162,70 @@
       <p>Ative para controlar perícias vinculadas ao processo.</p>
     </div>
     <div class="form-grid">
+      <% has_existing_exams = legal_case.persisted? && legal_case.process_exams.exists? %>
       <div class="field-full">
-        <label class="checkbox-field">
-          <%= form.check_box :tem_pericia, data: { pericia_toggle: true, pericia_open_modal_on_check: true } %>
-          <span>Tem perícia?</span>
-        </label>
+        <% if has_existing_exams %>
+          <%= form.hidden_field :tem_pericia, value: true %>
+        <% else %>
+          <label class="checkbox-field">
+            <%= form.check_box :tem_pericia, data: { pericia_toggle: true, pericia_open_modal_on_check: true } %>
+            <span>Tem perícia?</span>
+          </label>
+        <% end %>
       </div>
 
       <div class="field-full" data-pericia-section style="display: <%= legal_case.tem_pericia? ? "block" : "none" %>;">
-        <button type="button" class="btn btn-secondary" data-open-pericia-modal>Adicionar/editar dados da perícia</button>
+        <div class="form-inline-actions">
+          <button type="button" class="btn btn-secondary" data-open-pericia-modal>Adicionar perícia</button>
+        </div>
+
+        <% if legal_case.persisted? && legal_case.process_exams.any? %>
+          <div class="table-wrap" style="margin-top: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Natureza</th>
+                  <th>Esfera</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Perito</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC")).each do |exam| %>
+                  <tr>
+                    <td><%= enum_label(ProcessExam, :exam_nature, exam.exam_nature) %></td>
+                    <td><%= enum_label(ProcessExam, :exam_scope, exam.exam_scope) %></td>
+                    <td><%= exam.scheduled_label %></td>
+                    <td><%= enum_label(ProcessExam, :status, exam.status) %></td>
+                    <td><%= exam.expert_name.presence || "-" %></td>
+                    <td class="table-actions">
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-edit-pericia-modal
+                        data-exam-id="<%= exam.id %>"
+                        data-exam-nature="<%= exam.exam_nature %>"
+                        data-exam-scope="<%= exam.exam_scope %>"
+                        data-exam-status="<%= exam.status %>"
+                        data-exam-scheduled-at="<%= exam.scheduled_at&.strftime("%Y-%m-%dT%H:%M") %>"
+                        data-exam-location="<%= exam.location.to_s %>"
+                        data-exam-expert-name="<%= exam.expert_name.to_s %>"
+                        data-exam-notes="<%= exam.notes.to_s %>"
+                        data-exam-active="<%= exam.active? %>"
+                      >
+                        Editar
+                      </button>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% elsif legal_case.persisted? %>
+          <p class="form-hint">Nenhuma perícia cadastrada ainda.</p>
+        <% end %>
       </div>
     </div>
   </section>
@@ -198,7 +254,7 @@
 
     <div class="form-grid">
       <%= form.fields_for :process_exams, modal_exam do |exam_form| %>
-        <%= exam_form.hidden_field :id if exam_form.object.persisted? %>
+        <%= exam_form.hidden_field :id %>
         <div>
           <%= exam_form.label :exam_nature, "Natureza" %>
           <%= exam_form.select :exam_nature, enum_options_for(ProcessExam, :exam_nature), include_blank: "Selecione a natureza" %>
@@ -244,7 +300,7 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn btn-primary" data-save-pericia-modal>Salvar perícia no formulário</button>
+      <button type="button" class="btn btn-primary" data-save-pericia-modal>Salvar</button>
     </div>
   </dialog>
 <% end %>

@@ -22,7 +22,7 @@
           <tr>
             <td><%= user.name %></td>
             <td><%= user.email %></td>
-            <td><%= user.admin? ? "Administrador" : "Atendente" %></td>
+            <td><%= user.role_label %></td>
             <td><%= user.active? ? "Ativo" : "Inativo" %></td>
             <td><%= user.last_sign_in_at.present? ? l(user.last_sign_in_at, format: :short) : "-" %></td>
             <td class="table-actions office-users-actions">
@@ -30,7 +30,7 @@
                 <span aria-hidden="true">&#9998;</span>
               <% end %>
               <% unless user == current_user %>
-                <%= link_to office_setting_user_path(user), class: "btn btn-secondary btn-icon", data: { turbo_method: :delete, turbo_confirm: "Excluir este usuário?" }, aria: { label: "Excluir usuário" }, title: "Excluir usuário" do %>
+                <%= button_to office_setting_user_path(user), method: :delete, class: "btn btn-secondary btn-icon", data: { turbo_confirm: "Excluir este usuário?" }, aria: { label: "Excluir usuário" }, title: "Excluir usuário" do %>
                   <span aria-hidden="true">&#128465;</span>
                 <% end %>
               <% end %>

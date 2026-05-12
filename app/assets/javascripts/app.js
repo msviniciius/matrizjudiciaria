@@ -117,6 +117,20 @@
 })();
 
 (() => {
+  const initRequiredFieldsPattern = () => {
+    document.querySelectorAll("form.app-form").forEach((form) => {
+      form.querySelectorAll("[data-required-field]").forEach((field) => {
+        field.required = true;
+        field.setAttribute("aria-required", "true");
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initRequiredFieldsPattern);
+  document.addEventListener("DOMContentLoaded", initRequiredFieldsPattern);
+})();
+
+(() => {
   const initInlineValidationForms = () => {
     document.querySelectorAll("[data-inline-validation-form]").forEach((form) => {
       if (form.dataset.inlineValidationBound === "true") return;
@@ -256,6 +270,85 @@
 
   document.addEventListener("turbo:load", initProcessMovementForm);
   document.addEventListener("DOMContentLoaded", initProcessMovementForm);
+})();
+
+(() => {
+  const normalizeValue = (value) => value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const parseComparable = (value) => {
+    const normalized = normalizeValue(value);
+    const numberCandidate = normalized.replace(/\./g, "").replace(",", ".");
+    if (/^-?\d+(\.\d+)?$/.test(numberCandidate)) return Number(numberCandidate);
+    return normalized;
+  };
+
+  const initSortableTables = () => {
+    document.querySelectorAll(".table-wrap table").forEach((table) => {
+      if (table.dataset.sortableBound === "true") return;
+
+      const headRow = table.querySelector("thead tr");
+      const body = table.querySelector("tbody");
+      if (!headRow || !body) return;
+
+      const headers = Array.from(headRow.querySelectorAll("th"));
+      if (!headers.length) return;
+
+      table.dataset.sortableBound = "true";
+      table.dataset.sortDirection = "asc";
+      table.dataset.sortColumn = "";
+
+      headers.forEach((header, index) => {
+        if (header.classList.contains("actions-col")) return;
+        if (header.dataset.sortable === "false") return;
+
+        header.classList.add("is-sortable");
+        header.setAttribute("role", "button");
+        header.setAttribute("tabindex", "0");
+
+        const applySort = () => {
+          const rows = Array.from(body.querySelectorAll("tr"));
+          if (!rows.length) return;
+
+          const isSameColumn = table.dataset.sortColumn === String(index);
+          const direction = isSameColumn && table.dataset.sortDirection === "asc" ? "desc" : "asc";
+          const factor = direction === "asc" ? 1 : -1;
+
+          rows.sort((rowA, rowB) => {
+            const cellA = rowA.children[index];
+            const cellB = rowB.children[index];
+            const valueA = parseComparable(cellA ? cellA.textContent : "");
+            const valueB = parseComparable(cellB ? cellB.textContent : "");
+
+            if (valueA < valueB) return -1 * factor;
+            if (valueA > valueB) return 1 * factor;
+            return 0;
+          });
+
+          rows.forEach((row) => body.appendChild(row));
+          table.dataset.sortColumn = String(index);
+          table.dataset.sortDirection = direction;
+
+          headers.forEach((th) => th.removeAttribute("data-sort-direction"));
+          header.setAttribute("data-sort-direction", direction);
+        };
+
+        header.addEventListener("click", applySort);
+        header.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          applySort();
+        });
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initSortableTables);
+  document.addEventListener("DOMContentLoaded", initSortableTables);
 })();
 
 (() => {
@@ -1146,7 +1239,9 @@
         }
 
         if (event.target.closest("[data-save-pericia-modal]")) {
+          const form = modal.closest("form");
           closeDialog(modal);
+          if (form) form.requestSubmit();
           return;
         }
 
@@ -1158,6 +1253,34 @@
   };
 
   document.addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-edit-pericia-modal]");
+    if (editButton) {
+      const form = editButton.closest("form");
+      const modal = form?.querySelector("[data-pericia-modal]");
+      if (!form || !modal) return;
+
+      const setValue = (selector, value) => {
+        const field = form.querySelector(selector);
+        if (!field) return;
+        field.value = value ?? "";
+      };
+
+      setValue("[name='legal_case[process_exams_attributes][0][id]']", editButton.dataset.examId || "");
+      setValue("[name='legal_case[process_exams_attributes][0][exam_nature]']", editButton.dataset.examNature || "");
+      setValue("[name='legal_case[process_exams_attributes][0][exam_scope]']", editButton.dataset.examScope || "");
+      setValue("[name='legal_case[process_exams_attributes][0][status]']", editButton.dataset.examStatus || "");
+      setValue("[name='legal_case[process_exams_attributes][0][scheduled_at]']", editButton.dataset.examScheduledAt || "");
+      setValue("[name='legal_case[process_exams_attributes][0][location]']", editButton.dataset.examLocation || "");
+      setValue("[name='legal_case[process_exams_attributes][0][expert_name]']", editButton.dataset.examExpertName || "");
+      setValue("[name='legal_case[process_exams_attributes][0][notes]']", editButton.dataset.examNotes || "");
+
+      const activeField = form.querySelector("[name='legal_case[process_exams_attributes][0][active]']");
+      if (activeField) activeField.checked = editButton.dataset.examActive === "true";
+
+      openDialog(modal);
+      return;
+    }
+
     const openButton = event.target.closest("[data-open-pericia-modal]");
     if (!openButton) return;
 
@@ -1247,6 +1370,14 @@
     const pendingHint = document.querySelector("[data-client-pending-hint]");
     const errorsBox = modal?.querySelector("[data-quick-client-errors]");
     if (!modal || !select) return;
+
+    const requiredFields = Array.from(modal.querySelectorAll("[data-quick-client-field][required]"));
+    const firstInvalid = requiredFields.find((field) => !field.checkValidity());
+    if (firstInvalid) {
+      firstInvalid.reportValidity();
+      firstInvalid.focus();
+      return;
+    }
 
     const endpoint = modal.dataset.endpoint;
     const token = document.querySelector('meta[name="csrf-token"]')?.content;

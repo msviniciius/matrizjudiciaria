@@ -61,6 +61,34 @@ class LegalCaseTest < ActiveSupport::TestCase
     assert_includes legal_case.health_issues, "Prazo vencido"
   end
 
+  test "persiste pericia via nested attributes no create" do
+    legal_case = build_case(
+      tem_pericia: true,
+      process_exams_attributes: {
+        "0" => {
+          "exam_nature" => "medica",
+          "exam_scope" => "judicial",
+          "status" => "designada",
+          "scheduled_at" => "2026-05-28T14:00",
+          "location" => "Forum Teste",
+          "expert_name" => "Perito Teste",
+          "notes" => "Observacoes da pericia",
+          "active" => "1"
+        }
+      }
+    )
+
+    assert_difference("ProcessExam.count", 1) do
+      assert legal_case.save!, legal_case.errors.full_messages.join(", ")
+    end
+
+    exam = legal_case.reload.process_exams.first
+    assert_equal "medica", exam.exam_nature
+    assert_equal "judicial", exam.exam_scope
+    assert_equal "designada", exam.status
+    assert_equal "Perito Teste", exam.expert_name
+  end
+
   private
 
   def build_case(attrs = {})

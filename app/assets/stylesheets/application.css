@@ -978,6 +978,32 @@ thead th {
   font-weight: 700;
 }
 
+thead th.is-sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 26px;
+}
+
+thead th.is-sortable::after {
+  content: "↕";
+  position: absolute;
+  right: 10px;
+  color: var(--muted);
+  opacity: 0.55;
+  font-size: 0.82rem;
+}
+
+thead th.is-sortable[data-sort-direction="asc"]::after {
+  content: "↑";
+  opacity: 0.9;
+}
+
+thead th.is-sortable[data-sort-direction="desc"]::after {
+  content: "↓";
+  opacity: 0.9;
+}
+
 tbody tr:last-child td {
   border-bottom: 0;
 }
