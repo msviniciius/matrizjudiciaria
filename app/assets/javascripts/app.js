@@ -1286,6 +1286,24 @@
 
     const form = openButton.closest("form");
     const modal = form?.querySelector("[data-pericia-modal]");
+    if (form) {
+      const clearValue = (selector) => {
+        const field = form.querySelector(selector);
+        if (!field) return;
+        field.value = "";
+      };
+
+      clearValue("[name='legal_case[process_exams_attributes][0][id]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][exam_nature]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][exam_scope]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][status]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][scheduled_at]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][location]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][expert_name]']");
+      clearValue("[name='legal_case[process_exams_attributes][0][notes]']");
+      const activeField = form.querySelector("[name='legal_case[process_exams_attributes][0][active]']");
+      if (activeField) activeField.checked = true;
+    }
     openDialog(modal);
   });
 
