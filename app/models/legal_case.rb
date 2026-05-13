@@ -40,6 +40,7 @@ class LegalCase < ApplicationRecord
 
   belongs_to :client
   belongs_to :office
+  belongs_to :unit, optional: true
   belongs_to :legal_area, optional: true
   belongs_to :process_type, optional: true
   belongs_to :court, optional: true

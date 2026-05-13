@@ -3,7 +3,7 @@ class ClientsController < ApplicationController
 
   def index
     @filters = client_filters
-    scope = current_office.clients.ordered.includes(:legal_cases)
+    scope = scope_by_current_unit(current_office.clients).ordered.includes(:legal_cases)
 
     if @filters[:q].present?
       term = "%#{@filters[:q].strip}%"
@@ -29,11 +29,11 @@ class ClientsController < ApplicationController
   end
 
   def show
-    @client_legal_cases = @client.legal_cases.order(updated_at: :desc)
+    @client_legal_cases = scope_by_current_unit(@client.legal_cases).order(updated_at: :desc)
   end
 
   def new
-    @client = current_office.clients.new
+    @client = current_office.clients.new(unit: current_unit)
   end
 
   def edit
@@ -41,6 +41,7 @@ class ClientsController < ApplicationController
 
   def create
     @client = current_office.clients.new(client_params)
+    @client.unit ||= current_unit
 
     respond_to do |format|
       if @client.save
@@ -55,6 +56,7 @@ class ClientsController < ApplicationController
 
   def quick_create
     @client = current_office.clients.new(quick_client_params.merge(cadastro_pendente: true))
+    @client.unit ||= current_unit
 
     if @client.save(context: :quick_create)
       render json: {
@@ -92,7 +94,7 @@ class ClientsController < ApplicationController
   private
 
   def set_client
-    @client = current_office.clients.find(params.expect(:id))
+    @client = scope_by_current_unit(current_office.clients).find(params.expect(:id))
   end
 
   def client_params

@@ -1,0 +1,39 @@
+<%= form_with(model: unit, class: "app-form") do |form| %>
+  <% if unit.errors.any? %>
+    <div class="form-errors">
+      <h2>Foram encontrados <%= pluralize(unit.errors.count, "erro", "erros") %>:</h2>
+      <ul>
+        <% unit.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <section class="form-section">
+    <h3>Dados da Unidade</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :name, "Nome" %>
+        <%= form.text_field :name %>
+      </div>
+
+      <div>
+        <%= form.label :slug, "Slug" %>
+        <%= form.text_field :slug, placeholder: "ex: matriz" %>
+      </div>
+
+      <div class="field-checkbox">
+        <label class="checkbox-field">
+          <%= form.check_box :active %>
+          <span>Unidade ativa</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <%= link_to "Voltar", units_path, class: "btn btn-secondary" %>
+    <%= form.submit unit.persisted? ? "Salvar unidade" : "Cadastrar unidade", class: "btn btn-primary" %>
+  </div>
+<% end %>

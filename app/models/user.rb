@@ -3,6 +3,8 @@ require "securerandom"
 
 class User < ApplicationRecord
   belongs_to :office
+  has_many :user_units, dependent: :destroy
+  has_many :units, through: :user_units
 
   ROLES = %w[admin attendant associate intern].freeze
   ROLE_LABELS = {
@@ -24,6 +26,12 @@ class User < ApplicationRecord
   before_validation :ensure_password_data_for_create, on: :create
 
   scope :active, -> { where(active: true) }
+
+  def available_units
+    return office.units.active if admin?
+
+    units.where(office_id: office_id, active: true)
+  end
 
   def admin?
     role == "admin"

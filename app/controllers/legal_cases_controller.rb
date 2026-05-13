@@ -3,7 +3,7 @@ class LegalCasesController < ApplicationController
 
   def index
     @filters = legal_case_filters
-    scope = current_office.legal_cases.includes(:client).order(updated_at: :desc)
+    scope = scope_by_current_unit(current_office.legal_cases).includes(:client).order(updated_at: :desc)
 
     if @filters[:q].present?
       term = "%#{@filters[:q].strip}%"
@@ -73,7 +73,7 @@ class LegalCasesController < ApplicationController
 
   def daily_closure
     @reference_date = parse_reference_date(params[:reference_date])
-    @closure_rows = DailyClosureReport.new(reference_date: @reference_date, scope: current_office.legal_cases).rows
+    @closure_rows = DailyClosureReport.new(reference_date: @reference_date, scope: scope_by_current_unit(current_office.legal_cases)).rows
   end
 
   def google_calendar
@@ -91,7 +91,8 @@ class LegalCasesController < ApplicationController
       phase: current_office.default_phase,
       status: current_office.default_status,
       priority: current_office.default_priority,
-      responsible_name: current_user&.name
+      responsible_name: current_user&.name,
+      unit: current_unit
     )
     @legal_case.process_exams.build if @legal_case.process_exams.empty?
   end
@@ -103,6 +104,7 @@ class LegalCasesController < ApplicationController
   def create
     @legal_case = current_office.legal_cases.new(legal_case_params)
     @legal_case.responsible_name = current_user&.name
+    @legal_case.unit ||= current_unit
     @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
     ensure_legal_case_office_scope!
 
@@ -145,7 +147,7 @@ class LegalCasesController < ApplicationController
   private
 
   def set_legal_case
-    @legal_case = current_office.legal_cases.find(params.expect(:id))
+    @legal_case = scope_by_current_unit(current_office.legal_cases).find(params.expect(:id))
   end
 
   def legal_case_params

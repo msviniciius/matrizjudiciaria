@@ -7,9 +7,10 @@ class ApplicationController < ActionController::Base
 
   before_action :set_current_context
   before_action :authenticate_user!
+  before_action :ensure_unit_context!
   before_action :load_navbar_notifications
 
-  helper_method :current_user, :current_office, :user_signed_in?
+  helper_method :current_user, :current_office, :current_unit, :all_units_mode?, :user_signed_in?
 
   private
 
@@ -23,6 +24,17 @@ class ApplicationController < ActionController::Base
 
   def user_signed_in?
     current_user.present?
+  end
+
+  def current_unit
+    return nil if current_user.blank?
+    return nil if all_units_mode?
+
+    @current_unit ||= current_user.available_units.find_by(id: session[:current_unit_id])
+  end
+
+  def all_units_mode?
+    current_user&.admin? && session[:all_units] == true
   end
 
   def authenticate_user!
@@ -41,6 +53,30 @@ class ApplicationController < ActionController::Base
   def set_current_context
     Current.user = current_user
     Current.office = current_office
+    Current.unit = current_unit
+  end
+
+  def ensure_unit_context!
+    return unless user_signed_in?
+
+    units = current_user.available_units
+    return if units.empty?
+    return if all_units_mode?
+    return if current_unit.present?
+    return if current_user.admin?
+
+    if units.count == 1
+      session[:current_unit_id] = units.first.id
+      session[:all_units] = false
+    end
+  end
+
+  def scope_by_current_unit(scope)
+    return scope if all_units_mode?
+    return scope unless scope.klass.column_names.include?("unit_id")
+    return scope.none if current_unit.blank?
+
+    scope.where(unit_id: current_unit.id)
   end
 
   def load_navbar_notifications
@@ -67,6 +103,11 @@ class ApplicationController < ActionController::Base
       .where(due_date: ..task_limit)
       .order(:due_date)
       .limit(5)
+
+    unless all_units_mode?
+      @navbar_deadlines = @navbar_deadlines.where(legal_cases: { unit_id: current_unit&.id })
+      @navbar_tasks = @navbar_tasks.where(legal_cases: { unit_id: current_unit&.id })
+    end
 
     @navbar_notification_total = @navbar_deadlines.size + @navbar_tasks.size
   end

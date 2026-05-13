@@ -119,6 +119,13 @@
                 <span class="nav-link__icon" aria-hidden="true">&#128205;</span>
                 <span class="nav-link__label">Comarcas</span>
               <% end %>
+
+              <% if current_user&.admin? %>
+                <%= link_to units_path, class: "nav-link #{'is-active' if controller_name == 'units'}", aria: { label: "Unidades" }, title: "Unidades" do %>
+                  <span class="nav-link__icon" aria-hidden="true">&#127970;</span>
+                  <span class="nav-link__label">Unidades</span>
+                <% end %>
+              <% end %>
             </div>
           </section>
 
@@ -175,6 +182,29 @@
               <strong><%= current_user&.name %></strong>
               <span><%= law_firm_name %></span>
             </div>
+
+            <% if current_user.present? && (current_user.admin? || current_user.available_units.count > 1) %>
+              <details class="navbar-unit-menu">
+                <summary class="navbar-unit-menu__trigger" title="Trocar unidade" aria-label="Trocar unidade">
+                  <span aria-hidden="true">&#8962;</span>
+                </summary>
+                <div class="navbar-unit-menu__panel">
+                  <p class="navbar-unit-menu__title">Unidade ativa</p>
+                  <% current_user.available_units.ordered.each do |unit| %>
+                    <%= form_with url: unit_session_path, method: :post, local: true, class: "navbar-unit-menu__form" do |form| %>
+                      <%= form.hidden_field :unit_id, value: unit.id %>
+                      <%= form.submit unit.name, class: "navbar-unit-menu__option #{'is-active' if current_unit&.id == unit.id && !all_units_mode?}" %>
+                    <% end %>
+                  <% end %>
+                  <% if current_user.admin? %>
+                    <%= form_with url: unit_session_path, method: :post, local: true, class: "navbar-unit-menu__form" do |form| %>
+                      <%= form.hidden_field :all_units, value: "1" %>
+                      <%= form.submit "Todas Unidades", class: "navbar-unit-menu__option navbar-unit-menu__option--all #{'is-active' if all_units_mode?}" %>
+                    <% end %>
+                  <% end %>
+                </div>
+              </details>
+            <% end %>
 
             <details class="navbar-notifications">
               <summary class="app-navbar__tool" aria-label="Notificações" title="Notificações">

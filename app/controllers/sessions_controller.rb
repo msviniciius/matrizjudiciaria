@@ -14,7 +14,21 @@ class SessionsController < ApplicationController
     if user&.authenticate(params[:password].to_s)
       session[:user_id] = user.id
       user.record_sign_in!
-      redirect_to root_path, notice: "Login realizado com sucesso."
+      units = user.available_units
+
+      if user.admin?
+        session.delete(:current_unit_id)
+        session[:all_units] = false
+        redirect_to root_path, notice: "Selecione a unidade para continuar."
+      elsif units.count <= 1
+        session[:current_unit_id] = units.first&.id
+        session[:all_units] = false
+        redirect_to root_path, notice: "Login realizado com sucesso."
+      else
+        session.delete(:current_unit_id)
+        session[:all_units] = false
+        redirect_to root_path, notice: "Selecione a unidade para continuar."
+      end
     else
       flash.now[:alert] =
         if users.many?

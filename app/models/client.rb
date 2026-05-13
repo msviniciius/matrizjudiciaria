@@ -1,5 +1,6 @@
 class Client < ApplicationRecord
   belongs_to :office
+  belongs_to :unit, optional: true
   has_many :legal_cases, dependent: :destroy
 
   validates :full_name, :cpf_cnpj, presence: true

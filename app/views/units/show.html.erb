@@ -1,0 +1,23 @@
+<% content_for :title, @unit.name %>
+
+<section class="case-section">
+  <div class="section-head">
+    <div>
+      <h3>Unidade</h3>
+    </div>
+    <div class="form-inline-actions">
+      <%= link_to "Editar", edit_unit_path(@unit), class: "btn btn-secondary" %>
+      <%= link_to "Voltar", units_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <div class="table-wrap details-table">
+    <table>
+      <tbody>
+        <tr><th>Nome</th><td><%= @unit.name %></td></tr>
+        <tr><th>Slug</th><td><%= @unit.slug %></td></tr>
+        <tr><th>Status</th><td><%= @unit.active? ? "Ativa" : "Inativa" %></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>

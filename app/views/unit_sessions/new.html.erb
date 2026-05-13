@@ -1,0 +1,27 @@
+<% content_for :title, "Selecionar Unidade" %>
+
+<section class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-card__form">
+      <p class="auth-kicker">Matriz Jurídica</p>
+      <h1>Escolha a unidade</h1>
+      <p class="auth-subtitle">Selecione a unidade de trabalho para iniciar a sessão.</p>
+
+      <%= form_with url: unit_session_path, method: :post, class: "auth-form", local: true do |form| %>
+        <div>
+          <%= form.label :unit_id, "Unidade" %>
+          <%= form.select :unit_id, options_from_collection_for_select(@units, :id, :name), { include_blank: "Selecione" }, required: true %>
+        </div>
+
+        <%= form.submit "Entrar na unidade", class: "btn btn-primary btn-block" %>
+      <% end %>
+
+      <% if current_user&.admin? %>
+        <%= form_with url: unit_session_path, method: :post, class: "auth-form", local: true do |form| %>
+          <%= form.hidden_field :all_units, value: "1" %>
+          <%= form.submit "Todas Unidades", class: "btn btn-secondary btn-block" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>

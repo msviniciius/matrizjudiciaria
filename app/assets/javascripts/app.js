@@ -1,4 +1,42 @@
 (() => {
+  const initUnitChecklist = () => {
+    const checklist = document.querySelector("[data-unit-checklist]");
+    if (!checklist || checklist.dataset.unitChecklistBound === "true") return;
+    checklist.dataset.unitChecklistBound = "true";
+
+    const checkboxes = Array.from(checklist.querySelectorAll("input[type='checkbox']"));
+    const countNode = document.querySelector("[data-unit-count]");
+    const selectAll = document.querySelector("[data-unit-select-all]");
+    const clearBtn = document.querySelector("[data-unit-clear]");
+
+    const update = () => {
+      let total = 0;
+      checkboxes.forEach((checkbox) => {
+        const item = checkbox.closest("[data-unit-item]");
+        if (checkbox.checked) total += 1;
+        if (item) item.classList.toggle("is-selected", checkbox.checked);
+      });
+      if (countNode) countNode.textContent = `${total} selecionada${total === 1 ? "" : "s"}`;
+    };
+
+    checkboxes.forEach((checkbox) => checkbox.addEventListener("change", update));
+    if (selectAll) selectAll.addEventListener("click", () => {
+      checkboxes.forEach((checkbox) => { checkbox.checked = true; });
+      update();
+    });
+    if (clearBtn) clearBtn.addEventListener("click", () => {
+      checkboxes.forEach((checkbox) => { checkbox.checked = false; });
+      update();
+    });
+
+    update();
+  };
+
+  document.addEventListener("turbo:load", initUnitChecklist);
+  document.addEventListener("DOMContentLoaded", initUnitChecklist);
+})();
+
+(() => {
   const initOfficeSettingsInteractions = () => {
     const form = document.querySelector("[data-office-settings-form]");
     if (!form) return;
@@ -1485,6 +1523,28 @@
 
   document.addEventListener("turbo:load", initQuickClientModal);
   document.addEventListener("DOMContentLoaded", initQuickClientModal);
+})();
+
+(() => {
+  const initForcedUnitModal = () => {
+    const modal = document.querySelector("[data-force-unit-modal]");
+    if (!modal) return;
+
+    modal.hidden = false;
+    if (typeof modal.showModal === "function" && !modal.open) modal.showModal();
+    if (typeof modal.showModal !== "function") modal.setAttribute("open", "open");
+
+    if (modal.dataset.forceUnitModalBound === "true") return;
+    modal.dataset.forceUnitModalBound = "true";
+
+    modal.addEventListener("cancel", (event) => event.preventDefault());
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) event.preventDefault();
+    });
+  };
+
+  document.addEventListener("turbo:load", initForcedUnitModal);
+  document.addEventListener("DOMContentLoaded", initForcedUnitModal);
 })();
 
 (() => {

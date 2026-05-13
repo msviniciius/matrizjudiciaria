@@ -1,5 +1,20 @@
 class DashboardController < ApplicationController
   def index
+    @unit_selection_required = current_user.present? && !all_units_mode? && current_unit.blank? && (current_user.admin? || current_user.available_units.exists?)
+    @available_units = current_user&.available_units&.ordered || []
+
+    if @unit_selection_required
+      @legal_cases = []
+      @report_counts = { por_fase: {}, prazo_proximo: 0, sem_prazo: 0, com_pericia: 0, com_exigencia_pendente: 0, saude_critica: 0 }
+      @risk_counts = { vence_hoje: 0, vence_48h: 0, atrasados: 0, sem_proxima_providencia: 0 }
+      @risk_queues = { vence_hoje: [], vence_48h: [], atrasados: [], sem_proxima_providencia: [] }
+      @today_counts = { deadlines_today: 0, deadlines_overdue: 0, tasks_today: 0, tasks_overdue: 0 }
+      @recent_movements = []
+      @critical_queues = { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] }
+      @chart_data = { phase: { labels: [], values: [] }, status: { labels: [], values: [] }, deadlines: { labels: [], values: [] }, responsible: { labels: [], values: [] } }
+      return
+    end
+
     @legal_cases = current_office.legal_cases.order(updated_at: :desc)
     operational_scope = current_office.legal_cases.operational
     deadlines_scope = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id })

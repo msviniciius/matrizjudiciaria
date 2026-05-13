@@ -8,6 +8,7 @@ class OfficeUsersController < ApplicationController
 
   def new
     @user = current_office.users.new(role: "attendant", active: true)
+    @user.unit_ids = [ current_unit.id ].compact
   end
 
   def create
@@ -54,6 +55,6 @@ class OfficeUsersController < ApplicationController
   end
 
   def user_params
-    params.expect(user: [ :name, :email, :role, :active, :password, :password_confirmation ])
+    params.expect(user: [ :name, :email, :role, :active, :password, :password_confirmation, unit_ids: [] ])
   end
 end

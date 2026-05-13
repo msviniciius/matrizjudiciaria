@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
   get "/logout", to: "sessions#destroy"
+  resource :unit_session, only: %i[new create]
   resource :office_setting, only: %i[show edit update] do
     resources :users, controller: "office_users", except: :show
   end
@@ -52,6 +53,7 @@ Rails.application.routes.draw do
     end
   end
   resources :courts
+  resources :units
   resources :districts, only: [] do
     resources :courts_lookup, only: :index
   end

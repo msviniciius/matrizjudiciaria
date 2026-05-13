@@ -1,0 +1,51 @@
+<% content_for :title, "Unidades" %>
+
+<% content_for :topbar_actions do %>
+  <%= link_to "Nova unidade", new_unit_path, class: "btn btn-primary" %>
+<% end %>
+
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Listagem</h3>
+    <p>Exibindo <strong><%= @units.size %></strong> unidade(s)</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Slug</th>
+          <th>Status</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @units.any? %>
+          <% @units.each do |unit| %>
+            <tr>
+              <td><%= unit.name %></td>
+              <td><%= unit.slug %></td>
+              <td><%= unit.active? ? "Ativa" : "Inativa" %></td>
+              <td class="table-actions">
+                <%= link_to unit_path(unit), class: "btn btn-secondary btn-icon", aria: { label: "Ver unidade" }, title: "Ver unidade" do %>
+                  <span aria-hidden="true">&#128065;</span>
+                <% end %>
+                <%= link_to edit_unit_path(unit), class: "btn btn-secondary btn-icon", aria: { label: "Editar unidade" }, title: "Editar unidade" do %>
+                  <span aria-hidden="true">&#9998;</span>
+                <% end %>
+                <%= button_to unit_path(unit), method: :delete, class: "btn btn-danger btn-icon", form: { class: "table-action-form", data: { turbo_confirm: "Excluir esta unidade?" } }, aria: { label: "Excluir unidade" }, title: "Excluir unidade" do %>
+                  <span aria-hidden="true">&#128465;</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="4" class="table-empty-state">Nenhuma unidade cadastrada.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

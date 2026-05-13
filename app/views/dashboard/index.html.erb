@@ -8,6 +8,39 @@
   <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
 <% end %>
 
+<% if @unit_selection_required %>
+  <dialog class="quick-client-modal quick-client-modal--locked" data-force-unit-modal hidden>
+    <div class="quick-client-modal__header">
+      <h3>Selecionar unidade</h3>
+    </div>
+    <p class="form-hint">Você precisa escolher uma unidade para continuar.</p>
+    <div class="form-grid">
+      <div class="field-full">
+        <% if @available_units.any? %>
+          <%= form_with url: unit_session_path, method: :post, class: "app-form", local: true do |form| %>
+            <%= form.label :unit_id, "Unidade" %>
+            <%= form.select :unit_id, options_from_collection_for_select(@available_units, :id, :name), { include_blank: "Selecione" }, required: true %>
+            <div class="form-actions" style="margin-top: 12px;">
+              <%= form.submit "Entrar na unidade", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="empty-state">Nenhuma unidade vinculada ao seu usuário.</p>
+        <% end %>
+      </div>
+      <% if current_user&.admin? %>
+        <div class="field-full">
+          <%= form_with url: unit_session_path, method: :post, class: "app-form", local: true do |form| %>
+            <%= form.hidden_field :all_units, value: "1" %>
+            <%= form.submit "Todas Unidades", class: "btn btn-secondary" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </dialog>
+<% end %>
+
+<% unless @unit_selection_required %>
 <section class="case-section dashboard-section">
   <div class="dashboard-section__head">
     <h3>Resumo Operacional</h3>
@@ -42,6 +75,7 @@
     </article>
   </div>
 </section>
+<% end %>
 
 <section class="case-section dashboard-section">
   <div class="dashboard-section__head">

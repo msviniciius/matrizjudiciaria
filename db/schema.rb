@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -77,11 +77,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
     t.string "profession"
     t.string "rg"
     t.string "state"
+    t.bigint "unit_id"
     t.datetime "updated_at", null: false
     t.string "whatsapp"
     t.string "zip_code"
     t.index ["cadastro_pendente"], name: "index_clients_on_cadastro_pendente"
     t.index ["office_id"], name: "index_clients_on_office_id"
+    t.index ["unit_id"], name: "index_clients_on_unit_id"
     t.index ["zip_code"], name: "index_clients_on_zip_code"
   end
 
@@ -175,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
     t.string "subarea"
     t.string "support_team"
     t.boolean "tem_pericia", default: false, null: false
+    t.bigint "unit_id"
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_legal_cases_on_client_id"
     t.index ["court_id"], name: "index_legal_cases_on_court_id"
@@ -182,6 +185,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
     t.index ["legal_area_id"], name: "index_legal_cases_on_legal_area_id"
     t.index ["office_id"], name: "index_legal_cases_on_office_id"
     t.index ["process_type_id"], name: "index_legal_cases_on_process_type_id"
+    t.index ["unit_id"], name: "index_legal_cases_on_unit_id"
   end
 
   create_table "movement_templates", force: :cascade do |t|
@@ -366,6 +370,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
     t.index ["legal_case_id"], name: "index_tasks_on_legal_case_id"
   end
 
+  create_table "units", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "office_id", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["office_id", "name"], name: "index_units_on_office_id_and_name", unique: true
+    t.index ["office_id", "slug"], name: "index_units_on_office_id_and_slug", unique: true
+    t.index ["office_id"], name: "index_units_on_office_id"
+  end
+
+  create_table "user_units", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["unit_id"], name: "index_user_units_on_unit_id"
+    t.index ["user_id", "unit_id"], name: "index_user_units_on_user_id_and_unit_id", unique: true
+    t.index ["user_id"], name: "index_user_units_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -387,6 +413,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
   add_foreign_key "case_events", "movement_types"
   add_foreign_key "case_events", "process_exams"
   add_foreign_key "clients", "offices"
+  add_foreign_key "clients", "units"
   add_foreign_key "courts", "districts"
   add_foreign_key "deadline_settings", "offices"
   add_foreign_key "deadlines", "legal_cases"
@@ -396,6 +423,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
   add_foreign_key "legal_cases", "legal_areas"
   add_foreign_key "legal_cases", "offices"
   add_foreign_key "legal_cases", "process_types"
+  add_foreign_key "legal_cases", "units"
   add_foreign_key "movement_templates", "movement_types"
   add_foreign_key "movement_templates", "process_phases", column: "next_phase_id"
   add_foreign_key "movement_templates", "process_phases", column: "phase_id"
@@ -409,5 +437,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_172000) do
   add_foreign_key "process_movements", "process_phases", column: "phase_id"
   add_foreign_key "process_types", "legal_areas"
   add_foreign_key "tasks", "legal_cases"
+  add_foreign_key "units", "offices"
+  add_foreign_key "user_units", "units"
+  add_foreign_key "user_units", "users"
   add_foreign_key "users", "offices"
 end

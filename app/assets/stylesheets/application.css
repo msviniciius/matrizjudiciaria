@@ -2930,3 +2930,155 @@ table td.table-actions {
     position: static;
   }
 }
+
+.quick-client-modal--locked {
+  width: min(640px, 92vw);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
+}
+
+.quick-client-modal--locked::backdrop {
+  background: rgba(10, 20, 35, 0.56);
+  backdrop-filter: blur(1px);
+}
+
+.unit-checklist {
+  display: grid;
+  gap: 8px;
+}
+
+.unit-checklist-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.unit-checklist-toolbar__count {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.unit-checklist-toolbar__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.unit-checklist__item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.unit-checklist__item.is-selected {
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--line));
+  background: color-mix(in srgb, var(--brand) 8%, var(--surface-2));
+}
+
+.unit-checklist__item input[type="checkbox"] {
+  margin: 0;
+}
+
+.office-user-password-field {
+  min-width: 0;
+}
+
+.navbar-unit-menu {
+  position: relative;
+}
+
+.navbar-unit-menu__trigger {
+  list-style: none;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fdfbfb;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.navbar-unit-menu__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.navbar-unit-menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(320px, calc(100vw - 32px));
+  max-width: min(360px, calc(100vw - 32px));
+  background: #fffdfa;
+  border: 1px solid #d9cfbc;
+  border-radius: 12px;
+  box-shadow: 0 16px 30px rgba(11, 23, 41, 0.2);
+  padding: 10px;
+  z-index: 16;
+  overflow-x: hidden;
+}
+
+.navbar-unit-menu__title {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a6778;
+}
+
+.navbar-unit-menu__form {
+  margin: 0 0 6px;
+}
+
+.navbar-unit-menu__option {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #eadfcb;
+  border-radius: 8px;
+  background: #fff !important;
+  color: #1d2532 !important;
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  opacity: 1 !important;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.navbar-unit-menu__option.is-active {
+  border-color: #6f8fb3;
+  background: #dbe8f7 !important;
+  color: #0f2742 !important;
+  font-weight: 700;
+  position: relative;
+  padding-left: 28px;
+}
+
+.navbar-unit-menu__option.is-active::before {
+  content: "✓";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 800;
+  color: #0f2742;
+}
+
+.navbar-unit-menu__option--all {
+  border-style: dashed;
+}
