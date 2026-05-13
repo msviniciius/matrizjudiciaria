@@ -180,7 +180,7 @@
           <div class="app-navbar__right">
             <div class="navbar-user-badge">
               <strong><%= current_user&.name %></strong>
-              <span><%= law_firm_name %></span>
+              <span><%= all_units_mode? ? "consolidado" : (current_unit&.name || "-") %></span>
             </div>
 
             <% if current_user.present? && (current_user.admin? || current_user.available_units.count > 1) %>
