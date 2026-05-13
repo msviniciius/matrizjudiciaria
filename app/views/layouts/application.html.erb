@@ -277,7 +277,7 @@
               </div>
             </details>
 
-            <%= link_to logout_path, class: "app-navbar__logout", title: "Sair da conta", data: { turbo_method: :delete, turbo_confirm: "Deseja sair da conta?" } do %>
+            <%= button_to logout_path, method: :delete, class: "app-navbar__logout", form: { class: "app-navbar__logout-form", data: { turbo_confirm: "Deseja sair da conta?" } }, title: "Sair da conta" do %>
               <span class="app-navbar__logout-icon" aria-hidden="true">&#10162;</span>
               <span class="app-navbar__logout-label">Sair</span>
             <% end %>
