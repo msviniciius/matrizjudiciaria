@@ -177,6 +177,14 @@
             </button>
           </div>
 
+          <div class="app-navbar__center">
+            <div class="app-navbar__crumbs">
+              <span>Operação</span>
+              <span aria-hidden="true">/</span>
+              <strong><%= content_for?(:title) ? content_for(:title) : "Painel Geral" %></strong>
+            </div>
+          </div>
+
           <div class="app-navbar__right">
             <div class="navbar-user-badge">
               <strong><%= current_user&.name %></strong>
@@ -307,18 +315,13 @@
             </section>
           <% end %>
 
-          <header class="topbar">
-            <div>
-              <p class="topbar-kicker">Plataforma operacional</p>
-              <h2><%= content_for?(:title) ? content_for(:title) : "Painel Geral" %></h2>
-            </div>
-
-            <% if content_for?(:topbar_actions) %>
+          <% if content_for?(:topbar_actions) %>
+            <header class="topbar topbar--actions-only">
               <div class="topbar-actions">
                 <%= yield :topbar_actions %>
               </div>
-            <% end %>
-          </header>
+            </header>
+          <% end %>
 
           <% flash.each do |type, message| %>
             <div class="flash <%= type %>"><%= message %></div>

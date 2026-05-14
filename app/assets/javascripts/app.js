@@ -390,7 +390,7 @@
 })();
 
 (() => {
-  const PALETTE = [ "#1f4e79", "#4472c4", "#2f7d5b", "#9a6b2f", "#8b3a3a", "#6b5ca5", "#5d6775", "#264653", "#7f8c8d" ];
+  const PALETTE = [ "#5b8cff", "#6ea8ff", "#8fb8ff", "#32d583", "#f5b942", "#ff5d73", "#7da4e8", "#89a0bf", "#5f7ba8" ];
   const CHART_HIT_MAP = new Map();
 
   const getOrCreateTooltip = () => {
@@ -405,8 +405,8 @@
     tooltip.style.padding = "6px 8px";
     tooltip.style.borderRadius = "8px";
     tooltip.style.font = "600 12px Manrope, sans-serif";
-    tooltip.style.background = "rgba(17, 33, 53, 0.92)";
-    tooltip.style.color = "#fff";
+    tooltip.style.background = "rgba(11, 23, 48, 0.94)";
+    tooltip.style.color = "#e8eefb";
     tooltip.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.25)";
     tooltip.style.transform = "translate(-50%, -110%)";
     tooltip.style.whiteSpace = "nowrap";
@@ -488,7 +488,7 @@
     const gap = 10;
     const barWidth = Math.max(14, (chartWidth - gap * (values.length - 1)) / values.length);
 
-    ctx.strokeStyle = "#d8cfbe";
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(left, bottom);
@@ -497,20 +497,20 @@
 
     values.forEach((value, index) => {
       const x = left + index * (barWidth + gap);
-      const h = (value / maxValue) * chartHeight;
+      const h = Math.max(4, (value / maxValue) * chartHeight);
       const y = bottom - h;
       const fullLabel = String(labels[index] || "Item");
 
       ctx.fillStyle = colors[index] || colors[0] || "#2f5f8f";
       ctx.fillRect(x, y, barWidth, h);
 
-      ctx.fillStyle = "#23364e";
+      ctx.fillStyle = "rgba(230,234,242,.92)";
       ctx.font = "12px Manrope, sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(String(value), x + barWidth / 2, y - 4);
 
       const shortLabel = fullLabel.length > 14 ? `${fullLabel.slice(0, 12)}...` : fullLabel;
-      ctx.fillStyle = "#5f6674";
+      ctx.fillStyle = "rgba(210,222,244,.72)";
       ctx.font = "11px Manrope, sans-serif";
       ctx.fillText(shortLabel, x + barWidth / 2, bottom + 14);
 
@@ -543,13 +543,13 @@
       const y = top + index * rowHeight;
       const barY = y + 6;
       const barH = Math.max(14, rowHeight - 12);
-      const barW = (value / maxValue) * chartWidth;
+      const barW = Math.max(4, (value / maxValue) * chartWidth);
       const label = String(labels[index] || "");
 
       ctx.fillStyle = color;
       ctx.fillRect(left, barY, barW, barH);
 
-      ctx.fillStyle = "#23364e";
+      ctx.fillStyle = "rgba(210,222,244,.86)";
       ctx.font = "11px Manrope, sans-serif";
       ctx.textAlign = "right";
       ctx.fillText(label.length > 22 ? `${label.slice(0, 20)}...` : label, left - 8, barY + barH - 2);
@@ -580,7 +580,7 @@
     const cx = Math.min(width * 0.35, width - 120);
     const cy = height * 0.5;
     const radius = Math.min(72, Math.min(width, height) * 0.28);
-    const lineWidth = 30;
+    const lineWidth = 22;
     let angle = -Math.PI / 2;
 
     values.forEach((value, index) => {
@@ -617,7 +617,7 @@
       });
     });
 
-    ctx.fillStyle = "#23364e";
+    ctx.fillStyle = "rgba(230,234,242,.92)";
     ctx.font = "700 14px Manrope, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(String(total), cx, cy + 4);
@@ -627,7 +627,7 @@
       const x = Math.max(cx + radius + 28, width * 0.55);
       ctx.fillStyle = PALETTE[index % PALETTE.length];
       ctx.fillRect(x, legendY - 8, 10, 10);
-      ctx.fillStyle = "#23364e";
+      ctx.fillStyle = "rgba(210,222,244,.82)";
       ctx.font = "11px Manrope, sans-serif";
       const itemLabel = `${label} (${values[index] || 0})`;
       ctx.fillText(itemLabel.length > 28 ? `${itemLabel.slice(0, 26)}...` : itemLabel, x + 16, legendY);
@@ -649,10 +649,10 @@
       return;
     }
 
-    drawVerticalBars("dashboard-chart-phase", data.phase?.labels || [], data.phase?.values || [], [ "#2f5f8f" ]);
+    drawVerticalBars("dashboard-chart-phase", data.phase?.labels || [], data.phase?.values || [], [ "#5b8cff" ]);
     drawDonut("dashboard-chart-status", data.status?.labels || [], data.status?.values || []);
-    drawVerticalBars("dashboard-chart-deadlines", data.deadlines?.labels || [], data.deadlines?.values || [], [ "#8b3a3a", "#b08a45", "#2f5f8f", "#4e7f59" ]);
-    drawHorizontalBars("dashboard-chart-responsible", data.responsible?.labels || [], data.responsible?.values || [], "#0f3b61");
+    drawVerticalBars("dashboard-chart-deadlines", data.deadlines?.labels || [], data.deadlines?.values || [], [ "#ff5d73", "#f5b942", "#5b8cff", "#32d583" ]);
+    drawHorizontalBars("dashboard-chart-responsible", data.responsible?.labels || [], data.responsible?.values || [], "#5b8cff");
   };
 
   document.addEventListener("turbo:load", initDashboardCharts);

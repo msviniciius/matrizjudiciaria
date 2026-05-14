@@ -42,7 +42,7 @@
 
 <% unless @unit_selection_required %>
 <% resumo_max = [@report_counts[:prazo_proximo], @report_counts[:sem_prazo], @report_counts[:com_pericia], @report_counts[:com_exigencia_pendente], @report_counts[:saude_critica], 1].map(&:to_i).max %>
-<section class="case-section dashboard-section">
+<section class="case-section dashboard-section dashboard-section--level-1">
   <div class="dashboard-section__head">
     <h3>Resumo Operacional</h3>
     <p>Visão rápida para priorizar o dia.</p>
@@ -78,7 +78,7 @@
 </section>
 <% end %>
 
-<section class="case-section dashboard-section">
+<section class="case-section dashboard-section dashboard-section--level-1">
   <div class="dashboard-section__head">
     <h3>Agenda de Hoje</h3>
     <p>O que exige atenção imediata na operação.</p>
@@ -113,7 +113,7 @@
   </div>
 </section>
 
-<section class="case-section dashboard-section">
+<section class="case-section dashboard-section dashboard-section--level-2">
   <div class="dashboard-section__head">
     <h3>Últimos Andamentos</h3>
     <p>Registros mais recentes do histórico operacional.</p>
@@ -142,7 +142,7 @@
   <% end %>
 </section>
 
-<section class="case-section dashboard-section">
+<section class="case-section dashboard-section dashboard-section--level-1">
   <div class="dashboard-section__head">
     <h3>Pendências Críticas</h3>
     <p>Itens com risco operacional e ação imediata recomendada.</p>
@@ -219,7 +219,7 @@
   </div>
 </section>
 
-<section class="case-section dashboard-section">
+<section class="case-section dashboard-section dashboard-section--level-3">
   <div class="dashboard-section__head">
     <h3>Distribuição por Fase</h3>
     <p>Entenda onde está a maior carga do escritório.</p>
@@ -235,7 +235,7 @@
   </div>
 </section>
 
-<section class="case-section dashboard-section">
+<section class="case-section dashboard-section dashboard-section--level-2">
   <div class="dashboard-section__head">
     <h3>Central de Risco</h3>
     <p>Filas que exigem ação imediata.</p>
