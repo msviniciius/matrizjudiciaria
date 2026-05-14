@@ -41,6 +41,7 @@
 <% end %>
 
 <% unless @unit_selection_required %>
+<% resumo_max = [@report_counts[:prazo_proximo], @report_counts[:sem_prazo], @report_counts[:com_pericia], @report_counts[:com_exigencia_pendente], @report_counts[:saude_critica], 1].map(&:to_i).max %>
 <section class="case-section dashboard-section">
   <div class="dashboard-section__head">
     <h3>Resumo Operacional</h3>
@@ -48,31 +49,31 @@
   </div>
 
   <div class="report-grid report-grid--kpi">
-    <article class="report-card report-card--warning">
+    <%= link_to legal_cases_path(deadline_state: "upcoming"), class: "report-card report-card--warning report-card--link", style: "--spark-level:#{@report_counts[:prazo_proximo].to_f / resumo_max};", title: "Ver processos com prazo próximo" do %>
       <span class="report-icon" aria-hidden="true">&#9200;</span>
       <p class="report-label">Com prazo próximo</p>
       <p class="report-value"><%= @report_counts[:prazo_proximo] %></p>
-    </article>
-    <article class="report-card report-card--neutral">
+    <% end %>
+    <%= link_to legal_cases_path(deadline_state: "without_deadline"), class: "report-card report-card--neutral report-card--link", style: "--spark-level:#{@report_counts[:sem_prazo].to_f / resumo_max};", title: "Ver processos sem prazo" do %>
       <span class="report-icon" aria-hidden="true">&#128197;</span>
       <p class="report-label">Sem prazo</p>
       <p class="report-value"><%= @report_counts[:sem_prazo] %></p>
-    </article>
-    <article class="report-card report-card--info">
+    <% end %>
+    <%= link_to legal_cases_path(tem_pericia: "1"), class: "report-card report-card--info report-card--link", style: "--spark-level:#{@report_counts[:com_pericia].to_f / resumo_max};", title: "Ver processos com perícia" do %>
       <span class="report-icon" aria-hidden="true">&#9877;</span>
       <p class="report-label">Com perícia</p>
       <p class="report-value"><%= @report_counts[:com_pericia] %></p>
-    </article>
-    <article class="report-card report-card--attention">
+    <% end %>
+    <%= link_to legal_cases_path(exigencia_pendente: "1"), class: "report-card report-card--attention report-card--link", style: "--spark-level:#{@report_counts[:com_exigencia_pendente].to_f / resumo_max};", title: "Ver processos com exigência pendente" do %>
       <span class="report-icon" aria-hidden="true">&#9888;</span>
       <p class="report-label">Com exigência pendente</p>
       <p class="report-value"><%= @report_counts[:com_exigencia_pendente] %></p>
-    </article>
-    <article class="report-card report-card--danger">
+    <% end %>
+    <%= link_to legal_cases_path(health: "critica"), class: "report-card report-card--danger report-card--link", style: "--spark-level:#{@report_counts[:saude_critica].to_f / resumo_max};", title: "Ver processos em risco" do %>
       <span class="report-icon" aria-hidden="true">&#10071;</span>
       <p class="report-label">Processos em risco</p>
       <p class="report-value"><%= @report_counts[:saude_critica] %></p>
-    </article>
+    <% end %>
   </div>
 </section>
 <% end %>

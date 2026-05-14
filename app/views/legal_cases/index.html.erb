@@ -77,8 +77,6 @@
           <th>Último andamento</th>
           <th>Próximo prazo</th>
           <th>Responsável</th>
-          <th>Saúde</th>
-          <th class="actions-col">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -92,20 +90,6 @@
               <td><%= legal_case.last_movement.presence || "-" %></td>
               <td><%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></td>
               <td><%= legal_case.responsible_name.presence || "-" %></td>
-              <td class="health-cell">
-                <span
-                  class="<%= legal_case_health_class(legal_case) %>"
-                  title="<%= legal_case_primary_alert(legal_case) %>"
-                  aria-label="<%= legal_case_primary_alert(legal_case) %>"
-                >
-                  <%= legal_case_health_label(legal_case) %>
-                </span>
-              </td>
-              <td class="table-actions">
-                <%= link_to legal_case, class: "btn btn-secondary btn-icon", aria: { label: "Ver processo" }, title: "Ver processo" do %>
-                  <span aria-hidden="true">&#128065;</span>
-                <% end %>
-              </td>
             </tr>
           <% end %>
         <% else %>
