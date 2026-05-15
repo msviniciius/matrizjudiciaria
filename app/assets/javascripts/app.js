@@ -1225,6 +1225,14 @@
     if (typeof dialog.showModal !== "function") dialog.hidden = true;
   };
 
+  const setPericiaModalFieldsEnabled = (modal, enabled) => {
+    if (!modal) return;
+    modal.querySelectorAll("input, textarea, select").forEach((field) => {
+      if (field.type === "button" || field.type === "submit") return;
+      field.disabled = !enabled;
+    });
+  };
+
   const togglePericiaSection = (checkbox) => {
     const form = checkbox.closest("form");
     const section = form?.querySelector("[data-pericia-section]");
@@ -1272,21 +1280,27 @@
 
       modal.addEventListener("click", (event) => {
         if (event.target.closest("[data-close-pericia-modal]")) {
+          setPericiaModalFieldsEnabled(modal, false);
           closeDialog(modal);
           return;
         }
 
         if (event.target.closest("[data-save-pericia-modal]")) {
           const form = modal.closest("form");
+          setPericiaModalFieldsEnabled(modal, true);
           closeDialog(modal);
           if (form) form.requestSubmit();
+          setPericiaModalFieldsEnabled(modal, false);
           return;
         }
 
         if (event.target === modal) {
+          setPericiaModalFieldsEnabled(modal, false);
           closeDialog(modal);
         }
       });
+
+      setPericiaModalFieldsEnabled(modal, false);
     });
   };
 
@@ -1315,6 +1329,7 @@
       const activeField = form.querySelector("[name='legal_case[process_exams_attributes][0][active]']");
       if (activeField) activeField.checked = editButton.dataset.examActive === "true";
 
+      setPericiaModalFieldsEnabled(modal, true);
       openDialog(modal);
       return;
     }
@@ -1342,6 +1357,7 @@
       const activeField = form.querySelector("[name='legal_case[process_exams_attributes][0][active]']");
       if (activeField) activeField.checked = true;
     }
+    setPericiaModalFieldsEnabled(modal, true);
     openDialog(modal);
   });
 

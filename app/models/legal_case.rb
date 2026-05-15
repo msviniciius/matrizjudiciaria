@@ -70,7 +70,7 @@ class LegalCase < ApplicationRecord
   before_validation :apply_office_operational_defaults
   before_validation :assign_internal_number, on: :create
 
-  validates :internal_number, :legal_area_id, :process_type_id, :phase, :status, presence: true
+  validates :internal_number, :legal_area_id, :process_type_id, :status, presence: true
   validates :internal_number, uniqueness: { scope: :office_id }
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
@@ -294,11 +294,6 @@ class LegalCase < ApplicationRecord
   def validate_operational_snapshot_quality
     return if skip_quality_validation
     return unless operational_tracking_required?
-
-    errors.add(:responsible_name, :blank) if responsible_name.blank?
-    return unless next_deadline_expected? && next_deadline_on.blank?
-
-    errors.add(:next_deadline_on, "deve ser informado para o acompanhamento operacional")
   end
 
   def normalize_legacy_phase_and_status

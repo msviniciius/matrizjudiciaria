@@ -107,7 +107,7 @@
     <div class="form-grid">
       <div>
         <%= form.label :phase, "Fase" %>
-        <%= form.select :phase, enum_options_for(LegalCase, :phase), {}, { required: true } %>
+        <%= form.select :phase, enum_options_for(LegalCase, :phase), {}, {} %>
       </div>
 
       <div>
@@ -140,7 +140,7 @@
 
       <div>
         <%= form.label :next_deadline_on, "Próximo prazo" %>
-        <%= form.date_field :next_deadline_on, required: true %>
+        <%= form.date_field :next_deadline_on %>
       </div>
 
       <div>
