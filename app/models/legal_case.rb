@@ -4,6 +4,7 @@ class LegalCase < ApplicationRecord
   INTERNAL_NUMBER_MIN_DIGITS = 2
   INTERNAL_NUMBER_START = 1
   CALENDAR_FEED_PURPOSE = :google_calendar_feed
+  AUTO_SYNC_DEADLINE_TITLE = "Prazo do processo"
 
   OFFICIAL_PHASES = %w[
     atendimento_inicial
@@ -69,6 +70,7 @@ class LegalCase < ApplicationRecord
   before_validation :normalize_legacy_phase_and_status
   before_validation :apply_office_operational_defaults
   before_validation :assign_internal_number, on: :create
+  after_save :sync_next_deadline_to_deadlines, if: :saved_change_to_next_deadline_on?
 
   validates :internal_number, :legal_area_id, :process_type_id, :status, presence: true
   validates :internal_number, uniqueness: { scope: :office_id }
@@ -338,5 +340,25 @@ class LegalCase < ApplicationRecord
     self.phase = office.default_phase if phase.blank?
     self.status = office.default_status if status.blank?
     self.priority = office.default_priority if priority.blank?
+  end
+
+  def sync_next_deadline_to_deadlines
+    synced_deadline = deadlines.find_by(title: AUTO_SYNC_DEADLINE_TITLE, deadline_type: "internal")
+
+    if next_deadline_on.blank?
+      synced_deadline&.destroy
+      return
+    end
+
+    synced_deadline ||= deadlines.build(
+      title: AUTO_SYNC_DEADLINE_TITLE,
+      deadline_type: "internal"
+    )
+
+    synced_deadline.due_date = next_deadline_on
+    synced_deadline.status = "pending" if synced_deadline.status.blank?
+    synced_deadline.priority = "medium" if synced_deadline.priority.blank?
+    synced_deadline.responsible_name = responsible_name.presence || synced_deadline.responsible_name
+    synced_deadline.save! if synced_deadline.changed?
   end
 end

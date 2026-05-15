@@ -1904,3 +1904,134 @@
     setupBanner();
   });
 })();
+
+(() => {
+  const ROOT_ATTR = "data-custom-select";
+
+  const closeAll = (except = null) => {
+    document.querySelectorAll(`[${ROOT_ATTR}].is-open`).forEach((root) => {
+      if (except && root === except) return;
+      root.classList.remove("is-open");
+    });
+  };
+
+  const build = (select) => {
+    if (!select || select.dataset.customSelectBound === "true") return;
+    if (select.multiple) return;
+
+    select.dataset.customSelectBound = "true";
+    select.classList.add("native-select-hidden");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "custom-select";
+    wrapper.setAttribute(ROOT_ATTR, "true");
+    wrapper.tabIndex = 0;
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "custom-select__trigger";
+
+    const label = document.createElement("span");
+    label.className = "custom-select__label";
+
+    const chevron = document.createElement("span");
+    chevron.className = "custom-select__chevron";
+    chevron.innerHTML = "&#9662;";
+
+    trigger.append(label, chevron);
+
+    const panel = document.createElement("div");
+    panel.className = "custom-select__panel";
+
+    const searchWrap = document.createElement("div");
+    searchWrap.className = "custom-select__search-wrap";
+    const search = document.createElement("input");
+    search.type = "text";
+    search.className = "custom-select__search";
+    const fieldId = select.id;
+    const labelNode = fieldId ? document.querySelector(`label[for='${fieldId}']`) : null;
+    const labelText = (labelNode?.textContent || "").trim().replace(/\s*\*+\s*$/, "");
+    const fallbackText = select.name.split("[").pop()?.replace("]", "").replace(/_id$/, "").replaceAll("_", " ") || "opção";
+    search.placeholder = `Buscar ${(labelText || fallbackText).toLowerCase()}...`;
+    searchWrap.append(search);
+
+    const list = document.createElement("div");
+    list.className = "custom-select__list";
+
+    panel.append(searchWrap, list);
+    wrapper.append(trigger, panel);
+    select.parentNode.insertBefore(wrapper, select.nextSibling);
+
+    const render = (filter = "") => {
+      list.innerHTML = "";
+      const q = filter.trim().toLowerCase();
+      Array.from(select.options).forEach((opt, idx) => {
+        const text = (opt.textContent || "").trim();
+        if (q && !text.toLowerCase().includes(q)) return;
+
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "custom-select__item";
+        item.dataset.value = opt.value;
+        item.dataset.index = String(idx);
+        item.innerHTML = `<span>${text || "-"}</span><span class=\"custom-select__check\">&#10003;</span>`;
+        if (opt.selected) item.classList.add("is-selected");
+
+        item.addEventListener("click", () => {
+          select.value = opt.value;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          updateLabel();
+          render(search.value);
+          wrapper.classList.remove("is-open");
+        });
+
+        list.appendChild(item);
+      });
+    };
+
+    const updateLabel = () => {
+      const selected = select.options[select.selectedIndex];
+      const text = selected ? (selected.textContent || "").trim() : "Selecione";
+      label.textContent = text || "Selecione";
+    };
+
+    trigger.addEventListener("click", () => {
+      const open = wrapper.classList.contains("is-open");
+      closeAll(wrapper);
+      wrapper.classList.toggle("is-open", !open);
+      if (!open) {
+        search.value = "";
+        render("");
+        setTimeout(() => search.focus(), 0);
+      }
+    });
+
+    search.addEventListener("input", () => render(search.value));
+
+    wrapper.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        wrapper.classList.remove("is-open");
+        return;
+      }
+      if (event.key === "Enter" && !wrapper.classList.contains("is-open")) {
+        event.preventDefault();
+        trigger.click();
+      }
+    });
+
+    updateLabel();
+    render();
+  };
+
+  const initCustomSelects = () => {
+    document.querySelectorAll("form.main-filters select, form.app-form select").forEach(build);
+  };
+
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(`[${ROOT_ATTR}]`)) return;
+    closeAll();
+  });
+
+  document.addEventListener("turbo:load", initCustomSelects);
+  document.addEventListener("DOMContentLoaded", initCustomSelects);
+})();

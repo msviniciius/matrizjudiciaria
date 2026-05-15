@@ -72,7 +72,7 @@
         <tr>
           <th>Número interno</th>
           <th>Cliente</th>
-          <th>Fase</th>
+          <th>Área do direito</th>
           <th>Status</th>
           <th>Último andamento</th>
           <th>Próximo prazo</th>
@@ -85,7 +85,7 @@
             <tr>
               <td><%= link_to legal_case.internal_number, legal_case_path(legal_case) %></td>
               <td><%= legal_case.client.full_name %></td>
-              <td><%= enum_label(LegalCase, :phase, legal_case.phase) %></td>
+              <td><%= legal_case.legal_area&.name || "-" %></td>
               <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>
               <td><%= legal_case.last_movement.presence || "-" %></td>
               <td><%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></td>

@@ -4454,3 +4454,207 @@ th.actions-col {
     height: 170px !important;
   }
 }
+
+/* ===== Custom Select (premium dark) ===== */
+.native-select-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.custom-select {
+  position: relative;
+}
+
+.custom-select__trigger {
+  width: 100%;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.03);
+  color: #E6EAF2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 180ms ease;
+}
+
+.custom-select__trigger:hover {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.10);
+}
+
+.custom-select:focus-within .custom-select__trigger,
+.custom-select.is-open .custom-select__trigger {
+  border-color: #5B8CFF;
+  box-shadow: 0 0 0 4px rgba(91,140,255,.12);
+  outline: none;
+}
+
+.custom-select__chevron {
+  font-size: 12px;
+  color: rgba(255,255,255,.48);
+}
+
+.custom-select__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: #0F1C36;
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 8px;
+  max-height: 280px;
+  display: none;
+}
+
+.custom-select.is-open .custom-select__panel { display: block; }
+
+.custom-select__search-wrap { margin-bottom: 6px; }
+.custom-select__search {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.04);
+  color: #E6EAF2;
+  padding: 0 12px;
+}
+
+.custom-select__list {
+  max-height: 220px;
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+}
+
+.custom-select__item {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: #E6EAF2;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.custom-select__item:hover { background: rgba(255,255,255,.05); }
+
+.custom-select__item.is-selected {
+  background: rgba(91,140,255,.12);
+  color: #fff;
+}
+
+.custom-select__check {
+  color: #5B8CFF;
+  opacity: 0;
+}
+
+.custom-select__item.is-selected .custom-select__check { opacity: 1; }
+
+/* ===== Custom select layering fix ===== */
+.form-section,
+.case-section,
+.form-grid,
+.app-form {
+  overflow: visible;
+}
+
+.custom-select {
+  position: relative;
+  z-index: 20;
+}
+
+.custom-select.is-open {
+  z-index: 1200;
+}
+
+.custom-select__panel {
+  z-index: 1300;
+}
+
+/* ===== Process form: ensure open selects stay above next sections ===== */
+.app-form .form-section {
+  position: relative;
+  z-index: 1;
+}
+
+.app-form .form-section:has(.custom-select.is-open) {
+  z-index: 1500;
+}
+
+.app-form .field-full:has(.custom-select.is-open),
+.app-form .form-grid > div:has(.custom-select.is-open) {
+  position: relative;
+  z-index: 1510;
+}
+
+/* ===== Global select stacking for all forms and listings ===== */
+.content-surface,
+.case-section--filters,
+.case-section--listing,
+.main-filters,
+.main-filters__advanced,
+.office-tab-panel,
+.quick-client-modal,
+.confirm-modal {
+  overflow: visible;
+}
+
+.app-form .form-section:has(.custom-select.is-open),
+.main-filters:has(.custom-select.is-open),
+.case-section--filters:has(.custom-select.is-open),
+.case-section--listing:has(.custom-select.is-open),
+.office-tab-panel:has(.custom-select.is-open),
+.quick-client-modal:has(.custom-select.is-open) {
+  position: relative;
+  z-index: 1600;
+}
+
+.app-form .form-grid > div:has(.custom-select.is-open),
+.main-filters .form-grid > div:has(.custom-select.is-open),
+.main-filters__bar > div:has(.custom-select.is-open),
+.table-wrap:has(.custom-select.is-open) {
+  position: relative;
+  z-index: 1610;
+}
+
+@media (max-width: 980px) {
+  .custom-select.is-open {
+    z-index: 2000;
+  }
+
+  .custom-select__panel {
+    z-index: 2010;
+  }
+}
+
+/* ===== Fix: client select full width in inline actions ===== */
+.inline-client-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-client-actions .custom-select,
+.inline-client-actions select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inline-client-actions .btn-icon {
+  flex: 0 0 auto;
+}

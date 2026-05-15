@@ -199,7 +199,7 @@
             <tr>
               <td><%= deadline.title %></td>
               <td><%= enum_label(Deadline, :deadline_type, deadline.deadline_type) %></td>
-              <td><%= deadline.due_date %></td>
+              <td><%= deadline.due_date.present? ? l(deadline.due_date, format: :short) : "-" %></td>
               <td><%= enum_label(Deadline, :status, deadline.status) %></td>
               <td><%= enum_label(Deadline, :priority, deadline.priority) %></td>
             </tr>
@@ -238,7 +238,7 @@
             <tr>
               <td><%= task.title %></td>
               <td><%= task.responsible_name.presence || "-" %></td>
-              <td><%= task.due_date %></td>
+              <td><%= task.due_date.present? ? l(task.due_date, format: :short) : "-" %></td>
               <td><%= enum_label(Task, :status, task.status) %></td>
               <td><%= enum_label(Task, :priority, task.priority) %></td>
             </tr>

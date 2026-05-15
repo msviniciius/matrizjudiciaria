@@ -81,7 +81,7 @@
               </td>
               <td><%= deadline.title %></td>
               <td><%= deadline.deadline_type.present? ? enum_label(Deadline, :deadline_type, deadline.deadline_type) : "-" %></td>
-              <td><%= deadline.due_date || "-" %></td>
+              <td><%= deadline.due_date.present? ? l(deadline.due_date, format: :short) : "-" %></td>
               <td><%= enum_label(Deadline, :status, deadline.status) %></td>
               <td><%= deadline.respond_to?(:extended_at) && deadline.extended_at.present? ? l(deadline.extended_at, format: :short) : "-" %></td>
               <td><%= deadline.priority.present? ? enum_label(Deadline, :priority, deadline.priority) : "-" %></td>

@@ -26,7 +26,7 @@
 
   <div>
     <strong><%= Task.human_attribute_name(:due_date) %>:</strong>
-    <%= task.due_date %>
+    <%= task.due_date.present? ? l(task.due_date, format: :short) : "-" %>
   </div>
 
   <div>

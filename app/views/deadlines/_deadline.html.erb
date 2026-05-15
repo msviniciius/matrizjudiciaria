@@ -21,7 +21,7 @@
 
   <div>
     <strong><%= Deadline.human_attribute_name(:due_date) %>:</strong>
-    <%= deadline.due_date %>
+    <%= deadline.due_date.present? ? l(deadline.due_date, format: :short) : "-" %>
   </div>
 
   <div>
