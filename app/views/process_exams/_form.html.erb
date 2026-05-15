@@ -1,6 +1,7 @@
 <% back_path = local_assigns[:back_path] %>
 
-<%= form_with(model: [@legal_case || process_exam.legal_case, process_exam], class: "app-form") do |form| %>
+<% form_url = process_exam.persisted? ? process_exam_path(process_exam) : legal_case_process_exams_path(@legal_case || process_exam.legal_case) %>
+<%= form_with(model: process_exam, url: form_url, class: "app-form") do |form| %>
   <% if process_exam.errors.any? %>
     <div class="form-errors">
       <h2>Foram encontrados <%= pluralize(process_exam.errors.count, "erro", "erros") %> neste cadastro:</h2>

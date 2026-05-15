@@ -13,7 +13,6 @@
         <tr><th>Origem</th><td><%= enum_label(ProcessMovement, :origin, @process_movement.origin) %></td></tr>
         <tr><th>Situação administrativa</th><td><%= @process_movement.administrative_situation.present? ? enum_label(ProcessMovement, :administrative_situation, @process_movement.administrative_situation) : "-" %></td></tr>
         <tr><th>Data</th><td><%= l(@process_movement.event_date, format: :short) %></td></tr>
-        <tr><th>Descrição</th><td><%= @process_movement.complementary_description.presence || "-" %></td></tr>
       </tbody>
     </table>
   </div>

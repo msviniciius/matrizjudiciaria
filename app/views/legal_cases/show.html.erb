@@ -104,10 +104,6 @@
           <p><strong>Data:</strong> <%= exam.scheduled_label %></p>
           <p><strong>Status:</strong> <%= enum_label(ProcessExam, :status, exam.status) %></p>
           <p><strong>Local:</strong> <%= exam.location.presence || "-" %></p>
-          <div class="form-inline-actions">
-            <%= link_to "Editar", edit_process_exam_path(exam), class: "btn btn-secondary" %>
-            <%= button_to "Excluir", process_exam_path(exam), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Confirma a exclusão da perícia?" } } %>
-          </div>
         </article>
       <% end %>
     </div>

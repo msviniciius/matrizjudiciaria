@@ -50,11 +50,6 @@
         <p class="field-inline-warning" data-field-error-for="process_movement_display_title" hidden>Informe um título para o andamento.</p>
       </div>
 
-      <div class="field-full">
-        <%= form.label :complementary_description, "Descrição complementar (opcional)" %>
-        <%= form.text_area :complementary_description %>
-      </div>
-
       <div>
         <%= form.label :event_date, "Data do evento *" %>
         <%= form.datetime_field :event_date, required: true, step: 60, data: { required_field: true, movement_event_date: true } %>

@@ -4658,3 +4658,100 @@ th.actions-col {
 .inline-client-actions .btn-icon {
   flex: 0 0 auto;
 }
+
+/* ===== Global form label spacing ===== */
+form > div,
+.app-form .form-grid > div,
+.main-filters .form-grid > div {
+  display: grid;
+  gap: 8px;
+}
+
+label,
+.app-form label,
+.main-filters label {
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+
+/* ===== Legal case details + timeline dark premium fix ===== */
+.case-summary__grid div,
+.case-headline-grid > div {
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+  padding: 10px 12px;
+}
+
+.case-summary__grid strong,
+.case-headline-grid strong,
+.case-summary__grid span,
+.case-headline-grid span {
+  color: rgba(230,234,242,.9);
+}
+
+.health-guidance-card {
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(12,24,49,.82), rgba(9,18,37,.9));
+}
+
+.health-guidance-card h4,
+.health-list li {
+  color: rgba(230,234,242,.9);
+}
+
+.timeline-list {
+  gap: 10px;
+}
+
+.timeline-item {
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(11,23,48,.86), rgba(8,17,34,.94));
+  padding: 12px;
+}
+
+.timeline-item--highlight {
+  border-left: 2px solid #5B8CFF;
+  background: linear-gradient(180deg, rgba(17,33,66,.9), rgba(10,20,40,.95));
+}
+
+.timeline-item--soft {
+  border-left: 2px solid rgba(145,168,222,.5);
+  background: linear-gradient(180deg, rgba(11,23,48,.82), rgba(8,17,34,.92));
+}
+
+.timeline-item h4,
+.timeline-item p,
+.timeline-subline,
+.timeline-meta .status-pill {
+  color: rgba(230,234,242,.88);
+}
+
+.timeline-subline {
+  opacity: .82;
+}
+
+/* ===== Sem próxima providência visual parity ===== */
+.critical-card--warning,
+.risk-card--muted {
+  border: 1px solid rgba(255,255,255,.06) !important;
+  border-left: 2px solid rgba(145,168,222,.55) !important;
+  background: linear-gradient(180deg, rgba(12,24,49,.84), rgba(8,17,34,.94)) !important;
+}
+
+.critical-card--warning .critical-list li,
+.risk-card--muted .risk-list li {
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+  padding: 8px 10px;
+}
+
+.critical-card--warning .risk-card__head p,
+.risk-card--muted .risk-card__head p,
+.critical-card--warning small,
+.risk-card--muted small {
+  color: rgba(230,234,242,.86);
+}
