@@ -6,6 +6,7 @@
     <table>
       <tbody>
         <tr><th>Processo</th><td><%= @process_movement.process&.internal_number || "-" %></td></tr>
+        <tr><th>Cliente</th><td><%= @process_movement.process&.client&.full_name || "-" %></td></tr>
         <tr><th>Fase</th><td><%= @process_movement.phase&.name || "-" %></td></tr>
         <tr><th>Tipo</th><td><%= @process_movement.movement_type&.name || "-" %></td></tr>
         <tr><th>Natureza</th><td><%= enum_label(ProcessMovement, :nature, @process_movement.nature) %></td></tr>

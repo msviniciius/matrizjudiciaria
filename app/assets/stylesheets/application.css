@@ -4755,3 +4755,30 @@ label,
 .risk-card--muted small {
   color: rgba(230,234,242,.86);
 }
+
+/* ===== Process movements details + unified timeline final dark override ===== */
+.case-section .details-table tbody th {
+  background: rgba(255,255,255,.03);
+  color: rgba(230,234,242,.82);
+  border-color: rgba(255,255,255,.06);
+}
+
+.case-section .details-table tbody td {
+  background: rgba(9,18,37,.78);
+  color: rgba(230,234,242,.92);
+  border-color: rgba(255,255,255,.06);
+}
+
+.case-section .details-table tbody tr:nth-child(even) th {
+  background: rgba(255,255,255,.04);
+}
+
+.case-section .details-table tbody tr:nth-child(even) td {
+  background: rgba(11,23,48,.82);
+}
+
+.case-section .timeline-meta .status-pill {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(230,234,242,.9);
+}
