@@ -1,18 +1,14 @@
 <% content_for :title, "Painel" %>
 
 <% content_for :topbar_actions do %>
-  <% if @syncable_count > 0 %>
+  <% if @syncable_count.to_i > 0 %>
     <%= button_to sync_all_cases_path, method: :post, class: "btn btn-secondary", form: { data: { turbo_confirm: "Isso vai buscar os andamentos de #{@syncable_count} processo(s) no CNJ. Continuar?" } } do %>
       Sincronizar Andamentos
-      <% if @new_imported_events_count > 0 %>
+      <% if @new_imported_events_count.to_i > 0 %>
         <span class="status-pill status-pill--danger" style="margin-left:0.5rem"><%= @new_imported_events_count %> novo(s)</span>
       <% end %>
     <% end %>
   <% end %>
-  <%= link_to "Fechamento diário", daily_closure_legal_cases_path, class: "btn btn-secondary" %>
-  <%= link_to "Novo andamento", new_process_movement_path, class: "btn btn-secondary" %>
-  <%= link_to "Nova tarefa", new_task_path, class: "btn btn-secondary" %>
-  <%= link_to "Novo prazo", new_deadline_path, class: "btn btn-secondary" %>
   <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
 <% end %>
 
@@ -50,120 +46,68 @@
 
 <% unless @unit_selection_required %>
 <% resumo_max = [@report_counts[:prazo_proximo], @report_counts[:sem_prazo], @report_counts[:com_pericia], @report_counts[:com_exigencia_pendente], @report_counts[:saude_critica], 1].map(&:to_i).max %>
-<section class="case-section dashboard-section dashboard-section--level-1">
+
+<!-- ====== Visão Geral: KPIs Essenciais ====== -->
+<section class="dashboard-section">
   <div class="dashboard-section__head">
-    <h3>Resumo Operacional</h3>
-    <p>Visão rápida para priorizar o dia.</p>
+    <div>
+      <h3>Visão Geral</h3>
+      <p>Indicadores principais e agenda de hoje.</p>
+    </div>
+    <div class="topbar-actions">
+      <%= link_to "Fechamento diário", daily_closure_legal_cases_path, class: "btn btn-secondary btn-xs" %>
+      <%= link_to "Novo andamento", new_process_movement_path, class: "btn btn-secondary btn-xs" %>
+      <%= link_to "Nova tarefa", new_task_path, class: "btn btn-secondary btn-xs" %>
+      <%= link_to "Novo prazo", new_deadline_path, class: "btn btn-secondary btn-xs" %>
+    </div>
   </div>
 
   <div class="report-grid report-grid--kpi">
     <%= link_to legal_cases_path(deadline_state: "upcoming"), class: "report-card report-card--warning report-card--link", style: "--spark-level:#{@report_counts[:prazo_proximo].to_f / resumo_max};", title: "Ver processos com prazo próximo" do %>
       <span class="report-icon" aria-hidden="true">&#9200;</span>
-      <p class="report-label">Com prazo próximo</p>
+      <p class="report-label">Prazo próximo</p>
       <p class="report-value"><%= @report_counts[:prazo_proximo] %></p>
     <% end %>
+
     <%= link_to legal_cases_path(deadline_state: "without_deadline"), class: "report-card report-card--neutral report-card--link", style: "--spark-level:#{@report_counts[:sem_prazo].to_f / resumo_max};", title: "Ver processos sem prazo" do %>
       <span class="report-icon" aria-hidden="true">&#128197;</span>
       <p class="report-label">Sem prazo</p>
       <p class="report-value"><%= @report_counts[:sem_prazo] %></p>
     <% end %>
-    <%= link_to legal_cases_path(tem_pericia: "1"), class: "report-card report-card--info report-card--link", style: "--spark-level:#{@report_counts[:com_pericia].to_f / resumo_max};", title: "Ver processos com perícia" do %>
-      <span class="report-icon" aria-hidden="true">&#9877;</span>
-      <p class="report-label">Com perícia</p>
-      <p class="report-value"><%= @report_counts[:com_pericia] %></p>
-    <% end %>
-    <%= link_to legal_cases_path(exigencia_pendente: "1"), class: "report-card report-card--attention report-card--link", style: "--spark-level:#{@report_counts[:com_exigencia_pendente].to_f / resumo_max};", title: "Ver processos com exigência pendente" do %>
-      <span class="report-icon" aria-hidden="true">&#9888;</span>
-      <p class="report-label">Com exigência pendente</p>
-      <p class="report-value"><%= @report_counts[:com_exigencia_pendente] %></p>
-    <% end %>
+
     <%= link_to legal_cases_path(health: "critica"), class: "report-card report-card--danger report-card--link", style: "--spark-level:#{@report_counts[:saude_critica].to_f / resumo_max};", title: "Ver processos em risco" do %>
       <span class="report-icon" aria-hidden="true">&#10071;</span>
-      <p class="report-label">Processos em risco</p>
+      <p class="report-label">Em risco</p>
       <p class="report-value"><%= @report_counts[:saude_critica] %></p>
     <% end %>
-    <% if @syncable_count > 0 %>
-      <article class="report-card report-card--<%= @new_imported_events_count > 0 ? 'info' : 'neutral' %>">
-        <span class="report-icon" aria-hidden="true">&#128260;</span>
-        <p class="report-label">Novos andamentos CNJ</p>
-        <p class="report-value"><%= @new_imported_events_count %></p>
-      </article>
-    <% end %>
-  </div>
-</section>
-<% end %>
 
-<section class="case-section dashboard-section dashboard-section--level-1">
-  <div class="dashboard-section__head">
-    <h3>Agenda de Hoje</h3>
-    <p>O que exige atenção imediata na operação.</p>
-  </div>
-
-  <div class="report-grid report-grid--kpi">
     <%= link_to deadlines_path(due_state: "overdue"), class: "report-card report-card--danger report-card--link", title: "Ver prazos vencidos" do %>
       <span class="report-icon" aria-hidden="true">&#9888;</span>
       <p class="report-label">Prazos vencidos</p>
       <p class="report-value"><%= @today_counts[:deadlines_overdue] %></p>
     <% end %>
+
     <%= link_to deadlines_path(due_state: "today"), class: "report-card report-card--warning report-card--link", title: "Ver prazos de hoje" do %>
       <span class="report-icon" aria-hidden="true">&#9200;</span>
-      <p class="report-label">Prazos para hoje</p>
+      <p class="report-label">Prazos hoje</p>
       <p class="report-value"><%= @today_counts[:deadlines_today] %></p>
     <% end %>
-    <%= link_to tasks_path(due_state: "overdue"), class: "report-card report-card--danger report-card--link", title: "Ver tarefas atrasadas" do %>
-      <span class="report-icon" aria-hidden="true">&#10071;</span>
-      <p class="report-label">Tarefas atrasadas</p>
-      <p class="report-value"><%= @today_counts[:tasks_overdue] %></p>
-    <% end %>
+
     <%= link_to tasks_path(due_state: "today"), class: "report-card report-card--info report-card--link", title: "Ver tarefas de hoje" do %>
       <span class="report-icon" aria-hidden="true">&#10003;</span>
-      <p class="report-label">Tarefas para hoje</p>
+      <p class="report-label">Tarefas hoje</p>
       <p class="report-value"><%= @today_counts[:tasks_today] %></p>
     <% end %>
-    <%= link_to daily_closure_legal_cases_path(reference_date: Date.current), class: "report-card report-card--neutral report-card--link", title: "Abrir fechamento diário" do %>
-      <span class="report-icon" aria-hidden="true">&#128197;</span>
-      <p class="report-label">Data de referência</p>
-      <p class="report-value"><%= l(Date.current, format: :short) %></p>
-    <% end %>
   </div>
 </section>
 
-<section class="case-section dashboard-section dashboard-section--level-2">
+<!-- ====== Ações Necessárias ====== -->
+<section class="dashboard-section">
   <div class="dashboard-section__head">
-    <h3>Últimos Andamentos</h3>
-    <p>Registros mais recentes do histórico operacional.</p>
-  </div>
-
-  <% if @unified_feed.any? %>
-    <div class="dashboard-feed">
-      <% @unified_feed.each do |item| %>
-        <article class="dashboard-feed__item">
-          <header class="dashboard-feed__head">
-            <strong><%= item[:title].presence || "Andamento sem título" %></strong>
-            <span>
-              <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>" style="margin-right:0.5rem"><%= item[:origin] %></span>
-              <%= item[:date].present? ? l(item[:date], format: :short) : "-" %>
-            </span>
-          </header>
-          <p>
-            <%= item[:internal_number] %>
-            <% if item[:movement_type].present? %>
-              • <%= item[:movement_type] %>
-            <% end %>
-          </p>
-          <%= link_to "Ver processo", legal_case_path(item[:process_id]), class: "dashboard-feed__link" %>
-        </article>
-      <% end %>
+    <div>
+      <h3>Ações Necessárias</h3>
+      <p>O que exige atenção agora.</p>
     </div>
-  <% else %>
-    <p class="empty-state">Ainda não há andamentos registrados para exibir.</p>
-  <% end %>
-</section>
-
-<section class="case-section dashboard-section dashboard-section--level-1">
-  <div class="dashboard-section__head">
-    <h3>Pendências Críticas</h3>
-    <p>Itens com risco operacional e ação imediata recomendada.</p>
   </div>
 
   <div class="critical-grid">
@@ -188,7 +132,7 @@
           <% end %>
         </ul>
       <% else %>
-        <p class="empty-state">Nenhum processo sem responsável.</p>
+        <p class="empty-state">Todos os processos têm responsável definido.</p>
       <% end %>
     </article>
 
@@ -201,10 +145,8 @@
         <ul class="critical-list">
           <% @critical_queues[:without_next_action].each do |legal_case| %>
             <li>
-              <div>
-                <%= link_to legal_case.internal_number, legal_case_path(legal_case) %>
-                <small>Status: <%= enum_label(LegalCase, :status, legal_case.status) %> • Próxima providência não definida</small>
-              </div>
+              <%= link_to legal_case.internal_number, legal_case_path(legal_case) %>
+              <small><%= enum_label(LegalCase, :status, legal_case.status) %> • Próxima providência não definida</small>
             </li>
           <% end %>
         </ul>
@@ -224,7 +166,7 @@
             <li>
               <div>
                 <%= link_to deadline.title, deadline_path(deadline) %>
-                <small><%= deadline.legal_case.internal_number %> • Venceu em <%= l(deadline.due_date, format: :short) %> • Sem justificativa</small>
+                <small><%= deadline.legal_case.internal_number %> • Venceu em <%= l(deadline.due_date, format: :short) %></small>
               </div>
             </li>
           <% end %>
@@ -234,139 +176,94 @@
       <% end %>
     </article>
 
+    <article class="critical-card critical-card--info">
+      <div class="risk-card__head">
+        <p>Central de Risco</p>
+        <span class="status-pill status-pill--info"><%= @risk_counts.values.sum %></span>
+      </div>
+      <ul class="critical-list">
+        <% [
+          { label: "Vence hoje", count: @risk_counts[:vence_hoje], path: legal_cases_path(deadline_state: "today") },
+          { label: "Próximas 48h", count: @risk_counts[:vence_48h], path: legal_cases_path(deadline_state: "upcoming") },
+          { label: "Atrasados", count: @risk_counts[:atrasados], path: legal_cases_path(deadline_state: "overdue") },
+          { label: "Sem próxima providência", count: @risk_counts[:sem_proxima_providencia], path: legal_cases_path(without_next_action: "1") }
+        ].select { |r| r[:count].to_i > 0 }.each do |row| %>
+          <li>
+            <%= link_to row[:path] do %>
+              <%= row[:label] %> <strong><%= row[:count] %></strong>
+            <% end %>
+          </li>
+        <% end %>
+        <% if @risk_counts.values.all?(&:zero?) %>
+          <p class="empty-state">Nenhum processo em fila de risco.</p>
+        <% end %>
+      </ul>
+    </article>
   </div>
 </section>
 
-<section class="case-section dashboard-section dashboard-section--level-3">
+<!-- ====== Últimos Andamentos ====== -->
+<section class="dashboard-section">
   <div class="dashboard-section__head">
-    <h3>Distribuição por Fase</h3>
-    <p>Entenda onde está a maior carga do escritório.</p>
-  </div>
-
-  <div class="report-grid report-grid--phases">
-    <% @report_counts[:por_fase].each do |phase, count| %>
-      <article class="report-card">
-        <p class="report-label"><%= enum_label(LegalCase, :phase, phase) %></p>
-        <p class="report-value"><%= count %></p>
-      </article>
+    <h3>Últimos Andamentos</h3>
+    <% if @syncable_count.to_i > 0 %>
+      <span class="status-pill status-pill--info">CNJ: <%= @new_imported_events_count %> novos</span>
     <% end %>
   </div>
+
+  <% if @unified_feed.any? %>
+    <div class="dashboard-feed">
+      <% @unified_feed.each do |item| %>
+        <article class="dashboard-feed__item">
+          <header class="dashboard-feed__head">
+            <strong><%= item[:title].presence || "Andamento sem título" %></strong>
+            <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>"><%= item[:origin] %></span>
+          </header>
+          <p><%= item[:internal_number] %></p>
+          <span style="font-size:0.8rem;color:var(--muted)"><%= item[:date].present? ? l(item[:date], format: :short) : "-" %></span>
+          <%= link_to "Ver processo", legal_case_path(item[:process_id]), class: "dashboard-feed__link" %>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="empty-state">Nenhum andamento registrado.</p>
+  <% end %>
 </section>
 
-<section class="case-section dashboard-section dashboard-section--level-2">
-  <div class="dashboard-section__head">
-    <h3>Central de Risco</h3>
-    <p>Filas que exigem ação imediata.</p>
-  </div>
-
-  <div class="risk-grid">
-    <article class="risk-card risk-card--warning">
-      <div class="risk-card__head">
-        <p>Vence hoje</p>
-        <span class="status-pill status-pill--warning"><%= @risk_counts[:vence_hoje] %></span>
-      </div>
-      <% if @risk_queues[:vence_hoje].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:vence_hoje].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
+<!-- ====== Distribuição + Gráficos ====== -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+  <section class="dashboard-section" style="margin-bottom:0">
+    <div class="dashboard-section__head">
+      <h3>Distribuição por Fase</h3>
+    </div>
+    <div class="report-grid report-grid--phases">
+      <% @report_counts[:por_fase].each do |phase, count| %>
+        <article class="report-card report-card--neutral">
+          <p class="report-label"><%= enum_label(LegalCase, :phase, phase) %></p>
+          <p class="report-value"><%= count %></p>
+        </article>
       <% end %>
-    </article>
+    </div>
+  </section>
 
-    <article class="risk-card risk-card--info">
-      <div class="risk-card__head">
-        <p>Próximas 48h</p>
-        <span class="status-pill status-pill--info"><%= @risk_counts[:vence_48h] %></span>
-      </div>
-      <% if @risk_queues[:vence_48h].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:vence_48h].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
+  <section class="dashboard-section" style="margin-bottom:0">
+    <div class="dashboard-section__head">
+      <h3>Visão Gráfica</h3>
+    </div>
+    <div class="dashboard-charts-grid" style="grid-template-columns:1fr 1fr;">
+      <article class="dashboard-chart-card">
+        <h4>Por fase</h4>
+        <canvas id="dashboard-chart-phase"></canvas>
+      </article>
+      <article class="dashboard-chart-card">
+        <h4>Por status</h4>
+        <canvas id="dashboard-chart-status"></canvas>
+      </article>
+    </div>
+  </section>
+</div>
 
-    <article class="risk-card risk-card--danger">
-      <div class="risk-card__head">
-        <p>Atrasados</p>
-        <span class="status-pill status-pill--danger"><%= @risk_counts[:atrasados] %></span>
-      </div>
-      <% if @risk_queues[:atrasados].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:atrasados].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Prazo: <%= legal_case.next_deadline_on.present? ? l(legal_case.next_deadline_on, format: :short) : "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
-
-    <article class="risk-card risk-card--muted">
-      <div class="risk-card__head">
-        <p>Sem próxima providência</p>
-        <span class="status-pill status-pill--muted"><%= @risk_counts[:sem_proxima_providencia] %></span>
-      </div>
-      <% if @risk_queues[:sem_proxima_providencia].any? %>
-        <ul class="risk-list">
-          <% @risk_queues[:sem_proxima_providencia].each do |legal_case| %>
-            <li>
-              <%= link_to legal_case.internal_number, legal_case %>
-              <small>Responsável: <%= legal_case.responsible_name.presence || "-" %></small>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Nenhum processo nesta fila.</p>
-      <% end %>
-    </article>
-  </div>
-</section>
-
-<section class="case-section dashboard-section">
-  <div class="dashboard-section__head">
-    <h3>Visão Gráfica</h3>
-    <p>Distribuição operacional resumida.</p>
-  </div>
-
-  <div id="dashboard-charts-root" class="dashboard-charts-grid">
-    <article class="dashboard-chart-card">
-      <h4>Processos por fase</h4>
-      <canvas id="dashboard-chart-phase"></canvas>
-    </article>
-
-    <article class="dashboard-chart-card">
-      <h4>Status operacional</h4>
-      <canvas id="dashboard-chart-status"></canvas>
-    </article>
-
-    <article class="dashboard-chart-card">
-      <h4>Risco de prazos</h4>
-      <canvas id="dashboard-chart-deadlines"></canvas>
-    </article>
-
-    <article class="dashboard-chart-card">
-      <h4>Carga por responsável</h4>
-      <canvas id="dashboard-chart-responsible"></canvas>
-    </article>
-  </div>
-
-  <script id="dashboard-charts-data" type="application/json">
-    <%= raw(@chart_data.to_json) %>
-  </script>
-</section>
+<script id="dashboard-charts-data" type="application/json">
+  <%= raw(@chart_data.to_json) %>
+</script>
+<% end %>

@@ -651,8 +651,6 @@
 
     drawVerticalBars("dashboard-chart-phase", data.phase?.labels || [], data.phase?.values || [], [ "#5b8cff" ]);
     drawDonut("dashboard-chart-status", data.status?.labels || [], data.status?.values || []);
-    drawVerticalBars("dashboard-chart-deadlines", data.deadlines?.labels || [], data.deadlines?.values || [], [ "#ff5d73", "#f5b942", "#5b8cff", "#32d583" ]);
-    drawHorizontalBars("dashboard-chart-responsible", data.responsible?.labels || [], data.responsible?.values || [], "#5b8cff");
   };
 
   document.addEventListener("turbo:load", initDashboardCharts);
