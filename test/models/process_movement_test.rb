@@ -2,11 +2,12 @@ require "test_helper"
 
 class ProcessMovementTest < ActiveSupport::TestCase
   setup do
-    @client = Client.create!(full_name: "Cliente PM", cpf_cnpj: "99999999999")
-    @district = District.create!(name: "Comarca PM")
-    @court = Court.create!(name: "Vara PM", district: @district)
-    @legal_area = LegalArea.create!(name: "Previdenciário", justice_branch: "federal")
-    @process_type = ProcessType.create!(name: "Ação Previdenciária", legal_area: @legal_area)
+    @client = create_client(full_name: "Cliente PM", cpf_cnpj: "99999999999")
+    create_case_dependencies(
+      legal_area_name: "Previdenciário",
+      justice_branch: "federal",
+      process_type_name: "Ação Previdenciária"
+    )
 
     @phase_judicial = ProcessPhase.create!(code: "judicial", name: "Judicial", order: 1)
     @phase_recurso = ProcessPhase.create!(code: "recurso", name: "Recurso", order: 2)
@@ -14,25 +15,19 @@ class ProcessMovementTest < ActiveSupport::TestCase
     @movement_type = MovementType.create!(code: "movimentacao_judicial", name: "Movimentação Judicial")
     @movement_type_exam = MovementType.create!(code: "pericia_designada", name: "Perícia Designada")
 
-    @legal_case = LegalCase.create!(
+    @legal_case = create_full_legal_case(
       internal_number: "PROC-PM-001",
+      client: @client,
       external_number: "0000001-00.2026.8.10.0001",
       entry_date: Date.current,
       protocol_date: Date.current,
       subarea: "Subárea",
       main_subject: "Assunto",
       phase: "judicial",
-      status: "em_analise",
       responsible_name: "Advogado PM",
       next_action: "Preparar petição complementar",
-      next_deadline_on: Date.current + 4.days,
       claim_value: 1000,
       priority: "medium",
-      client: @client,
-      legal_area: @legal_area,
-      process_type: @process_type,
-      district: @district,
-      court: @court,
       tem_pericia: true
     )
 
@@ -151,7 +146,8 @@ class ProcessMovementTest < ActiveSupport::TestCase
     movement.update!(display_title: "Movimento alterado")
     assert ProcessMovementAudit.where(process_movement: movement, action: "update").exists?
 
-    movement.update!(active: false, manual_override: true, exception_authorized: true, override_reason: "Exclusão lógica")
+    movement.update!(active: false, manual_override: true, exception_authorized: true,
+                     override_reason: "Exclusão lógica")
     assert ProcessMovementAudit.where(process_movement: movement, action: "update").count >= 2
   end
 
@@ -163,9 +159,9 @@ class ProcessMovementTest < ActiveSupport::TestCase
     end
 
     movement = ProcessMovement.create!(
-            process: @legal_case,
-            phase: @phase_judicial,
-            movement_type: @movement_type,
+      process: @legal_case,
+      phase: @phase_judicial,
+      movement_type: @movement_type,
       event_date: Time.current,
       display_title: "Falha de automação",
       nature: "fato_administrativo",

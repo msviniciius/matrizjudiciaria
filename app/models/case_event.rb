@@ -37,7 +37,11 @@ class CaseEvent < ApplicationRecord
   }, prefix: true
 
   validates :description, presence: true
-  validates :movement_type, presence: true, if: :entry_kind_andamento?
+  validates :movement_type, presence: true, if: -> { entry_kind_andamento? && pje_external_id.blank? }
+  validates :pje_external_id, uniqueness: true, allow_nil: true
+
+  scope :from_pje, -> { where.not(pje_external_id: nil) }
+  scope :by_event_date, -> { order(event_date: :desc, id: :desc) }
 
   after_commit :sync_modules!, on: [ :create, :update ]
 
@@ -92,31 +96,7 @@ class CaseEvent < ApplicationRecord
     return if process_exam.blank?
     return unless movement_type&.code == "pericia"
 
-    due_date = process_exam.scheduled_at&.to_date
-    return if due_date.blank?
-
-    title_base = "Providenciar perícia #{process_exam.exam_nature.humanize.downcase}"
-
-    Task.find_or_create_by!(
-      legal_case_id: legal_case_id,
-      title: title_base,
-      due_date: due_date
-    ) do |task|
-      task.status = "pending"
-      task.priority = "high"
-      task.description = "Tarefa criada automaticamente a partir do andamento de perícia."
-    end
-
-    Deadline.find_or_create_by!(
-      legal_case_id: legal_case_id,
-      title: "Prazo da perícia",
-      due_date: due_date
-    ) do |deadline|
-      deadline.deadline_type = "expert_exam"
-      deadline.status = "pending"
-      deadline.priority = "high"
-      deadline.start_date = Date.current
-      deadline.responsible_name = responsible_name
-    end
+    CaseSync::TaskDeadlineCreator.new(legal_case)
+      .create_exam_task_and_deadline(process_exam, responsible_name: responsible_name)
   end
 end

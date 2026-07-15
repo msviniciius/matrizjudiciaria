@@ -160,12 +160,11 @@ class ProcessMovement < ApplicationRecord
     task_title = movement_template&.task_template_name.presence || "Providência: #{display_title}"
     due_date = exam&.scheduled_at&.to_date || event_date.to_date
 
-    Task.find_or_create_by!(legal_case_id: process_id, title: task_title, due_date: due_date) do |task|
-      task.status = "pending"
-      task.priority = "high"
-      task.description = complementary_description.presence || "Tarefa criada automaticamente pelo andamento processual."
-      task.responsible_name = process.responsible_name
-    end
+    CaseSync::TaskDeadlineCreator.new(process).create_task(
+      title: task_title,
+      due_date: due_date,
+      description: complementary_description.presence || "Tarefa criada automaticamente pelo andamento processual."
+    )
   end
 
   def create_deadline_if_needed!
@@ -177,12 +176,13 @@ class ProcessMovement < ApplicationRecord
     rule = process.office&.deadline_settings&.active&.find_by(deadline_type: deadline_type)
     due_date = base_date + rule&.days_to_due.to_i.days
 
-    Deadline.find_or_create_by!(legal_case_id: process_id, title: title, due_date: due_date) do |deadline|
-      deadline.deadline_type = deadline_type
-      deadline.status = "pending"
-      deadline.priority = rule&.default_priority.presence || "high"
-      deadline.delay_reason = rule&.justification_hint
-    end
+    CaseSync::TaskDeadlineCreator.new(process).create_deadline(
+      title: title,
+      due_date: due_date,
+      deadline_type: deadline_type,
+      priority: rule&.default_priority.presence || "high",
+      delay_reason: rule&.justification_hint
+    )
   end
 
   def create_audit!(action, changed_fields)

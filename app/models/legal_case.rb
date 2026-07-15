@@ -87,6 +87,25 @@ class LegalCase < ApplicationRecord
   scope :deadline_due_in_48h, -> { where(next_deadline_on: (Date.current + 1.day)..(Date.current + 2.days)) }
   scope :deadline_overdue, -> { where("next_deadline_on < ?", Date.current) }
   scope :without_next_action, -> { where("TRIM(COALESCE(next_action, '')) = ''") }
+  scope :syncable, -> { operational.where.not(external_number: [ nil, "" ]) }
+  scope :needing_sync, -> { syncable.where("last_synced_at IS NULL OR last_synced_at < ?", 1.hour.ago) }
+  scope :with_pje_case, ->(pje_id) { where(pje_case_id: pje_id) }
+  scope :with_new_imported_events, -> {
+    syncable
+      .joins(:case_events)
+      .where(case_events: { entry_kind: "andamento" })
+      .where.not(case_events: { pje_external_id: nil })
+      .where("case_events.created_at > COALESCE(legal_cases.last_viewed_events_at, ?)", 1.week.ago)
+      .distinct
+  }
+
+  def has_new_imported_events?
+    case_events
+      .where(entry_kind: "andamento")
+      .where.not(pje_external_id: nil)
+      .where("case_events.created_at > ?", last_viewed_events_at || 1.week.ago)
+      .exists?
+  end
 
   def self.with_pending_requirement
     joins(:process_movements)
@@ -175,81 +194,30 @@ class LegalCase < ApplicationRecord
     last_movement_at.blank? || last_movement_at < 15.days.ago
   end
 
-  def health_score
-    score = 100
-    score -= 45 if deadline_overdue?
-    score -= 20 if next_deadline_expected? && next_deadline_on.blank?
-    score -= 18 if next_action.blank?
-    score -= 12 if responsible_name.blank?
-    score -= 10 if stale_last_movement?
-    score -= 8 if prazo_alerta? && !deadline_overdue?
-    score.clamp(0, 100)
+  def health_calculator
+    @health_calculator ||= LegalCaseHealthCalculator.new(self)
   end
 
+  delegate :score, :status, :issues, to: :health_calculator, prefix: :health
+
   def health_status
-    case health_score
-    when 80..100 then "verde"
-    when 50..79 then "amarelo"
-    else "vermelho"
-    end
+    health_calculator.status
   end
 
   def health_status_verde?
-    health_status == "verde"
+    health_calculator.verde?
   end
 
   def health_status_amarelo?
-    health_status == "amarelo"
+    health_calculator.amarelo?
   end
 
   def health_status_vermelho?
-    health_status == "vermelho"
-  end
-
-  def health_issues
-    issues = []
-    issues << "Prazo vencido" if deadline_overdue?
-    issues << "Sem próxima providência" if next_action.blank?
-    issues << "Sem próximo prazo definido" if next_deadline_expected? && next_deadline_on.blank?
-    issues << "Sem responsável definido" if responsible_name.blank?
-    issues << "Sem atualização recente" if stale_last_movement?
-    issues
+    health_calculator.vermelho?
   end
 
   def pericia_alerta?
     process_exams.where(status: [ "designada", "redesignada", "laudo_pendente" ], active: true).exists?
-  end
-
-  def responsavel_atual
-    responsible_name
-  end
-
-  def fase_atual
-    phase
-  end
-
-  def status_operacional
-    status
-  end
-
-  def equipe_apoio
-    support_team
-  end
-
-  def ultimo_andamento
-    last_movement
-  end
-
-  def data_ultimo_andamento
-    last_movement_at
-  end
-
-  def proxima_providencia
-    next_action
-  end
-
-  def proximo_prazo
-    next_deadline_on
   end
 
   def display_number_and_client
@@ -262,10 +230,6 @@ class LegalCase < ApplicationRecord
 
   def next_action_warning?
     operational_tracking_required? && next_action.blank?
-  end
-
-  def observacoes_estrategicas
-    strategic_notes
   end
 
   def calendar_feed_token(expires_in: 5.years)

@@ -2,11 +2,9 @@ require "test_helper"
 
 class LegalCaseTest < ActiveSupport::TestCase
   setup do
-    @client = Client.create!(full_name: "Cliente LegalCase", cpf_cnpj: "12121212121")
-    @district = District.create!(name: "Comarca LegalCase")
-    @court = Court.create!(name: "Vara LegalCase", district: @district)
-    @legal_area = LegalArea.create!(name: "Cível", justice_branch: "state")
-    @process_type = ProcessType.create!(name: "Procedimento Comum", legal_area: @legal_area)
+    create_case_dependencies
+
+    @client = create_client(full_name: "Cliente LegalCase", cpf_cnpj: "12121212121")
   end
 
   test "validacao operacional exige responsavel e prazo" do
@@ -101,10 +99,11 @@ class LegalCaseTest < ActiveSupport::TestCase
         next_action: "Revisar petição inicial",
         next_deadline_on: Date.current + 3.days,
         client: @client,
-        legal_area: @legal_area,
-        process_type: @process_type,
-        district: @district,
-        court: @court
+        office: default_office,
+        legal_area: @test_legal_area,
+        process_type: @test_process_type,
+        district: @test_district,
+        court: @test_court
       }.merge(attrs)
     )
   end
