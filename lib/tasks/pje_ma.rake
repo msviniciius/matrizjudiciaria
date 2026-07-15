@@ -22,6 +22,9 @@ namespace :pje do
       api_key = ENV.fetch("CNJ_PJE_API_KEY", "")
       tribunal = ENV.fetch("CNJ_PJE_TRIBUNAL_ALIAS", "tjma")
 
+      # Permite sobrescrever o tribunal via argumento: rake pje:ma:inspect_cnj[trf1]
+      tribunal = ARGV[1] if ARGV[1].present? && !ARGV[1].start_with?("-")
+
       log_and_print("BASE_URL: #{base_url}", logger)
       log_and_print("TRIBUNAL: #{tribunal}", logger)
       log_and_print("API_KEY presente: #{api_key.present?}", logger)
@@ -118,6 +121,113 @@ namespace :pje do
       end
 
       log_and_print("\nLog completo salvo em: #{log_path}", logger)
+    end
+
+    desc "Diagnostica quais tribunais respondem na API CNJ DataJud"
+    task diagnose_tribunals: :environment do
+      require "net/http"
+      require "json"
+
+      base_url = ENV.fetch("CNJ_PJE_BASE_URL", "")
+      api_key = ENV.fetch("CNJ_PJE_API_KEY", "")
+
+      if base_url.blank? || api_key.blank?
+        puts "ERRO: CNJ_PJE_BASE_URL ou CNJ_PJE_API_KEY nao configurados"
+        exit 1
+      end
+
+      puts "=" * 72
+      puts "Diagnóstico de Tribunais CNJ DataJud"
+      puts "Base URL: #{base_url}"
+      puts "Data: #{Time.current}"
+      puts "=" * 72
+
+      results = { online: [], empty: [], rate_limited: [], timeout: [], offline: [], error: [] }
+      total = Office::TRIBUNAL_INTEGRATIONS.count
+      tested = 0
+
+      Office::TRIBUNAL_INTEGRATIONS.each do |label, code|
+        tested += 1
+        print "[#{tested}/#{total}] #{code.upcase}... "
+
+        begin
+          uri = URI("#{base_url}/api_publica_#{code}/_search")
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.use_ssl = true
+          http.open_timeout = 15
+          http.read_timeout = 30 # CNJ é lento, alguns tribunais levam 20s+
+
+          request = Net::HTTP::Post.new(uri.path)
+          request["Content-Type"] = "application/json"
+          request["Authorization"] = "ApiKey #{api_key}"
+          request.body = { query: { match_all: {} }, size: 1 }.to_json
+
+          response = http.request(request)
+
+          if response.is_a?(Net::HTTPSuccess)
+            data = JSON.parse(response.body)
+            total_hits = data.dig("hits", "total", "value") || 0
+
+            if total_hits > 0
+              puts "ONLINE (#{total_hits} processos)"
+              results[:online] << { code: code, label: label, hits: total_hits }
+            else
+              puts "VAZIO (conecta mas sem dados)"
+              results[:empty] << { code: code, label: label }
+            end
+          elsif response.code.to_i == 429
+            puts "RATE-LIMITED (HTTP 429 — tente novamente com intervalo maior)"
+            results[:rate_limited] << { code: code, label: label }
+          else
+            puts "OFFLINE (HTTP #{response.code})"
+            results[:offline] << { code: code, label: label, code_http: response.code }
+          end
+        rescue Net::OpenTimeout, Net::ReadTimeout
+          puts "TIMEOUT (pode ser rate-limit ou endpoint inexistente)"
+          results[:timeout] << { code: code, label: label }
+        rescue => e
+          puts "ERRO (#{e.message[0..60]})"
+          results[:error] << { code: code, label: label, error: e.message }
+        end
+
+        # Pausa entre chamadas para evitar rate-limit (HTTP 429)
+        # 2s = ~300 chamadas/hora, seguro para a API pública
+        sleep 2 unless tested == total
+      end
+
+      # Relatório
+      puts ""
+      puts "=" * 72
+      puts "RELATÓRIO FINAL"
+      puts "=" * 72
+
+      puts "\n✅ ONLINE (#{results[:online].count} tribunais):"
+      results[:online].each { |t| puts "  #{t[:code].upcase} — #{t[:label]} (#{t[:hits]} processos)" }
+
+      puts "\n📭 CONECTA MAS SEM DADOS (#{results[:empty].count} tribunais):"
+      results[:empty].each { |t| puts "  #{t[:code].upcase} — #{t[:label]}" }
+
+      puts "\n⏳ RATE-LIMITED (#{results[:rate_limited].count} tribunais):"
+      results[:rate_limited].each { |t| puts "  #{t[:code].upcase} — #{t[:label]} (provavelmente funcional)" }
+
+      puts "\n⏱️ TIMEOUT (#{results[:timeout].count} tribunais):"
+      results[:timeout].each { |t| puts "  #{t[:code].upcase} — #{t[:label]} (pode nao existir ou rede lenta)" }
+
+      puts "\n❌ OFFLINE (#{results[:offline].count} tribunais):"
+      results[:offline].each { |t| puts "  #{t[:code].upcase} — #{t[:label]} (HTTP #{t[:code_http]})" }
+
+      puts "\n⚠️  ERRO (#{results[:error].count} tribunais):"
+      results[:error].each { |t| puts "  #{t[:code].upcase} — #{t[:label]} (#{t[:error]})" }
+
+      # Sugere os tribunais funcionalmente confirmados
+      functional = results[:online] + results[:rate_limited]
+      puts "\nTribunais potencialmente funcionais (#{functional.count}):"
+      puts functional.map { |t| t[:code] }.inspect
+
+      # Salva JSON para uso programático
+      report_path = Rails.root.join("log/cnj_tribunals_diagnosis.json")
+      File.write(report_path, JSON.pretty_generate(results))
+      puts "\nRelatório JSON salvo em: #{report_path}"
     end
   end
 end
