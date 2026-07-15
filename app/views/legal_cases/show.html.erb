@@ -2,14 +2,14 @@
 
 <% content_for :topbar_actions do %>
   <% if @legal_case.external_number.present? %>
-    <%= button_to "Atualizar Andamentos", sync_legal_case_path(@legal_case), method: :post, class: "btn btn-secondary", form: { data: { turbo_confirm: "Buscar andamentos no CNJ? Isso leva alguns segundos." } } %>
+    <%= button_to "Atualizar Andamentos", sync_legal_case_path(@legal_case), method: :post, class: "btn btn-secondary", form: { data: { turbo_confirm: "Buscar andamentos no CNJ?" } } %>
   <% end %>
   <%= link_to "Editar processo", edit_legal_case_path(@legal_case), class: "btn btn-secondary" %>
   <%= link_to "Exportar PDF", pdf_legal_case_path(@legal_case), class: "btn btn-secondary", target: "_blank", rel: "noopener" %>
   <%= link_to "Voltar", legal_cases_path, class: "btn btn-secondary" %>
 <% end %>
 
-<!-- ====== Header Compacto ====== -->
+<!-- ====== Header: Identificação + Status ====== -->
 <section class="case-summary case-summary--header">
   <div class="case-summary__header">
     <div>
@@ -18,243 +18,243 @@
       <p class="case-summary__subtitle">
         <%= @legal_case.internal_number %>
         <% if @legal_case.external_number.present? %>
-          · CNJ: <%= @legal_case.external_number %>
+          · <strong>CNJ:</strong> <%= @legal_case.external_number %>
         <% end %>
       </p>
     </div>
   </div>
 
-  <div class="case-headline-grid">
-    <div><strong>Fase</strong> <span><%= enum_label(LegalCase, :phase, @legal_case.phase) %></span></div>
-    <div><strong>Status</strong> <span><%= enum_label(LegalCase, :status, @legal_case.status) %></span></div>
-    <div><strong>Prioridade</strong> <span><%= enum_label(LegalCase, :priority, @legal_case.priority) %></span></div>
-    <div><strong>Saúde</strong> <span class="<%= legal_case_health_class(@legal_case) %>"><%= legal_case_health_label(@legal_case) %></span></div>
-    <div class="header-alerts">
-      <% if @legal_case.prazo_alerta? %>
-        <span class="status-pill status-pill--warning">Prazo próximo</span>
-      <% end %>
-      <% if @legal_case.pericia_alerta? %>
-        <span class="status-pill status-pill--info">Perícia pendente</span>
-      <% end %>
-      <% if @legal_case.deadline_overdue? %>
-        <span class="status-pill status-pill--danger">Prazo vencido</span>
-      <% end %>
-    </div>
+  <div class="case-status-bar">
+    <span class="status-pill status-pill--muted"><%= enum_label(LegalCase, :phase, @legal_case.phase) %></span>
+    <span class="status-pill status-pill--muted"><%= enum_label(LegalCase, :status, @legal_case.status) %></span>
+    <span class="<%= legal_case_health_class(@legal_case) %>"><%= legal_case_health_label(@legal_case) %></span>
+    <% if @legal_case.prazo_alerta? %>
+      <span class="status-pill status-pill--warning">Prazo próximo</span>
+    <% end %>
+    <% if @legal_case.deadline_overdue? %>
+      <span class="status-pill status-pill--danger">Prazo vencido</span>
+    <% end %>
+    <% if @legal_case.pericia_alerta? %>
+      <span class="status-pill status-pill--info">Perícia pendente</span>
+    <% end %>
   </div>
 </section>
 
-<!-- ====== Resumo Operacional ====== -->
-<div class="case-layout-grid">
-  <section class="case-section" style="margin-bottom:0">
-    <div class="dashboard-section__head">
-      <h3>Dados do Processo</h3>
-    </div>
-    <div class="case-summary__grid">
-      <div><strong>Área</strong> <span><%= @legal_case.legal_area&.name || "-" %></span></div>
-      <div><strong>Tipo</strong> <span><%= @legal_case.process_type&.name || "-" %></span></div>
-      <div><strong>Órgão/Vara</strong> <span><%= @legal_case.court&.name || "-" %></span></div>
-      <div><strong>Comarca</strong> <span><%= @legal_case.district&.name || "-" %></span></div>
-      <div><strong>Valor da causa</strong> <span><%= @legal_case.claim_value.presence || "-" %></span></div>
-      <div><strong>Parte contrária</strong> <span><%= @legal_case.opposing_party.presence || "-" %></span></div>
-    </div>
-  </section>
-
-  <section class="case-section" style="margin-bottom:0">
-    <div class="dashboard-section__head">
-      <h3>Situação Atual</h3>
-    </div>
-    <div class="case-summary__grid">
-      <div>
-        <strong>Responsável</strong>
-        <%= form_with url: quick_update_case_responsible_path(@legal_case), method: :patch, class: "critical-inline-form", style: "margin-top:4px;min-width:0", local: true do |form| %>
-          <%= form.text_field :responsible_name, value: @legal_case.responsible_name, placeholder: "Nome do responsável", required: true %>
-          <%= form.submit "Salvar", class: "btn btn-secondary btn-xs" %>
-        <% end %>
-      </div>
-      <div>
-        <strong>Próxima providência</strong>
-        <%= form_with url: quick_update_case_next_action_path(@legal_case), method: :patch, class: "critical-inline-form", style: "margin-top:4px;min-width:0", local: true do |form| %>
-          <%= form.text_field :next_action, value: @legal_case.next_action, placeholder: "O que fazer agora", required: true %>
-          <%= form.submit "Salvar", class: "btn btn-secondary btn-xs" %>
-        <% end %>
-      </div>
-      <div><strong>Próximo prazo</strong> <span><%= @legal_case.next_deadline_on.present? ? l(@legal_case.next_deadline_on, format: :short) : "-" %></span></div>
-      <div><strong>Último andamento</strong> <span><%= @legal_case.last_movement_at.present? ? l(@legal_case.last_movement_at, format: :short) : "-" %></span></div>
-    </div>
-  </section>
-</div>
-
-<!-- ====== Health Guidance (condicional) ====== -->
-<% unless @legal_case.health_status_verde? %>
-<section class="case-section health-guidance-section">
+<!-- ====== Ações Pendentes ====== -->
+<section class="case-section">
   <div class="dashboard-section__head">
-    <h3>Diagnóstico Operacional</h3>
-    <p>Entenda por que o processo está em atenção e o que fazer.</p>
+    <h3>Ações Pendentes</h3>
+    <p>O que precisa de atenção agora neste processo.</p>
   </div>
-  <div class="health-guidance-grid">
-    <article class="health-guidance-card">
-      <h4>Por que a saúde está assim?</h4>
-      <ul class="health-list">
-        <% legal_case_health_reasons(@legal_case).each do |reason| %>
-          <li><%= reason %></li>
-        <% end %>
-      </ul>
-    </article>
-    <article class="health-guidance-card">
-      <h4>O que fazer agora</h4>
-      <ul class="health-list">
-        <% legal_case_health_actions(@legal_case).each do |action| %>
-          <li><%= action %></li>
-        <% end %>
-      </ul>
-    </article>
-  </div>
-</section>
-<% end %>
 
-<!-- ====== Timeline + Perícias ====== -->
-<div class="case-layout-grid">
-  <section class="case-section" style="margin-bottom:0">
-    <div class="section-head">
-      <div>
-        <h3>Timeline</h3>
-        <p class="section-subtitle">Histórico de andamentos e eventos.</p>
-      </div>
-      <%= link_to "Novo andamento", new_process_movement_path(process_id: @legal_case.id), class: "btn btn-secondary btn-xs" %>
-    </div>
-
-    <% if @timeline_items.any? %>
-      <div class="timeline-list">
-        <% @timeline_items.first(15).each do |item| %>
-          <article class="timeline-item <%= item[:highlight] ? 'timeline-item--highlight' : 'timeline-item--soft' %>">
-            <div class="timeline-meta">
-              <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>"><%= item[:source] == :process_movement ? "Andamento" : item[:origin] %></span>
-              <% if item[:date].present? %>
-                <span class="timeline-subline"><%= l(item[:date], format: :short) %></span>
-              <% end %>
-            </div>
-            <h4><%= item[:title] %></h4>
-            <% if item[:description].present? %>
-              <p class="timeline-subline"><%= item[:description] %></p>
-            <% end %>
-          </article>
-        <% end %>
-        <% if @timeline_items.size > 15 %>
-          <p class="empty-state">Mostrando 15 de <%= @timeline_items.size %> itens. Registros mais recentes primeiro.</p>
-        <% end %>
-      </div>
-    <% else %>
-      <p class="empty-state">Nenhum andamento cadastrado.</p>
-    <% end %>
-  </section>
-
-  <section class="case-section" style="margin-bottom:0">
-    <div class="section-head">
-      <div>
-        <h3>Perícias</h3>
-        <p class="section-subtitle">Controle de perícias e laudos.</p>
-      </div>
-      <% if @legal_case.tem_pericia? %>
-        <%= link_to "Nova perícia", new_legal_case_process_exam_path(@legal_case), class: "btn btn-secondary btn-xs" %>
-      <% else %>
-        <%= link_to "Habilitar", edit_legal_case_path(@legal_case), class: "btn btn-secondary btn-xs" %>
+  <div class="case-summary__grid">
+    <div>
+      <strong>Responsável</strong>
+      <%= form_with url: quick_update_case_responsible_path(@legal_case), method: :patch, class: "inline-update-form", local: true do |form| %>
+        <%= form.text_field :responsible_name, value: @legal_case.responsible_name, placeholder: "Nome do responsável", required: true %>
+        <%= form.submit "Salvar", class: "btn btn-secondary btn-xs" %>
       <% end %>
     </div>
+    <div>
+      <strong>Próxima providência</strong>
+      <%= form_with url: quick_update_case_next_action_path(@legal_case), method: :patch, class: "inline-update-form", local: true do |form| %>
+        <%= form.text_field :next_action, value: @legal_case.next_action, placeholder: "O que fazer agora", required: true %>
+        <%= form.submit "Salvar", class: "btn btn-secondary btn-xs" %>
+      <% end %>
+    </div>
+    <div><strong>Próximo prazo</strong> <span><%= @legal_case.next_deadline_on.present? ? l(@legal_case.next_deadline_on, format: :short) : "Não definido" %></span></div>
+    <div><strong>Último andamento em</strong> <span><%= @legal_case.last_movement_at.present? ? l(@legal_case.last_movement_at, format: :short) : "Sem registro" %></span></div>
+  </div>
 
-    <% unless @legal_case.tem_pericia? %>
-      <p class="empty-state">Perícias desativadas. Edite o processo e marque "Tem perícia?".</p>
+  <% unless @legal_case.health_status_verde? %>
+    <details class="health-details" style="margin-top:14px">
+      <summary>Por que o processo está em <%= legal_case_health_label(@legal_case).downcase %>?</summary>
+      <div class="health-guidance-grid" style="margin-top:12px">
+        <article class="health-guidance-card">
+          <h4>Motivos</h4>
+          <ul class="health-list">
+            <% legal_case_health_reasons(@legal_case).each do |reason| %>
+              <li><%= reason %></li>
+            <% end %>
+          </ul>
+        </article>
+        <article class="health-guidance-card">
+          <h4>Recomendações</h4>
+          <ul class="health-list">
+            <% legal_case_health_actions(@legal_case).each do |action| %>
+              <li><%= action %></li>
+            <% end %>
+          </ul>
+        </article>
+      </div>
+    </details>
+  <% end %>
+</section>
+
+<!-- ====== Dados do Processo ====== -->
+<section class="case-section">
+  <div class="dashboard-section__head">
+    <h3>Dados do Processo</h3>
+  </div>
+  <div class="case-summary__grid">
+    <div><strong>Área do direito</strong> <span><%= @legal_case.legal_area&.name || "-" %></span></div>
+    <div><strong>Tipo de processo</strong> <span><%= @legal_case.process_type&.name || "-" %></span></div>
+    <div><strong>Órgão / Vara</strong> <span><%= @legal_case.court&.name || "-" %></span></div>
+    <div><strong>Comarca</strong> <span><%= @legal_case.district&.name || "-" %></span></div>
+    <div><strong>Valor da causa</strong> <span><%= @legal_case.claim_value.presence || "-" %></span></div>
+    <div><strong>Parte contrária</strong> <span><%= @legal_case.opposing_party.presence || "-" %></span></div>
+  </div>
+</section>
+
+<!-- ====== Timeline ====== -->
+<section class="case-section">
+  <div class="section-head">
+    <div>
+      <h3>Timeline</h3>
+      <p class="section-subtitle">Histórico completo de andamentos e eventos do processo.</p>
+    </div>
+    <%= link_to "Novo andamento", new_process_movement_path(process_id: @legal_case.id), class: "btn btn-secondary" %>
+  </div>
+
+  <% if @timeline_items.any? %>
+    <div class="timeline-list">
+      <% @timeline_items.first(15).each do |item| %>
+        <article class="timeline-item <%= item[:highlight] ? 'timeline-item--highlight' : 'timeline-item--soft' %>">
+          <div class="timeline-meta">
+            <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>"><%= item[:source] == :process_movement ? "Andamento" : item[:origin] %></span>
+            <% if item[:date].present? %>
+              <span class="timeline-subline"><%= l(item[:date], format: :short) %></span>
+            <% end %>
+            <% if item[:movement_type].present? %>
+              <span class="timeline-subline">· <%= item[:movement_type] %></span>
+            <% end %>
+          </div>
+          <h4><%= item[:title] %></h4>
+          <% if item[:description].present? %>
+            <p class="timeline-subline"><%= item[:description] %></p>
+          <% end %>
+          <% if item[:exam].present? %>
+            <p class="timeline-subline"><strong>Perícia:</strong> <%= item[:exam].summary_label %></p>
+          <% end %>
+        </article>
+      <% end %>
+    </div>
+    <% if @timeline_items.size > 15 %>
+      <p class="empty-state" style="margin-top:10px">Mostrando 15 de <%= @timeline_items.size %> itens. Registros mais recentes primeiro.</p>
     <% end %>
+  <% else %>
+    <p class="empty-state">Nenhum andamento cadastrado.</p>
+  <% end %>
+</section>
 
-    <% if @process_exams.any? %>
-      <div class="exam-cards" style="grid-template-columns:1fr;">
-        <% @process_exams.each do |exam| %>
-          <article class="exam-card <%= 'exam-card--warning' if exam.near_schedule? %> <%= 'exam-card--danger' if exam.status_laudo_pendente? %>">
+<!-- ====== Perícias ====== -->
+<% if @process_exams.any? || @legal_case.tem_pericia? %>
+<section class="case-section">
+  <div class="section-head">
+    <div>
+      <h3>Perícias</h3>
+      <p class="section-subtitle">Controle de perícias e laudos vinculados ao processo.</p>
+    </div>
+    <% if @legal_case.tem_pericia? %>
+      <%= link_to "Nova perícia", new_legal_case_process_exam_path(@legal_case), class: "btn btn-secondary" %>
+    <% end %>
+  </div>
+
+  <% if @process_exams.any? %>
+    <div class="exam-cards">
+      <% @process_exams.each do |exam| %>
+        <article class="exam-card <%= 'exam-card--warning' if exam.near_schedule? %> <%= 'exam-card--danger' if exam.status_laudo_pendente? %>">
+          <div>
             <p><strong>Natureza:</strong> <%= enum_label(ProcessExam, :exam_nature, exam.exam_nature) %></p>
             <p><strong>Esfera:</strong> <%= enum_label(ProcessExam, :exam_scope, exam.exam_scope) %></p>
+          </div>
+          <div>
             <p><strong>Data:</strong> <%= exam.scheduled_label %></p>
             <p><strong>Status:</strong> <%= enum_label(ProcessExam, :status, exam.status) %></p>
             <p><strong>Local:</strong> <%= exam.location.presence || "-" %></p>
-          </article>
-        <% end %>
-      </div>
-    <% elsif @legal_case.tem_pericia? %>
-      <p class="empty-state">Nenhuma perícia cadastrada.</p>
-    <% end %>
-  </section>
-</div>
-
-<!-- ====== Prazos + Tarefas ====== -->
-<div class="case-layout-grid">
-  <section class="case-section" style="margin-bottom:0">
-    <div class="section-head">
-      <div>
-        <h3>Prazos</h3>
-        <p class="section-subtitle">Datas limite do processo.</p>
-      </div>
-      <%= link_to "Novo prazo", new_deadline_path(legal_case_id: @legal_case.id), class: "btn btn-secondary btn-xs" %>
+          </div>
+        </article>
+      <% end %>
     </div>
+  <% elsif !@legal_case.tem_pericia? %>
+    <p class="empty-state">Perícias desativadas. <a href="<%= edit_legal_case_path(@legal_case) %>">Edite o processo</a> e marque "Tem perícia?".</p>
+  <% else %>
+    <p class="empty-state">Nenhuma perícia cadastrada.</p>
+  <% end %>
+</section>
+<% end %>
 
-    <% if @deadlines.any? %>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Data final</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @deadlines.each do |deadline| %>
-              <tr>
-                <td><%= link_to deadline.title, deadline_path(deadline) %></td>
-                <td><%= deadline.due_date.present? ? l(deadline.due_date, format: :short) : "-" %></td>
-                <td><%= enum_label(Deadline, :status, deadline.status) %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <p class="empty-state">Nenhum prazo cadastrado.</p>
-    <% end %>
-  </section>
-
-  <section class="case-section" style="margin-bottom:0">
-    <div class="section-head">
-      <div>
-        <h3>Tarefas</h3>
-        <p class="section-subtitle">Ações da equipe.</p>
-      </div>
-      <%= link_to "Nova tarefa", new_task_path(legal_case_id: @legal_case.id), class: "btn btn-secondary btn-xs" %>
+<!-- ====== Prazos ====== -->
+<section class="case-section">
+  <div class="section-head">
+    <div>
+      <h3>Prazos</h3>
+      <p class="section-subtitle">Datas limite para providências judiciais e internas.</p>
     </div>
+    <%= link_to "Novo prazo", new_deadline_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
+  </div>
 
-    <% if @tasks.any? %>
-      <div class="table-wrap">
-        <table>
-          <thead>
+  <% if @deadlines.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Data final</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @deadlines.each do |deadline| %>
             <tr>
-              <th>Título</th>
-              <th>Responsável</th>
-              <th>Status</th>
+              <td><%= link_to deadline.title, deadline_path(deadline) %></td>
+              <td><%= deadline.due_date.present? ? l(deadline.due_date, format: :short) : "-" %></td>
+              <td><%= enum_label(Deadline, :status, deadline.status) %></td>
             </tr>
-          </thead>
-          <tbody>
-            <% @tasks.each do |task| %>
-              <tr>
-                <td><%= link_to task.title, task_path(task) %></td>
-                <td><%= task.responsible_name.presence || "-" %></td>
-                <td><%= enum_label(Task, :status, task.status) %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <p class="empty-state">Nenhuma tarefa cadastrada.</p>
-    <% end %>
-  </section>
-</div>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="empty-state">Nenhum prazo cadastrado.</p>
+  <% end %>
+</section>
+
+<!-- ====== Tarefas ====== -->
+<section class="case-section">
+  <div class="section-head">
+    <div>
+      <h3>Tarefas</h3>
+      <p class="section-subtitle">Ações da equipe para manter o processo em dia.</p>
+    </div>
+    <%= link_to "Nova tarefa", new_task_path(legal_case_id: @legal_case.id), class: "btn btn-secondary" %>
+  </div>
+
+  <% if @tasks.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Responsável</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @tasks.each do |task| %>
+            <tr>
+              <td><%= link_to task.title, task_path(task) %></td>
+              <td><%= task.responsible_name.presence || "-" %></td>
+              <td><%= enum_label(Task, :status, task.status) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="empty-state">Nenhuma tarefa cadastrada.</p>
+  <% end %>
+</section>
 
 <!-- ====== Footer ====== -->
 <div class="case-actions case-actions--footer">

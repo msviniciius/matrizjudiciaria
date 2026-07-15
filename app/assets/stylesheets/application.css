@@ -1485,6 +1485,62 @@ td.table-actions { width: 1%; }
   min-width: 0;
 }
 
+/* ===== Case Status Bar ===== */
+.case-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* ===== Inline Update Form ===== */
+.inline-update-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.inline-update-form input[type="text"] {
+  flex: 1;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+}
+
+.inline-update-form .btn-xs {
+  height: 36px;
+  white-space: nowrap;
+}
+
+/* ===== Health Details (collapsible) ===== */
+.health-details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.health-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  padding: 4px 0;
+}
+
+.health-details summary:hover { color: var(--text); }
+
+/* ===== Exam Card Multi-column ===== */
+.exam-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
 /* ===== Filters ===== */
 .main-filters { margin-bottom: 0; display: grid; gap: 10px; }
 
