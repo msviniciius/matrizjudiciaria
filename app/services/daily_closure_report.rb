@@ -91,7 +91,7 @@ class DailyClosureReport
     end
 
     rows
-      .group_by { |r| [r[:responsible_name], r[:support_team]] }
+      .group_by { |r| [ r[:responsible_name], r[:support_team] ] }
       .map do |(responsible_name, support_team), group_rows|
         {
           responsible_name: responsible_name,
@@ -105,7 +105,7 @@ class DailyClosureReport
           red_health_cases: group_rows.sum { |r| r[:red_health_cases] }
         }
       end
-      .sort_by { |row| [-row[:overdue_deadlines], -row[:deadlines_due_today], row[:responsible_name]] }
+      .sort_by { |row| [ -row[:overdue_deadlines], -row[:deadlines_due_today], row[:responsible_name] ] }
   end
 
   # Calcula health status em Ruby usando o calculator compartilhado

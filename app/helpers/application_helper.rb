@@ -1,5 +1,4 @@
 module ApplicationHelper
-
   def app_product_name
     "Matriz Jurídica"
   end

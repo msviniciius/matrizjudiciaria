@@ -259,7 +259,8 @@ class LegalCase < ApplicationRecord
 
   def validate_operational_snapshot_quality
     return if skip_quality_validation
-    return unless operational_tracking_required?
+
+    operational_tracking_required?
   end
 
   def normalize_legacy_phase_and_status

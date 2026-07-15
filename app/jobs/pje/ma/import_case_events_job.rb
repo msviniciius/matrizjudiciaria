@@ -57,12 +57,12 @@ module Pje
 
       def resolve_tribunals(office, tribunal_filter)
         if tribunal_filter.present?
-          [tribunal_filter]
+          [ tribunal_filter ]
         elsif office.enabled_tribunal_codes.any?
           office.enabled_tribunal_codes
         else
           # Fallback para single-tenant: usa ENV
-          [ENV.fetch("CNJ_PJE_TRIBUNAL_ALIAS", "tjma")]
+          [ ENV.fetch("CNJ_PJE_TRIBUNAL_ALIAS", "tjma") ]
         end
       end
 
