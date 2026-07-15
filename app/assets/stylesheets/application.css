@@ -661,8 +661,8 @@ a:hover { color: #d0e0ff; }
 .status-pill--success { background: var(--success-muted); border-color: rgba(50, 213, 131, 0.3); color: var(--success); }
 .status-pill--warning { background: var(--warning-muted); border-color: rgba(245, 185, 66, 0.3); color: var(--warning); }
 .status-pill--danger { background: var(--danger-muted); border-color: rgba(255, 93, 115, 0.3); color: var(--danger); }
-.status-pill--info { background: var(--brand-muted); border-color: rgba(91, 140, 255, 0.3); color: var(--brand); }
-.status-pill--muted { background: rgba(255, 255, 255, 0.04); border-color: var(--line); color: var(--muted); }
+.status-pill--info { background: var(--brand-muted); border-color: rgba(91, 140, 255, 0.3); color: #aac8ff; }
+.status-pill--muted { background: rgba(255, 255, 255, 0.06); border-color: var(--line-strong); color: var(--text-secondary); }
 
 /* ===== Tables ===== */
 .table-wrap {
