@@ -16,9 +16,34 @@ class InternalCalendarsController < ApplicationController
     @events = build_events(@calendar_start, @calendar_end)
     @events_by_day = @events.group_by { |event| event[:date] }
     @list_events = @events.sort_by { |event| [ event[:date], event[:time] || Time.zone.at(0) ] }
+
+    @google_calendar_url = build_google_calendar_url
+  end
+
+  def google_calendar
+    public_base_url = ENV["APP_PUBLIC_URL"].presence || request.base_url
+    feed_url = "#{public_base_url.chomp('/')}#{office_calendar_feed_path(token: current_office.calendar_feed_token)}"
+    subscribe_url = feed_url.sub(/\Ahttps?:\/\//, "webcal://")
+    google_url = GoogleCalendarLinkBuilder.subscribe_url(subscribe_url)
+
+    redirect_to google_url, allow_other_host: true
   end
 
   private
+
+  def build_google_calendar_url
+    return nil if current_office.blank?
+
+    public_base_url = ENV["APP_PUBLIC_URL"].presence
+    return nil if public_base_url.blank?
+
+    feed_url = "#{public_base_url.chomp('/')}#{office_calendar_feed_path(token: current_office.calendar_feed_token)}"
+    subscribe_url = feed_url.sub(/\Ahttps?:\/\//, "webcal://")
+    GoogleCalendarLinkBuilder.subscribe_url(subscribe_url)
+  rescue => e
+    Rails.logger.warn "[GoogleCalendar] Erro ao gerar URL: #{e.message}"
+    nil
+  end
 
   def parse_reference_month(raw_month)
     return Date.current.beginning_of_month if raw_month.blank?

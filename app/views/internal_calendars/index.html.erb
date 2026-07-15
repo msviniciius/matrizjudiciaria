@@ -4,6 +4,9 @@
   <%= link_to "Calendário", internal_calendar_path(month: @reference_month.strftime("%Y-%m"), view: "month"), class: "btn #{@view_mode == 'month' ? 'btn-primary' : 'btn-secondary'}" %>
   <%= link_to "Lista", internal_calendar_path(month: @reference_month.strftime("%Y-%m"), view: "list"), class: "btn #{@view_mode == 'list' ? 'btn-primary' : 'btn-secondary'}" %>
   <%= link_to "Hoje", internal_calendar_path(month: Date.current.strftime("%Y-%m"), view: @view_mode), class: "btn btn-secondary" %>
+  <% if @google_calendar_url.present? %>
+    <%= link_to "Assinar no Google Calendar", @google_calendar_url, class: "btn btn-primary", target: "_blank", rel: "noopener" %>
+  <% end %>
 <% end %>
 
 <section class="case-section case-section--listing">

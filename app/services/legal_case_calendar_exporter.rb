@@ -26,7 +26,7 @@ class LegalCaseCalendarExporter
   private
 
   def calendar_events
-    deadline_events + exam_events
+    deadline_events + task_events + exam_events
   end
 
   def deadline_events
@@ -43,6 +43,22 @@ class LegalCaseCalendarExporter
         ].join("\n"),
         starts_at: deadline.due_date,
         ends_at: deadline.due_date + 1.day,
+        all_day: true
+      }
+    end
+  end
+
+  def task_events
+    @legal_case.tasks.where.not(due_date: nil).where.not(status: :completed).order(:due_date).filter_map do |task|
+      {
+        uid: "task-#{task.id}-case-#{@legal_case.id}@matrizjuridica.local",
+        summary: "Tarefa: #{task.title}",
+        description: [
+          "Processo #{@legal_case.internal_number}",
+          "Responsável: #{task.responsible_name.presence || "Não informado"}"
+        ].join("\n"),
+        starts_at: task.due_date,
+        ends_at: task.due_date + 1.day,
         all_day: true
       }
     end

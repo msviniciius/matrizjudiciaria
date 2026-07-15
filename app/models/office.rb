@@ -1,4 +1,6 @@
 class Office < ApplicationRecord
+  CALENDAR_FEED_PURPOSE = :office_calendar_feed
+
   TRIBUNAL_INTEGRATIONS = {
     # Tribunais Estaduais
     "TJAC (Tribunal de Justiça do Acre)" => "tjac",
@@ -105,6 +107,14 @@ class Office < ApplicationRecord
 
   def tribunal_enabled?(code)
     enabled_tribunal_codes.include?(code.to_s)
+  end
+
+  def calendar_feed_token(expires_in: 5.years)
+    signed_id(purpose: CALENDAR_FEED_PURPOSE, expires_in: expires_in)
+  end
+
+  def self.find_by_calendar_feed_token!(token)
+    find_signed!(token, purpose: CALENDAR_FEED_PURPOSE)
   end
 
   private

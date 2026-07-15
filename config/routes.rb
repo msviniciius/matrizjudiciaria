@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   patch "/painel/prazos/:id/justificativa", to: "dashboard#quick_update_deadline_reason", as: :quick_update_deadline_reason
   patch "/painel/tarefas/:id/responsavel", to: "dashboard#quick_update_task_responsible", as: :quick_update_task_responsible
   get "/calendario_interno", to: "internal_calendars#index", as: :internal_calendar
+  get "/calendario_interno/google", to: "internal_calendars#google_calendar", as: :internal_calendar_google
   get "/login", to: "sessions#new"
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
@@ -47,6 +48,7 @@ Rails.application.routes.draw do
 
   get "calendar_feeds/legal_case/:token.ics", to: "calendar_feeds#legal_case", as: :legal_case_calendar_feed
   get "calendar_feeds/legal_case", to: "calendar_feeds#legal_case"
+  get "calendar_feeds/office/:token.ics", to: "calendar_feeds#office", as: :office_calendar_feed
 
   resources :process_exams, only: [ :edit, :update, :destroy ]
   resources :clients do
