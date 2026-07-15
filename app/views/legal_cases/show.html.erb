@@ -106,7 +106,10 @@
 
   <% if @timeline_items.any? %>
     <div class="timeline-list">
-      <% @timeline_items.first(15).each do |item| %>
+      <% visible = @timeline_items.first(5) %>
+      <% rest = @timeline_items.drop(5) %>
+
+      <% visible.each do |item| %>
         <article class="timeline-item <%= item[:highlight] ? 'timeline-item--highlight' : 'timeline-item--soft' %>">
           <div class="timeline-meta">
             <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>"><%= item[:source] == :process_movement ? "Andamento" : item[:origin] %></span>
@@ -126,10 +129,32 @@
           <% end %>
         </article>
       <% end %>
+
+      <% if rest.any? %>
+        <details class="timeline-details">
+          <summary>Mostrar mais <%= rest.size %> andamento(s) anterior(es)</summary>
+          <div class="timeline-list" style="margin-top:10px">
+            <% rest.each do |item| %>
+              <article class="timeline-item <%= item[:highlight] ? 'timeline-item--highlight' : 'timeline-item--soft' %>">
+                <div class="timeline-meta">
+                  <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>"><%= item[:source] == :process_movement ? "Andamento" : item[:origin] %></span>
+                  <% if item[:date].present? %>
+                    <span class="timeline-subline"><%= l(item[:date], format: :short) %></span>
+                  <% end %>
+                  <% if item[:movement_type].present? %>
+                    <span class="timeline-subline">· <%= item[:movement_type] %></span>
+                  <% end %>
+                </div>
+                <h4><%= item[:title] %></h4>
+                <% if item[:description].present? %>
+                  <p class="timeline-subline"><%= item[:description] %></p>
+                <% end %>
+              </article>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
     </div>
-    <% if @timeline_items.size > 15 %>
-      <p class="empty-state" style="margin-top:10px">Mostrando 15 de <%= @timeline_items.size %> itens. Registros mais recentes primeiro.</p>
-    <% end %>
   <% else %>
     <p class="empty-state">Nenhum andamento cadastrado.</p>
   <% end %>
