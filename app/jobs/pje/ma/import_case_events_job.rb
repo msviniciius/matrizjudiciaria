@@ -3,63 +3,111 @@ module Pje
     class ImportCaseEventsJob < ApplicationJob
       queue_as :default
 
-      # Realiza a sincronizacao de andamentos para todos os LegalCases ativos
-      # que possuem external_number (numero CNJ) configurado.
+      # Sincroniza andamentos do CNJ DataJud para processos ativos.
       #
-      # Opcoes:
-      #   legal_case_ids: Array de IDs especificos para sincronizar
-      #   limit: Maximo de casos a processar (default: 50, para nao sobrecarregar)
+      # Parâmetros:
+      #   office_id:       ID do escritório (usa enabled_tribunals do office)
+      #   tribunal:        Código do tribunal (ex: "tjma", "trf1")
+      #   legal_case_ids:  Array de IDs específicos para sincronizar
+      #   limit:           Máximo de casos por tribunal (default: 50)
+      #
+      # Comportamento:
+      #   - Se office_id informado: sincroniza apenas tribunais habilitados daquele office
+      #   - Se tribunal informado: sincroniza apenas aquele tribunal
+      #   - Se nenhum: itera todos os offices e seus tribunais habilitados
+      #   - Fallback: se nenhum office tiver tribunais, usa ENV["CNJ_PJE_TRIBUNAL_ALIAS"]
       #
       def perform(params = {})
+        office_id = params[:office_id]
+        tribunal_filter = params[:tribunal]
         legal_case_ids = params[:legal_case_ids]
         limit = params[:limit] || 50
 
-        scope = LegalCase.syncable
+        offices = resolve_offices(office_id)
+        total_imported = 0
+        total_skipped = 0
+        total_errors = 0
+
+        offices.find_each do |office|
+          tribunals = resolve_tribunals(office, tribunal_filter)
+
+          tribunals.each do |tribunal_code|
+            result = import_for_tribunal(office, tribunal_code, legal_case_ids, limit)
+            total_imported += result[:imported]
+            total_skipped += result[:skipped]
+            total_errors += result[:errors]
+          end
+        end
+
+        Rails.logger.info "[PJE] Sincronização concluída: #{total_imported} importados, " \
+                          "#{total_skipped} já existentes, #{total_errors} erros"
+
+        { imported: total_imported, skipped: total_skipped, errors: total_errors }
+      end
+
+      private
+
+      def resolve_offices(office_id)
+        if office_id.present?
+          Office.where(id: office_id)
+        else
+          Office.all
+        end
+      end
+
+      def resolve_tribunals(office, tribunal_filter)
+        if tribunal_filter.present?
+          [tribunal_filter]
+        elsif office.enabled_tribunal_codes.any?
+          office.enabled_tribunal_codes
+        else
+          # Fallback para single-tenant: usa ENV
+          [ENV.fetch("CNJ_PJE_TRIBUNAL_ALIAS", "tjma")]
+        end
+      end
+
+      def import_for_tribunal(office, tribunal_code, legal_case_ids, limit)
+        scope = office.legal_cases.syncable
         scope = scope.where(id: legal_case_ids) if legal_case_ids.present?
         scope = scope.limit(limit)
 
         total = scope.count
+        return { imported: 0, skipped: 0, errors: 0 } if total.zero?
+
+        Rails.logger.info "[PJE] #{office.name} / #{tribunal_code.upcase}: #{total} processos"
+
+        cnj_client = Pje::Cnj::Client.new(tribunal: tribunal_code)
         imported = 0
         skipped = 0
         errors = 0
 
-        Rails.logger.info "[PJE_MA] Iniciando sincronizacao de andamentos para #{total} processos"
-
-        cnj_client = Pje::Cnj::Client.new
-
         cnj_client.with_persistent_connection do |client|
           scope.find_each do |legal_case|
-            Rails.logger.info "[PJE_MA] Processo #{legal_case.internal_number} (#{legal_case.external_number})"
-
             begin
-              count = import_movements_for_case(legal_case, client)
+              count = import_movements_for_case(legal_case, client, office)
               imported += count[:imported]
               skipped += count[:skipped]
               errors += count[:errors]
             rescue => e
-              Rails.logger.error "[PJE_MA] Erro ao processar #{legal_case.external_number}: #{e.message}"
+              Rails.logger.error "[PJE] Erro #{legal_case.external_number}: #{e.message}"
               errors += 1
             end
           end
         end
 
-        Rails.logger.info "[PJE_MA] Sincronizacao concluida: #{imported} importados, #{skipped} ja existentes, #{errors} erros em #{total} processos"
-
-        { imported: imported, skipped: skipped, errors: errors, total: total }
+        { imported: imported, skipped: skipped, errors: errors }
       end
 
-      private
-
-      def import_movements_for_case(legal_case, cnj_client)
+      def import_movements_for_case(legal_case, cnj_client, office = nil)
         hit = cnj_client.fetch_case(legal_case.external_number)
         return { imported: 0, skipped: 0, errors: 0 } unless hit
 
         source = hit["_source"] || {}
         movimentos = source["movimentos"] || []
         numero_processo = source["numeroProcesso"]
-        tribunal = source["tribunal"] || "TJMA"
+        tribunal = source["tribunal"] || cnj_client.tribunal.upcase
 
-        # Atualiza o pje_case_id no LegalCase se ainda nao tiver
+        # Atualiza pje_case_id no LegalCase se ainda não tiver
         pje_id = build_pje_id(source)
         legal_case.update_column(:pje_case_id, pje_id) if legal_case.pje_case_id.blank? && pje_id.present?
 
@@ -81,12 +129,12 @@ module Pje
           rescue ActiveRecord::RecordNotUnique
             skipped += 1
           rescue => e
-            Rails.logger.warn "[PJE_MA] Erro ao importar movimento: #{e.message}"
+            Rails.logger.warn "[PJE] Erro ao importar movimento: #{e.message}"
             skipped += 1
           end
         end
 
-        # Atualiza a data da ultima sincronizacao
+        # Atualiza a data da última sincronização
         legal_case.touch(:last_synced_at)
 
         { imported: imported, skipped: skipped, errors: 0 }

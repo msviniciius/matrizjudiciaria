@@ -8,10 +8,12 @@ module Pje
       class RequestError < StandardError; end
       class ApiError < StandardError; end
 
-      def initialize
+      attr_reader :tribunal
+
+      def initialize(tribunal: nil)
         @base_url = ENV.fetch("CNJ_PJE_BASE_URL", "")
         @api_key = ENV.fetch("CNJ_PJE_API_KEY", "")
-        @tribunal = ENV.fetch("CNJ_PJE_TRIBUNAL_ALIAS", "tjma")
+        @tribunal = tribunal || ENV.fetch("CNJ_PJE_TRIBUNAL_ALIAS", "tjma")
 
         raise ConfigurationError, "CNJ_PJE_BASE_URL ausente" if @base_url.blank?
         raise ConfigurationError, "CNJ_PJE_API_KEY ausente" if @api_key.blank?

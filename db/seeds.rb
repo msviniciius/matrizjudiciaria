@@ -262,6 +262,7 @@ end
 # Seed de escritório + usuário admin (Kayran)
 kayran_office = Office.find_or_initialize_by(slug: "kayran-advocacia")
 kayran_office.name = "Kayran Advocacia"
+kayran_office.enabled_tribunals = ["tjma"] if kayran_office.enabled_tribunals.blank?
 kayran_office.save!
 
 kayran_admin_email = ENV.fetch("KAYRAN_ADMIN_EMAIL", "kayranadvocacia@gmail.com").downcase

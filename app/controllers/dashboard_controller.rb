@@ -11,7 +11,10 @@ class DashboardController < ApplicationController
       @today_counts = { deadlines_today: 0, deadlines_overdue: 0, tasks_today: 0, tasks_overdue: 0 }
       @recent_movements = []
       @critical_queues = { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] }
-      @chart_data = { phase: { labels: [], values: [] }, status: { labels: [], values: [] }, deadlines: { labels: [], values: [] }, responsible: { labels: [], values: [] } }
+      @chart_data = { phase: { labels: [], values: [] }, status: { labels: [], values: [] } }
+      @syncable_count = 0
+      @new_imported_events_count = 0
+      @unified_feed = []
       return
     end
 
@@ -147,16 +150,22 @@ class DashboardController < ApplicationController
   end
 
   def sync_all
+    tribunals = current_office.enabled_tribunal_codes
     count = current_office.legal_cases.syncable.count
+
+    if tribunals.empty?
+      redirect_to painel_path, alert: "Nenhum tribunal configurado. Acesse Configurações > Integrações para habilitar."
+      return
+    end
 
     if count.zero?
       redirect_to painel_path, alert: "Nenhum processo com número externo configurado para sincronizar."
       return
     end
 
-    Pje::Ma::ImportCaseEventsJob.perform_later
+    Pje::Ma::ImportCaseEventsJob.perform_later(office_id: current_office.id)
 
-    redirect_to painel_path, notice: "Sincronização iniciada para #{count} processo(s). Os andamentos aparecerão em instantes."
+    redirect_to painel_path, notice: "Sincronização iniciada para #{count} processo(s) em #{tribunals.size} tribunal(is). Os andamentos aparecerão em instantes."
   end
 
   private
@@ -164,12 +173,6 @@ class DashboardController < ApplicationController
   def build_chart_data
     phase_counts = @report_counts[:por_fase]
     status_counts = current_office.legal_cases.group(:status).count
-    responsible_counts = current_office.legal_cases
-      .where.not(responsible_name: [ nil, "" ])
-      .group(:responsible_name)
-      .order(Arel.sql("COUNT(*) DESC"))
-      .limit(8)
-      .count
 
     {
       phase: {
@@ -179,19 +182,6 @@ class DashboardController < ApplicationController
       status: {
         labels: status_counts.keys.map { |key| status_label_for(key) },
         values: status_counts.values
-      },
-      deadlines: {
-        labels: [ "Atrasados", "Vence hoje", "48h", "Próximos 7 dias" ],
-        values: [
-          @risk_counts[:atrasados],
-          @risk_counts[:vence_hoje],
-          @risk_counts[:vence_48h],
-          @report_counts[:prazo_proximo]
-        ]
-      },
-      responsible: {
-        labels: responsible_counts.keys,
-        values: responsible_counts.values
       }
     }
   end
