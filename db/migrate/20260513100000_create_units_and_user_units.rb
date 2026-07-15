@@ -8,8 +8,8 @@ class CreateUnitsAndUserUnits < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :units, [:office_id, :name], unique: true
-    add_index :units, [:office_id, :slug], unique: true
+    add_index :units, [ :office_id, :name ], unique: true
+    add_index :units, [ :office_id, :slug ], unique: true
 
     create_table :user_units do |t|
       t.references :user, null: false, foreign_key: true
@@ -17,7 +17,7 @@ class CreateUnitsAndUserUnits < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :user_units, [:user_id, :unit_id], unique: true
+    add_index :user_units, [ :user_id, :unit_id ], unique: true
 
     add_reference :clients, :unit, foreign_key: true
     add_reference :legal_cases, :unit, foreign_key: true
