@@ -33,6 +33,7 @@ class LegalCasePdfExporter
       section(pdf, "Dados do Processo")
       key_values(pdf, [
         [ "Número interno", @legal_case.internal_number ],
+        [ "Número CNJ", @legal_case.external_number.presence || "-" ],
         [ "Área", @legal_case.legal_area&.name || "-" ],
         [ "Tipo", @legal_case.process_type&.name || "-" ],
         [ "Subárea", @legal_case.subarea.presence || "-" ],
@@ -40,10 +41,13 @@ class LegalCasePdfExporter
         [ "Comarca", @legal_case.district&.name || "-" ],
         [ "Órgão/Vara/Tribunal", @legal_case.court&.name || "-" ],
         [ "Parte contrária", @legal_case.opposing_party.presence || "-" ],
-        [ "Valor da causa", @legal_case.claim_value.presence || "-" ]
+        [ "Valor da causa", @legal_case.claim_value.presence || "-" ],
+        [ "Advogado responsável", @legal_case.responsible_name.presence || "-" ]
       ])
-      pdf.text "Observações estratégicas: #{@legal_case.strategic_notes.presence || '-'}"
-      pdf.move_down 8
+      if @legal_case.strategic_notes.present?
+        pdf.text "Observações estratégicas: #{@legal_case.strategic_notes}"
+        pdf.move_down 6
+      end
 
       if @legal_case.tem_pericia?
         section(pdf, "Perícias do Processo")
