@@ -2017,8 +2017,13 @@ td.table-actions { width: 1%; }
 }
 
 /* ===== Custom Select (JS component) ===== */
-.custom-select { position: relative; z-index: 20; }
-.custom-select.is-open { z-index: 1200; }
+.native-select-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
 .custom-select__trigger {
   width: 100%;
@@ -2086,6 +2091,44 @@ td.table-actions { width: 1%; }
 .custom-select__item.is-selected { background: var(--brand-muted); color: #fff; }
 .custom-select__check { color: var(--brand); opacity: 0; }
 .custom-select__item.is-selected .custom-select__check { opacity: 1; }
+
+/* ===== Custom select layering ===== */
+.form-section,
+.case-section,
+.form-grid,
+.app-form { overflow: visible; }
+
+.custom-select { position: relative; z-index: 20; }
+.custom-select.is-open { z-index: 1200; }
+.custom-select__panel { z-index: 1300; }
+
+.app-form .form-section:has(.custom-select.is-open) { z-index: 1500; }
+.app-form .field-full:has(.custom-select.is-open),
+.app-form .form-grid > div:has(.custom-select.is-open) { position: relative; z-index: 1510; }
+
+.content-surface,
+.case-section--filters,
+.case-section--listing,
+.main-filters,
+.main-filters__advanced,
+.office-tab-panel,
+.quick-client-modal,
+.confirm-modal { overflow: visible; }
+
+.main-filters:has(.custom-select.is-open),
+.case-section--filters:has(.custom-select.is-open),
+.case-section--listing:has(.custom-select.is-open),
+.office-tab-panel:has(.custom-select.is-open),
+.quick-client-modal:has(.custom-select.is-open) { position: relative; z-index: 1600; }
+
+.main-filters .form-grid > div:has(.custom-select.is-open),
+.main-filters__bar > div:has(.custom-select.is-open),
+.table-wrap:has(.custom-select.is-open) { position: relative; z-index: 1610; }
+
+@media (max-width: 980px) {
+  .custom-select.is-open { z-index: 2000; }
+  .custom-select__panel { z-index: 2010; }
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 1100px) {
