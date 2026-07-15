@@ -98,7 +98,6 @@ class LegalCasesController < ApplicationController
     @legal_case.responsible_name = current_user&.name if @legal_case.responsible_name.blank?
     @legal_case.unit ||= current_unit
     @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
-    ensure_legal_case_office_scope!
 
     respond_to do |format|
       if @legal_case.save
@@ -112,7 +111,6 @@ class LegalCasesController < ApplicationController
   end
 
   def update
-    ensure_legal_case_office_scope!
     @legal_case.assign_attributes(legal_case_params)
     @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
 
@@ -217,13 +215,6 @@ class LegalCasesController < ApplicationController
 
     payload[:warning] = I18n.t("legal_cases.warnings.next_action_blank")
     payload
-  end
-
-  def ensure_legal_case_office_scope!
-    return if @legal_case.client.blank?
-    return if @legal_case.client.office_id == current_office.id
-
-    raise ActiveRecord::RecordNotFound
   end
 
   def legal_case_filters

@@ -78,6 +78,7 @@ class LegalCase < ApplicationRecord
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :phase, inclusion: { in: phases.keys }
   validate :validate_operational_snapshot_quality
+  validate :client_belongs_to_same_office, if: -> { client.present? && office.present? }
 
   scope :with_upcoming_deadline, ->(days = 7) { where(next_deadline_on: Date.current..(Date.current + days.to_i.days)) }
   scope :without_deadline, -> { where(next_deadline_on: nil) }
@@ -261,6 +262,12 @@ class LegalCase < ApplicationRecord
     return if skip_quality_validation
 
     operational_tracking_required?
+  end
+
+  def client_belongs_to_same_office
+    return if client.office_id == office_id
+
+    errors.add(:client_id, "não pertence ao escritório atual")
   end
 
   def normalize_legacy_phase_and_status
