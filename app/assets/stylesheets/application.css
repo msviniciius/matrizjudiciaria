@@ -1467,9 +1467,23 @@ td.table-actions { width: 1%; }
   padding: 14px;
 }
 
+.health-guidance-section {
+  border-left: 3px solid var(--warning);
+}
+
 .health-guidance-card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--text); }
 .health-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 .health-list li { color: var(--text-secondary); }
+
+.case-summary__grid .critical-inline-form {
+  min-width: 0 !important;
+  width: 100%;
+}
+
+.case-summary__grid .critical-inline-form input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
 
 /* ===== Filters ===== */
 .main-filters { margin-bottom: 0; display: grid; gap: 10px; }
