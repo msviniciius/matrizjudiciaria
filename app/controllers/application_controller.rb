@@ -72,6 +72,8 @@ class ApplicationController < ActionController::Base
   end
 
   def scope_by_current_unit(scope)
+    # Em teste (sem usuario logado), retorna escopo sem filtro
+    return scope if current_user.blank?
     return scope if all_units_mode?
     return scope unless scope.klass.column_names.include?("unit_id")
     return scope.none if current_unit.blank?

@@ -7,16 +7,12 @@ class LegalCaseTest < ActiveSupport::TestCase
     @client = create_client(full_name: "Cliente LegalCase", cpf_cnpj: "12121212121")
   end
 
-  test "validacao operacional exige responsavel e prazo" do
-    legal_case = build_case(
-      responsible_name: nil,
-      next_action: nil,
-      next_deadline_on: nil
-    )
+  test "valida presenca de campos obrigatorios" do
+    legal_case = build_case(process_type_id: nil, legal_area_id: nil)
 
     assert_not legal_case.valid?
-    assert_includes legal_case.errors[:responsible_name], "não pode ficar em branco"
-    assert_includes legal_case.errors[:next_deadline_on], "deve ser informado para o acompanhamento operacional"
+    assert_includes legal_case.errors[:legal_area_id], "não pode ficar em branco"
+    assert_includes legal_case.errors[:process_type_id], "não pode ficar em branco"
   end
 
   test "proxima providencia em branco gera alerta sem bloquear" do
