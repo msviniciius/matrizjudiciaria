@@ -4,45 +4,16 @@ class LegalCasesController < ApplicationController
   def index
     @filters = legal_case_filters
     scope = scope_by_current_unit(current_office.legal_cases).includes(:client).order(updated_at: :desc)
-
-    if @filters[:q].present?
-      term = "%#{@filters[:q].strip}%"
-      scope = scope.joins(:client).where(
-        "legal_cases.internal_number ILIKE :term
-         OR clients.full_name ILIKE :term
-         OR COALESCE(legal_cases.main_subject, '') ILIKE :term
-         OR COALESCE(legal_cases.opposing_party, '') ILIKE :term
-         OR COALESCE(legal_cases.last_movement, '') ILIKE :term",
-        term: term
-      )
-    end
-
-    scope = scope.where(phase: @filters[:phase]) if @filters[:phase].present?
-    scope = scope.where(status: @filters[:status]) if @filters[:status].present?
-    scope = scope.where(priority: @filters[:priority]) if @filters[:priority].present?
-
-    if @filters[:responsible_name].present?
-      responsible_term = "%#{@filters[:responsible_name].strip}%"
-      scope = scope.where("COALESCE(legal_cases.responsible_name, '') ILIKE ?", responsible_term)
-    end
-
-    case @filters[:deadline_state]
-    when "overdue"
-      scope = scope.where("next_deadline_on < ?", Date.current)
-    when "today"
-      scope = scope.where(next_deadline_on: Date.current)
-    when "upcoming"
-      scope = scope.where(next_deadline_on: Date.current..(Date.current + 7.days))
-    when "without_deadline"
-      scope = scope.where(next_deadline_on: nil)
-    end
+    scope = LegalCaseQuery.new(scope, @filters).call
 
     @legal_cases = scope
+    @new_events_case_ids = current_office.legal_cases.with_new_imported_events.pluck(:id).to_set
     @advanced_filters_open = false
   end
 
   def show
     load_case_related_collections
+    @legal_case.touch(:last_viewed_events_at) if @legal_case.has_new_imported_events?
   end
 
   def pdf
@@ -85,6 +56,27 @@ class LegalCasesController < ApplicationController
     redirect_to google_url, allow_other_host: true
   end
 
+  def sync
+    if @legal_case.external_number.blank?
+      redirect_to @legal_case, alert: "Este processo não possui número externo (CNJ) configurado."
+      return
+    end
+
+    # Sincrono para feedback imediato (a API do CNJ leva ~8s)
+    result = Pje::Ma::ImportCaseEventsJob.perform_now(legal_case_ids: [ @legal_case.id ], limit: 1)
+
+    if result[:imported] > 0
+      redirect_to @legal_case, notice: "#{result[:imported]} andamento(s) novo(s) importado(s) do CNJ. #{result[:skipped]} já existiam."
+    elsif result[:skipped] > 0
+      redirect_to @legal_case, notice: "Nenhum andamento novo. #{result[:skipped]} já estavam sincronizados."
+    else
+      redirect_to @legal_case, alert: "Nenhum andamento encontrado para este processo no CNJ."
+    end
+  rescue => e
+    Rails.logger.error "[PJE_MA] Erro na sincronização manual: #{e.message}"
+    redirect_to @legal_case, alert: "Erro ao sincronizar: #{e.message}"
+  end
+
   def new
     @legal_case = current_office.legal_cases.new(
       internal_number: LegalCase.next_internal_number_preview(current_office),
@@ -103,7 +95,7 @@ class LegalCasesController < ApplicationController
 
   def create
     @legal_case = current_office.legal_cases.new(legal_case_params)
-    @legal_case.responsible_name = current_user&.name
+    @legal_case.responsible_name = current_user&.name if @legal_case.responsible_name.blank?
     @legal_case.unit ||= current_unit
     @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
     ensure_legal_case_office_scope!
@@ -164,6 +156,11 @@ class LegalCasesController < ApplicationController
       :claim_value,
       :priority,
       :client_id,
+      :internal_number,
+      :external_number,
+      :subarea,
+      :main_subject,
+      :next_action,
       :last_movement,
       :last_movement_at,
       :next_deadline_on,
@@ -182,7 +179,7 @@ class LegalCasesController < ApplicationController
       ]
     ]
 
-    permitted << :responsible_name if current_user&.admin?
+    permitted << :responsible_name
 
     params.require(:legal_case).permit(*permitted)
   end
@@ -196,45 +193,14 @@ class LegalCasesController < ApplicationController
       .includes(:movement_type, :process_exam)
       .order(created_at: :desc)
 
-    @timeline_items = build_timeline(@process_movements, @legacy_case_events)
+    @timeline_items = TimelineBuilder.build(
+      process_movements: @process_movements,
+      case_events: @legacy_case_events
+    )
 
     @deadlines = @legal_case.deadlines.order(due_date: :asc)
     @tasks = @legal_case.tasks.order(due_date: :asc)
     @process_exams = @legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC"))
-  end
-
-  def build_timeline(process_movements, legacy_case_events)
-    movement_items = process_movements.map do |movement|
-      {
-        source: :process_movement,
-        title: movement.display_title,
-        description: movement.complementary_description,
-        date: movement.event_date,
-        nature: movement.nature,
-        highlight: movement.nature_fato_processual? || movement.nature_fato_administrativo?,
-        movement_type: movement.movement_type&.name,
-        exam: movement.exam,
-        origin: movement.origin,
-        administrative_situation: movement.administrative_situation
-      }
-    end
-
-    legacy_items = legacy_case_events.map do |event|
-      {
-        source: :legacy_case_event,
-        title: event.description,
-        description: "Registro legado (case_events)",
-        date: event.created_at,
-        nature: event.entry_kind,
-        highlight: false,
-        movement_type: event.movement_type&.name,
-        exam: event.process_exam,
-        origin: "legado",
-        administrative_situation: nil
-      }
-    end
-
-    (movement_items + legacy_items).sort_by { |item| item[:date] || Time.at(0) }.reverse
   end
 
   def parse_reference_date(raw_date)

@@ -2,24 +2,10 @@ require "test_helper"
 
 class TasksControllerTest < ActionDispatch::IntegrationTest
   setup do
-    client = Client.create!(full_name: "Cliente Task", cpf_cnpj: "44444444444")
-    district = District.create!(name: "Bacabal/MA")
-    court = Court.create!(name: "3a Vara Civel", district: district)
-    legal_area = LegalArea.create!(name: "Trabalhista", justice_branch: "labor")
-    process_type = ProcessType.create!(name: "Reclamacao Trabalhista", legal_area: legal_area)
-
-    @legal_case = LegalCase.create!(
+    @legal_case = create_full_legal_case(
       internal_number: "PROC-TASK-001",
-      phase: "analise_juridica",
-      status: "em_analise",
       responsible_name: "Advogado da carteira",
-      next_action: "Conferir despacho inicial",
-      next_deadline_on: Date.current + 4.days,
-      client: client,
-      legal_area_id: legal_area.id,
-      process_type_id: process_type.id,
-      district_id: district.id,
-      court_id: court.id
+      next_action: "Conferir despacho inicial"
     )
 
     @task = Task.create!(

@@ -61,63 +61,7 @@ class ProcessMovementsController < ApplicationController
 
   def filtered_scope
     scope = office_process_movements.active
-
-    if @filters[:phase_id].present?
-      scope = scope.where(phase_id: @filters[:phase_id])
-    end
-
-    if @filters[:status].present?
-      scope = scope.joins(:process).where(legal_cases: { status: @filters[:status] })
-    end
-
-    if @filters[:movement_type_id].present?
-      scope = scope.where(movement_type_id: @filters[:movement_type_id])
-    end
-
-    if @filters[:nature].present?
-      scope = scope.where(nature: @filters[:nature])
-    end
-
-    if @filters[:impact].present?
-      scope = scope.where(impact: @filters[:impact])
-    end
-
-    if @filters[:origin].present?
-      scope = scope.where(origin: @filters[:origin])
-    end
-
-    if @filters[:from].present?
-      scope = scope.where("event_date >= ?", Time.zone.parse(@filters[:from]).beginning_of_day)
-    end
-
-    if @filters[:to].present?
-      scope = scope.where("event_date <= ?", Time.zone.parse(@filters[:to]).end_of_day)
-    end
-
-    if @filters[:responsible_name].present?
-      scope = scope.joins(:process).where("LOWER(legal_cases.responsible_name) LIKE ?", "%#{@filters[:responsible_name].downcase}%")
-    end
-
-    if @filters[:exam_id].present?
-      scope = scope.where(exam_id: @filters[:exam_id])
-    end
-
-    if @filters[:administrative_situation].present?
-      scope = scope.where(administrative_situation: @filters[:administrative_situation])
-    end
-
-    if @filters[:q].present?
-      term = "%#{@filters[:q].strip}%"
-      scope = scope.joins(:process).where(
-        "COALESCE(process_movements.display_title, '') ILIKE :term
-         OR COALESCE(process_movements.complementary_description, '') ILIKE :term
-         OR COALESCE(legal_cases.internal_number, '') ILIKE :term
-         OR COALESCE(legal_cases.responsible_name, '') ILIKE :term",
-        term: term
-      )
-    end
-
-    scope.distinct
+    ProcessMovementQuery.new(scope, @filters).call
   end
 
   def filter_params

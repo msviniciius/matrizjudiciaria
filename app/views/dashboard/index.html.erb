@@ -1,6 +1,14 @@
 <% content_for :title, "Painel" %>
 
 <% content_for :topbar_actions do %>
+  <% if @syncable_count > 0 %>
+    <%= button_to sync_all_cases_path, method: :post, class: "btn btn-secondary", form: { data: { turbo_confirm: "Isso vai buscar os andamentos de #{@syncable_count} processo(s) no CNJ. Continuar?" } } do %>
+      Sincronizar Andamentos
+      <% if @new_imported_events_count > 0 %>
+        <span class="status-pill status-pill--danger" style="margin-left:0.5rem"><%= @new_imported_events_count %> novo(s)</span>
+      <% end %>
+    <% end %>
+  <% end %>
   <%= link_to "Fechamento diário", daily_closure_legal_cases_path, class: "btn btn-secondary" %>
   <%= link_to "Novo andamento", new_process_movement_path, class: "btn btn-secondary" %>
   <%= link_to "Nova tarefa", new_task_path, class: "btn btn-secondary" %>
@@ -74,6 +82,13 @@
       <p class="report-label">Processos em risco</p>
       <p class="report-value"><%= @report_counts[:saude_critica] %></p>
     <% end %>
+    <% if @syncable_count > 0 %>
+      <article class="report-card report-card--<%= @new_imported_events_count > 0 ? 'info' : 'neutral' %>">
+        <span class="report-icon" aria-hidden="true">&#128260;</span>
+        <p class="report-label">Novos andamentos CNJ</p>
+        <p class="report-value"><%= @new_imported_events_count %></p>
+      </article>
+    <% end %>
   </div>
 </section>
 <% end %>
@@ -119,21 +134,24 @@
     <p>Registros mais recentes do histórico operacional.</p>
   </div>
 
-  <% if @recent_movements.any? %>
+  <% if @unified_feed.any? %>
     <div class="dashboard-feed">
-      <% @recent_movements.each do |movement| %>
+      <% @unified_feed.each do |item| %>
         <article class="dashboard-feed__item">
           <header class="dashboard-feed__head">
-            <strong><%= movement.display_title.presence || "Andamento sem título" %></strong>
-            <span><%= movement.event_date.present? ? l(movement.event_date, format: :short) : "-" %></span>
+            <strong><%= item[:title].presence || "Andamento sem título" %></strong>
+            <span>
+              <span class="status-pill <%= item[:highlight] ? 'status-pill--info' : 'status-pill--muted' %>" style="margin-right:0.5rem"><%= item[:origin] %></span>
+              <%= item[:date].present? ? l(item[:date], format: :short) : "-" %>
+            </span>
           </header>
           <p>
-            <%= movement.process.internal_number %>
-            <% if movement.movement_type.present? %>
-              • <%= movement.movement_type.name %>
+            <%= item[:internal_number] %>
+            <% if item[:movement_type].present? %>
+              • <%= item[:movement_type] %>
             <% end %>
           </p>
-          <%= link_to "Ver processo", legal_case_path(movement.process), class: "dashboard-feed__link" %>
+          <%= link_to "Ver processo", legal_case_path(item[:process_id]), class: "dashboard-feed__link" %>
         </article>
       <% end %>
     </div>

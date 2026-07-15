@@ -83,7 +83,12 @@
         <% if @legal_cases.any? %>
           <% @legal_cases.each do |legal_case| %>
             <tr>
-              <td><%= link_to legal_case.internal_number, legal_case_path(legal_case) %></td>
+              <td>
+                <%= link_to legal_case.internal_number, legal_case_path(legal_case) %>
+                <% if @new_events_case_ids.include?(legal_case.id) %>
+                  <span class="status-pill status-pill--info" title="Andamentos novos importados do CNJ">&#128260; novo</span>
+                <% end %>
+              </td>
               <td><%= legal_case.client.full_name %></td>
               <td><%= legal_case.legal_area&.name || "-" %></td>
               <td><%= enum_label(LegalCase, :status, legal_case.status) %></td>

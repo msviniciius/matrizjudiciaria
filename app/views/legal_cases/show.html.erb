@@ -4,8 +4,13 @@
   <div class="case-summary__header">
     <div>
       <p class="case-kicker">Processo</p>
-      <h1><%= @legal_case.client.full_name %></h1>
-      <p class="case-summary__subtitle">Visão consolidada do andamento, riscos e próximas ações.</p>
+      <h1><%= @legal_case.client&.full_name || "Cliente não informado" %></h1>
+      <p class="case-summary__subtitle">
+        <%= @legal_case.internal_number %>
+        <% if @legal_case.external_number.present? %>
+          · CNJ: <%= @legal_case.external_number %>
+        <% end %>
+      </p>
     </div>
   </div>
 
@@ -141,7 +146,7 @@
       <% @timeline_items.each do |item| %>
         <article class="timeline-item <%= item[:highlight] ? 'timeline-item--highlight' : 'timeline-item--soft' %>">
           <div class="timeline-meta">
-            <span class="status-pill"><%= item[:source] == :process_movement ? "Andamento" : "Legado" %></span>
+            <span class="status-pill"><%= item[:source] == :process_movement ? "Andamento" : item[:origin] %></span>
             <% if item[:nature].present? %>
               <span class="status-pill status-pill--muted"><%= item[:nature].to_s.humanize %></span>
             <% end %>
@@ -248,6 +253,9 @@
 </section>
 
 <div class="case-actions case-actions--footer">
+  <% if @legal_case.external_number.present? %>
+    <%= button_to "Atualizar Andamentos", sync_legal_case_path(@legal_case), method: :post, class: "btn btn-primary", form: { data: { turbo_confirm: "Buscar andamentos no CNJ? Isso leva alguns segundos." } } %>
+  <% end %>
   <%= link_to "Sincronizar", google_calendar_legal_case_path(@legal_case), class: "btn btn-primary", target: "_blank", rel: "noopener" %>
   <%= link_to "Exportar PDF", pdf_legal_case_path(@legal_case), class: "btn btn-secondary", target: "_blank", rel: "noopener" %>
   <%= link_to "Editar processo", edit_legal_case_path(@legal_case), class: "btn btn-secondary" %>

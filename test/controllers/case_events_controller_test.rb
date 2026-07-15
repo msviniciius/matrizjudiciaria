@@ -2,31 +2,20 @@ require "test_helper"
 
 class CaseEventsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    client = Client.create!(full_name: "Cliente Evento", cpf_cnpj: "55555555555")
-    district = District.create!(name: "Caxias/MA")
-    court = Court.create!(name: "4a Vara Civel", district: district)
-    legal_area = LegalArea.create!(name: "Civel Geral", justice_branch: "state")
-    process_type = ProcessType.create!(name: "Procedimento Comum Civel", legal_area: legal_area)
-    @movement_type = MovementType.find_or_create_by!(code: "movimentacao_judicial") { |mt| mt.name = "Movimentacao Judicial" }
-
-    @legal_case = LegalCase.create!(
+    @legal_case = create_full_legal_case(
       internal_number: "PROC-EVT-001",
-      phase: "analise_juridica",
-      status: "em_analise",
       responsible_name: "Advogado da carteira",
-      next_action: "Monitorar andamento inicial",
-      next_deadline_on: Date.current + 5.days,
-      client: client,
-      legal_area_id: legal_area.id,
-      process_type_id: process_type.id,
-      district_id: district.id,
-      court_id: court.id
+      next_action: "Monitorar andamento inicial"
     )
+
+    @movement_type = MovementType.find_or_create_by!(code: "movimentacao_judicial") { |mt|
+      mt.name = "Movimentacao Judicial"
+    }
 
     @case_event = CaseEvent.create!(
       legal_case: @legal_case,
-      event_type: "initial_contact",
-      occurred_at: Time.current,
+      entry_kind: "andamento",
+      event_date: Time.current,
       description: "Evento inicial",
       responsible_name: "Advogado",
       movement_type: @movement_type
@@ -47,8 +36,8 @@ class CaseEventsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("CaseEvent.count") do
       post case_events_url, params: { case_event: {
         legal_case_id: @legal_case.id,
-        event_type: "filing",
-        occurred_at: Time.current,
+        entry_kind: "andamento",
+        event_date: Time.current,
         description: "Protocolo",
         responsible_name: "Equipe",
         movement_type_id: @movement_type.id
@@ -69,7 +58,11 @@ class CaseEventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update case_event" do
-    patch case_event_url(@case_event), params: { case_event: { description: "Evento atualizado", event_type: "client_contact" } }
+    patch case_event_url(@case_event), params: { case_event: {
+      description: "Evento atualizado",
+      entry_kind: "andamento",
+      movement_type_id: @movement_type.id
+    } }
     assert_redirected_to case_event_url(@case_event)
   end
 

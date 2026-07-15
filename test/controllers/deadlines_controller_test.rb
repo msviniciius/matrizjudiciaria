@@ -2,24 +2,10 @@ require "test_helper"
 
 class DeadlinesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    client = Client.create!(full_name: "Cliente Deadline", cpf_cnpj: "33333333333")
-    district = District.create!(name: "Imperatriz/MA")
-    court = Court.create!(name: "2a Vara Civel", district: district)
-    legal_area = LegalArea.create!(name: "Previdenciario", justice_branch: "federal")
-    process_type = ProcessType.create!(name: "Acao Previdenciaria", legal_area: legal_area)
-
-    @legal_case = LegalCase.create!(
+    @legal_case = create_full_legal_case(
       internal_number: "PROC-DEA-001",
-      phase: "analise_juridica",
-      status: "em_analise",
       responsible_name: "Advogado da carteira",
-      next_action: "Acompanhar prazo do cliente",
-      next_deadline_on: Date.current + 6.days,
-      client: client,
-      legal_area_id: legal_area.id,
-      process_type_id: process_type.id,
-      district_id: district.id,
-      court_id: court.id
+      next_action: "Acompanhar prazo do cliente"
     )
 
     @deadline = Deadline.create!(

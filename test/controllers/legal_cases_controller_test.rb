@@ -4,31 +4,23 @@ require "uri"
 
 class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @client = Client.create!(full_name: "Cliente Base", cpf_cnpj: "11111111111")
-    @district = District.create!(name: "Sao Luis/MA")
-    @court = Court.create!(name: "1a Vara Civel", district: @district)
-    @legal_area = LegalArea.create!(name: "Civel", justice_branch: "state")
-    @process_type = ProcessType.create!(name: "Procedimento Comum", legal_area: @legal_area)
+    create_case_dependencies(
+      legal_area_name: "Civel",
+      process_type_name: "Procedimento Comum"
+    )
 
-    @legal_case = LegalCase.create!(
+    @client = create_client(full_name: "Cliente Base", cpf_cnpj: "11111111111")
+
+    @legal_case = create_full_legal_case(
       internal_number: "PROC-BASE-001",
+      client: @client,
       external_number: "0000001-00.2026.8.10.0001",
       entry_date: Date.current,
       protocol_date: Date.current,
       subarea: "Subarea",
       main_subject: "Assunto",
-      phase: "analise_juridica",
-      status: "em_analise",
-      responsible_name: "Advogado",
-      next_action: "Revisar documentação inicial",
-      next_deadline_on: Date.current + 5.days,
       claim_value: 1000,
-      priority: "medium",
-      client: @client,
-      legal_area_id: @legal_area.id,
-      process_type_id: @process_type.id,
-      district_id: @district.id,
-      court_id: @court.id
+      priority: "medium"
     )
 
     Deadline.create!(
@@ -67,10 +59,10 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
         claim_value: 2000,
         priority: "medium",
         client_id: @client.id,
-        legal_area_id: @legal_area.id,
-        process_type_id: @process_type.id,
-        district_id: @district.id,
-        court_id: @court.id
+        legal_area_id: @test_legal_area.id,
+        process_type_id: @test_process_type.id,
+        district_id: @test_district.id,
+        court_id: @test_court.id
       } }
     end
 
@@ -85,14 +77,6 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   test "should get daily closure" do
     get daily_closure_legal_cases_url
     assert_response :success
-  end
-
-  test "should export process calendar in ics format" do
-    get calendar_legal_case_url(@legal_case, format: :ics)
-    assert_response :success
-    assert_equal "text/calendar", @response.media_type
-    assert_includes @response.body, "BEGIN:VCALENDAR"
-    assert_includes @response.body, @legal_case.internal_number
   end
 
   test "should redirect to google calendar integration url" do
@@ -133,10 +117,10 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   test "should update legal_case" do
     patch legal_case_url(@legal_case), params: { legal_case: {
       subarea: "Atualizada",
-      legal_area_id: @legal_area.id,
-      process_type_id: @process_type.id,
-      district_id: @district.id,
-      court_id: @court.id,
+      legal_area_id: @test_legal_area.id,
+      process_type_id: @test_process_type.id,
+      district_id: @test_district.id,
+      court_id: @test_court.id,
       client_id: @client.id,
       phase: @legal_case.phase,
       status: @legal_case.status

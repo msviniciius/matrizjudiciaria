@@ -57,6 +57,20 @@ class DashboardController < ApplicationController
       .order(event_date: :desc, created_at: :desc)
       .limit(8)
 
+    @recent_cnj_events = CaseEvent
+      .where.not(pje_external_id: nil)
+      .joins(:legal_case)
+      .where(legal_cases: { office_id: current_office.id })
+      .includes(:legal_case, :movement_type)
+      .order(event_date: :desc, created_at: :desc)
+      .limit(5)
+
+    @unified_feed = TimelineBuilder.build_compact(
+      process_movements: @recent_movements,
+      case_events: @recent_cnj_events,
+      limit: 10
+    )
+
     @critical_queues = {
       without_responsible: operational_scope
         .where(responsible_name: [ nil, "" ])
@@ -73,6 +87,9 @@ class DashboardController < ApplicationController
         .order(due_date: :asc)
         .limit(6)
     }
+
+    @new_imported_events_count = current_office.legal_cases.with_new_imported_events.count
+    @syncable_count = current_office.legal_cases.syncable.count
 
     @chart_data = build_chart_data
   end
@@ -127,6 +144,19 @@ class DashboardController < ApplicationController
 
     task.update!(responsible_name: responsible_name)
     redirect_to painel_path, notice: "Responsável da tarefa atualizado."
+  end
+
+  def sync_all
+    count = current_office.legal_cases.syncable.count
+
+    if count.zero?
+      redirect_to painel_path, alert: "Nenhum processo com número externo configurado para sincronizar."
+      return
+    end
+
+    Pje::Ma::ImportCaseEventsJob.perform_later
+
+    redirect_to painel_path, notice: "Sincronização iniciada para #{count} processo(s). Os andamentos aparecerão em instantes."
   end
 
   private

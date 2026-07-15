@@ -5,7 +5,8 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
     @client = Client.create!(
       full_name: "Cliente Teste",
       cpf_cnpj: "12345678901",
-      email: "cliente.teste@example.com"
+      email: "cliente.teste@example.com",
+      office: default_office
     )
   end
 
@@ -24,7 +25,8 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
       post clients_url, params: { client: {
         full_name: "Novo Cliente",
         cpf_cnpj: "98765432100",
-        email: "novo.cliente@example.com"
+        email: "novo.cliente@example.com",
+        office_id: default_office.id
       } }
     end
 
