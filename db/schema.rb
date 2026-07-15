@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,16 +46,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.string "entry_kind", default: "andamento", null: false
+    t.datetime "event_date"
     t.bigint "legal_case_id", null: false
     t.bigint "movement_type_id"
     t.string "next_action"
+    t.string "pje_external_id"
     t.bigint "process_exam_id"
     t.string "responsible_name"
+    t.string "source_tribunal"
     t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_case_events_on_created_at"
     t.index ["entry_kind"], name: "index_case_events_on_entry_kind"
+    t.index ["event_date"], name: "index_case_events_on_event_date"
     t.index ["legal_case_id"], name: "index_case_events_on_legal_case_id"
     t.index ["movement_type_id"], name: "index_case_events_on_movement_type_id"
+    t.index ["pje_external_id"], name: "index_case_events_on_pje_external_id", unique: true, where: "(pje_external_id IS NOT NULL)"
     t.index ["process_exam_id"], name: "index_case_events_on_process_exam_id"
+    t.index ["source_tribunal"], name: "index_case_events_on_source_tribunal"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -126,8 +133,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
     t.string "status"
     t.string "title"
     t.datetime "updated_at", null: false
+    t.index ["deadline_type"], name: "index_deadlines_on_deadline_type"
+    t.index ["due_date"], name: "index_deadlines_on_due_date"
     t.index ["extended_at"], name: "index_deadlines_on_extended_at"
     t.index ["legal_case_id"], name: "index_deadlines_on_legal_case_id"
+    t.index ["status"], name: "index_deadlines_on_status"
   end
 
   create_table "districts", force: :cascade do |t|
@@ -148,17 +158,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
   create_table "legal_cases", force: :cascade do |t|
     t.decimal "claim_value"
     t.bigint "client_id", null: false
-    t.string "court"
     t.bigint "court_id"
     t.datetime "created_at", null: false
-    t.string "district"
     t.bigint "district_id"
     t.date "entry_date"
     t.string "external_number"
     t.string "internal_number"
     t.text "last_movement"
     t.datetime "last_movement_at"
-    t.string "legal_area"
+    t.datetime "last_synced_at"
+    t.datetime "last_viewed_events_at"
     t.bigint "legal_area_id"
     t.string "main_subject"
     t.string "next_action"
@@ -167,8 +176,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
     t.bigint "office_id", null: false
     t.string "opposing_party"
     t.string "phase"
+    t.string "pje_case_id"
     t.string "priority"
-    t.string "process_type"
     t.bigint "process_type_id"
     t.date "protocol_date"
     t.string "responsible_name"
@@ -182,8 +191,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
     t.index ["client_id"], name: "index_legal_cases_on_client_id"
     t.index ["court_id"], name: "index_legal_cases_on_court_id"
     t.index ["district_id"], name: "index_legal_cases_on_district_id"
+    t.index ["last_synced_at"], name: "index_legal_cases_on_last_synced_at"
     t.index ["legal_area_id"], name: "index_legal_cases_on_legal_area_id"
     t.index ["office_id"], name: "index_legal_cases_on_office_id"
+    t.index ["pje_case_id"], name: "index_legal_cases_on_pje_case_id"
     t.index ["process_type_id"], name: "index_legal_cases_on_process_type_id"
     t.index ["unit_id"], name: "index_legal_cases_on_unit_id"
   end
@@ -367,7 +378,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_101000) do
     t.string "status"
     t.string "title"
     t.datetime "updated_at", null: false
+    t.index ["due_date"], name: "index_tasks_on_due_date"
     t.index ["legal_case_id"], name: "index_tasks_on_legal_case_id"
+    t.index ["responsible_name"], name: "index_tasks_on_responsible_name"
+    t.index ["status"], name: "index_tasks_on_status"
   end
 
   create_table "units", force: :cascade do |t|
