@@ -48,18 +48,8 @@
   </div>
 
   <div class="case-summary__grid">
-    <div>
-      <strong>Responsável</strong>
-      <%= form_with url: quick_update_case_responsible_path(@legal_case), method: :patch, class: "inline-update-form", local: true, html: { autocomplete: "off" } do |form| %>
-        <%= form.text_field :responsible_name, value: @legal_case.responsible_name, placeholder: "Nome do responsável", required: true, onchange: "this.form.requestSubmit()" %>
-      <% end %>
-    </div>
-    <div>
-      <strong>Próxima providência</strong>
-      <%= form_with url: quick_update_case_next_action_path(@legal_case), method: :patch, class: "inline-update-form", local: true, html: { autocomplete: "off" } do |form| %>
-        <%= form.text_field :next_action, value: @legal_case.next_action, placeholder: "O que fazer agora", required: true, onchange: "this.form.requestSubmit()" %>
-      <% end %>
-    </div>
+    <div><strong>Responsável</strong> <span><%= @legal_case.responsible_name.presence || "Não definido" %></span></div>
+    <div><strong>Próxima providência</strong> <span><%= @legal_case.next_action.presence || "Não definida" %></span></div>
     <div><strong>Próximo prazo</strong> <span><%= @legal_case.next_deadline_on.present? ? l(@legal_case.next_deadline_on, format: :short) : "Não definido" %></span></div>
     <div><strong>Último andamento em</strong> <span><%= @legal_case.last_movement_at.present? ? l(@legal_case.last_movement_at, format: :short) : "Sem registro" %></span></div>
   </div>
