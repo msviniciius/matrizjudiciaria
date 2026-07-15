@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   get "/painel", to: "dashboard#index"
+  post "/painel/sync", to: "dashboard#sync_all", as: :sync_all_cases
   patch "/painel/processos/:id/responsavel", to: "dashboard#quick_update_case_responsible", as: :quick_update_case_responsible
   patch "/painel/processos/:id/providencia", to: "dashboard#quick_update_case_next_action", as: :quick_update_case_next_action
   patch "/painel/prazos/:id/justificativa", to: "dashboard#quick_update_deadline_reason", as: :quick_update_deadline_reason
@@ -38,6 +39,7 @@ Rails.application.routes.draw do
       get :print
       get :pdf
       get :google_calendar
+      post :sync
     end
 
     resources :process_exams, only: [ :new, :create ]
@@ -54,10 +56,9 @@ Rails.application.routes.draw do
   end
   resources :courts
   resources :units
-  resources :districts, only: [] do
+  resources :districts do
     resources :courts_lookup, only: :index
   end
-  resources :districts
 
   resources :legal_areas, only: [] do
     resources :process_types, only: :index
