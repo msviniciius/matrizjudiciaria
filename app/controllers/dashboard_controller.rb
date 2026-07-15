@@ -102,12 +102,12 @@ class DashboardController < ApplicationController
     responsible_name = params[:responsible_name].to_s.strip
 
     if responsible_name.blank?
-      redirect_to painel_path, alert: "Informe o responsável para atualizar o processo."
+      redirect_back fallback_location: legal_case_path(legal_case), alert: "Informe o responsável para atualizar o processo."
       return
     end
 
     legal_case.update!(responsible_name: responsible_name)
-    redirect_to painel_path, notice: "Responsável do processo atualizado."
+    redirect_back fallback_location: legal_case_path(legal_case), notice: "Responsável do processo atualizado."
   end
 
   def quick_update_case_next_action
@@ -115,12 +115,12 @@ class DashboardController < ApplicationController
     next_action = params[:next_action].to_s.strip
 
     if next_action.blank?
-      redirect_to painel_path, alert: "Informe a próxima providência para atualizar o processo."
+      redirect_back fallback_location: legal_case_path(legal_case), alert: "Informe a próxima providência para atualizar o processo."
       return
     end
 
     legal_case.update!(next_action: next_action)
-    redirect_to painel_path, notice: "Próxima providência atualizada."
+    redirect_back fallback_location: legal_case_path(legal_case), notice: "Próxima providência atualizada."
   end
 
   def quick_update_deadline_reason
