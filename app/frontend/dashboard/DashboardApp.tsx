@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { PhaseBars } from "./components/PhaseBars"
 import { StatusDonut, type DistributionItem } from "./components/StatusDonut"
+import { ContextPanel } from "./components/ContextPanel"
 import "./dashboard.css"
 
 type QueueCase = { id: number; internal_number: string; path: string; responsible_name: string; update_responsible_path: string }
@@ -20,6 +21,12 @@ export function DashboardApp() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [selectedFilter, setSelectedFilter] = useState<DistributionItem | null>(null)
+  const [isContextPanelOpen, setIsContextPanelOpen] = useState(false)
+
+  const selectFilter = (filter: DistributionItem) => {
+    setSelectedFilter(filter)
+    setIsContextPanelOpen(true)
+  }
 
   const loadSnapshot = () => fetch("/painel.json", { headers: { Accept: "application/json" } })
     .then((response) => response.ok ? response.json() : Promise.reject(new Error("Não foi possível carregar o painel.")))
@@ -58,9 +65,10 @@ export function DashboardApp() {
       {toast && <p className="react-dashboard__toast" role="status">{toast}</p>}
 
       <section className="react-dashboard__kpis" aria-label="Indicadores operacionais">
-        {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); setSelectedFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
+        {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); selectFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
       </section>
       {selectedFilter && <p className="react-dashboard__filter-status" role="status">Filtro selecionado: {selectedFilter.label} ({selectedFilter.count} processos) <a href={selectedFilter.path}>Abrir processos filtrados</a></p>}
+      {selectedFilter && isContextPanelOpen && <ContextPanel filter={selectedFilter} onClose={() => setIsContextPanelOpen(false)} />}
 
       {nextAction && <section className="react-dashboard__next-action" aria-labelledby="next-action-title">
         <div>
@@ -83,8 +91,8 @@ export function DashboardApp() {
 
       <section className="react-dashboard__lower">
         <article className="react-dashboard__card"><h3>Últimos andamentos</h3>{snapshot.feed.length ? snapshot.feed.map((item) => <a className="react-dashboard__feed" href={item.path} key={`${item.origin}-${item.title}`}><span>{item.origin}</span><strong>{item.title}</strong><small>{item.internal_number}</small></a>) : <p>Nenhum andamento registrado.</p>}</article>
-        <article className="react-dashboard__card"><h3>Distribuição por status</h3><StatusDonut items={snapshot.distribution.status} onSelect={setSelectedFilter} selectedPath={selectedFilter?.path} /></article>
-        <article className="react-dashboard__card"><h3>Distribuição por fase</h3><PhaseBars items={snapshot.distribution.phase} onSelect={setSelectedFilter} selectedPath={selectedFilter?.path} /></article>
+        <article className="react-dashboard__card"><h3>Distribuição por status</h3><StatusDonut items={snapshot.distribution.status} onSelect={selectFilter} selectedPath={selectedFilter?.path} /></article>
+        <article className="react-dashboard__card"><h3>Distribuição por fase</h3><PhaseBars items={snapshot.distribution.phase} onSelect={selectFilter} selectedPath={selectedFilter?.path} /></article>
       </section>
     </main>
   )

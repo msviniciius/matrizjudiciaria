@@ -97,6 +97,30 @@ test("keeps a KPI selection in the dashboard and exposes its Rails path", async 
   expect(screen.getByRole("link", { name: "Abrir processos filtrados" })).toHaveAttribute("href", "/prazos?due_state=today")
 })
 
+test("opens a contextual panel for a KPI and keeps its selected filter after closing", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: { due_today: { label: "Prazos hoje", count: 3, path: "/prazos?due_state=today", tone: "warning" } },
+      critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] }, risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  render(<DashboardApp />)
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole("link", { name: /Prazos hoje.*3/ }))
+
+  const panel = screen.getByRole("dialog", { name: "Detalhes do filtro: Prazos hoje" })
+  expect(within(panel).getByRole("heading", { name: "Detalhes do filtro: Prazos hoje" })).toBeVisible()
+  expect(within(panel).getByText("3 processos")).toBeVisible()
+  expect(within(panel).getByRole("link", { name: "Ver processos filtrados" })).toHaveAttribute("href", "/prazos?due_state=today")
+  await user.click(within(panel).getByRole("button", { name: "Fechar painel" }))
+
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  expect(screen.getByRole("status")).toHaveTextContent("Filtro selecionado: Prazos hoje (3 processos)")
+})
+
 test("updates a responsible person and confirms without reloading the page", async () => {
   const snapshot = {
     meta: { office_name: "Kayran Advocacia", unit_name: "Centro", syncable_count: 2, new_imported_events_count: 0 }, kpis: {},
