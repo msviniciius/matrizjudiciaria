@@ -20,6 +20,12 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.parsed_body, "critical_queues"
   end
 
+  test "mounts the React application in the dashboard content area" do
+    get painel_path
+
+    assert_select "#react-dashboard-root"
+  end
+
   test "updates a responsible person through JSON" do
     legal_case = create_full_legal_case(responsible_name: "")
 

@@ -1,0 +1,20 @@
+.react-dashboard { color: #edf4ff; display: grid; gap: 1rem; }
+.react-dashboard__header, .react-dashboard__card, .react-dashboard__kpi { background: #13243d; border: 1px solid #294262; border-radius: 12px; }
+.react-dashboard__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem; }
+.react-dashboard__header h2, .react-dashboard__section h3, .react-dashboard__card h3, .react-dashboard__card h4 { margin: 0; }
+.react-dashboard__eyebrow { color: #9cb4d8; font-size: .75rem; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
+.react-dashboard__header p { color: #b8c9e1; margin: .35rem 0 0; }
+.react-dashboard__sync { background: #2d6fdd; border-radius: 8px; color: white; padding: .7rem .9rem; text-decoration: none; }
+.react-dashboard__sync span { background: #ffcf65; border-radius: 99px; color: #13243d; margin-left: .3rem; padding: .08rem .35rem; }
+.react-dashboard__kpis, .react-dashboard__queues, .react-dashboard__lower { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.react-dashboard__kpi { color: #edf4ff; padding: 1rem; text-decoration: none; }
+.react-dashboard__kpi strong { display: block; font-size: 2rem; margin-top: .35rem; }
+.react-dashboard__kpi--danger strong { color: #ff8495; }.react-dashboard__kpi--warning strong { color: #ffd166; }.react-dashboard__kpi--info strong { color: #7eb4ff; }
+.react-dashboard__section { display: grid; gap: .7rem; }.react-dashboard__card { display: grid; gap: .6rem; padding: 1rem; }
+.react-dashboard__card > a, .react-dashboard__feed { border-top: 1px solid #294262; color: #edf4ff; display: grid; gap: .2rem; padding-top: .6rem; text-decoration: none; }
+.react-dashboard__card a strong { float: right; }.react-dashboard__card p, .react-dashboard__card small { color: #aebed4; margin: 0; }
+.react-dashboard__feed span { color: #7eb4ff; font-size: .75rem; }.react-dashboard__distribution { display: flex; justify-content: space-between; }
+.react-dashboard__error { color: #fff; background: #8f2439; border-radius: 8px; padding: 1rem; }
+.react-dashboard__toast { background: #174d3a; border-radius: 8px; color: #d9ffeb; margin: 0; padding: .75rem 1rem; }
+.react-dashboard__queue-item { border-top: 1px solid #294262; display: grid; gap: .5rem; padding-top: .6rem; }.react-dashboard__queue-item a { color: #edf4ff; }.react-dashboard__queue-item form { display: flex; gap: .4rem; }.react-dashboard__queue-item label { display: grid; font-size: .75rem; gap: .2rem; }.react-dashboard__queue-item input { border: 1px solid #3e5c83; border-radius: 4px; padding: .35rem; }.react-dashboard__queue-item button { background: #2d6fdd; border: 0; border-radius: 4px; color: #fff; padding: .35rem .55rem; }
+@media (max-width: 640px) { .react-dashboard__header { align-items: flex-start; flex-direction: column; } }
