@@ -37,6 +37,14 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index mounts the React legal cases application" do
+    get legal_cases_url
+
+    assert_response :success
+    assert_select "#react-legal-cases-root"
+    assert_select "script[src*='legal_cases']"
+  end
+
   test "returns an empty legal cases snapshot as JSON without an active unit" do
     get legal_cases_url(format: :json), params: { status: "em_analise" }
 

@@ -18,11 +18,12 @@
     <link rel="manifest" href="<%= pwa_manifest_path(format: :json) %>">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag :app, "data-turbo-track": "reload", defer: true %>
-    <% if controller_name == "dashboard" %>
+    <% if controller_name.in?(["dashboard", "legal_cases"]) %>
       <%= vite_client_tag %>
       <%= vite_react_refresh_tag %>
-      <%= vite_javascript_tag "dashboard.tsx" %>
     <% end %>
+    <%= vite_javascript_tag "dashboard.tsx" if controller_name == "dashboard" %>
+    <%= vite_javascript_tag "legal_cases.tsx" if controller_name == "legal_cases" %>
 
   </head>
 

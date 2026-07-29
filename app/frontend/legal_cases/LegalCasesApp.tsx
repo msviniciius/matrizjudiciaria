@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import "./legalCases.css"
 
 type View = "cards" | "table"
 type FilterKey = "q" | "phase" | "status" | "priority" | "responsible_name" | "deadline_state"
@@ -103,6 +104,13 @@ export function LegalCasesApp() {
     requestSnapshot(nextFilters)
   }
 
+  const clearFilters = () => {
+    const nextFilters = emptyFilters()
+    window.history.replaceState({}, "", window.location.pathname)
+    setFilters(nextFilters)
+    requestSnapshot(nextFilters)
+  }
+
   const chooseView = (nextView: View) => {
     setView(nextView)
     sessionStorage.setItem(VIEW_KEY, nextView)
@@ -111,32 +119,37 @@ export function LegalCasesApp() {
   const retry = () => requestSnapshot(filters)
 
   return (
-    <main aria-label="Processos">
-      <header>
-        <h1>Processos</h1>
-        {snapshot && <p>{snapshot.meta.total_count} processo(s)</p>}
-        <div aria-label="Visualização">
+    <main className="react-legal-cases" aria-label="Processos">
+      <header className="react-legal-cases__header">
+        <div>
+          <p className="react-legal-cases__eyebrow">{snapshot?.meta.office_name || "Operação jurídica"}</p>
+          <h1>Processos</h1>
+          {snapshot && <p className="react-legal-cases__count" role="status">{snapshot.meta.total_count} processo(s)</p>}
+        </div>
+        <div className="react-legal-cases__view-switch" aria-label="Visualização">
           <button type="button" aria-pressed={view === "cards"} onClick={() => chooseView("cards")}>Cartões</button>
           <button type="button" aria-pressed={view === "table"} onClick={() => chooseView("table")}>Tabela</button>
         </div>
       </header>
 
-      {snapshot && <FiltersForm filters={filters} options={snapshot.filter_options} onChange={updateFilter} />}
-      {isRefreshing && <p role="status">{snapshot ? "Atualizando processos…" : "Carregando processos…"}</p>}
-      {error && <div role="alert"><p>{error}</p><button type="button" onClick={retry}>Tentar novamente</button></div>}
+      {snapshot && <FiltersForm filters={filters} options={snapshot.filter_options} onChange={updateFilter} onClear={clearFilters} />}
+      {isRefreshing && <div className="react-legal-cases__loading" role="status"><span aria-hidden="true" className="react-legal-cases__loading-mark" />{snapshot ? "Atualizando processos…" : "Carregando processos…"}</div>}
+      {!snapshot && isRefreshing && <LoadingSkeleton />}
+      {error && <section className="react-legal-cases__error" role="alert"><p>{error}</p><button type="button" onClick={retry}>Tentar novamente</button></section>}
       {snapshot && (view === "cards" ? <Cards legalCases={snapshot.legal_cases} /> : <CasesTable legalCases={snapshot.legal_cases} />)}
     </main>
   )
 }
 
-function FiltersForm({ filters, options, onChange }: { filters: Filters; options: Snapshot["filter_options"]; onChange: (key: FilterKey, value: string) => void }) {
-  return <form aria-label="Filtros de processos" onSubmit={(event) => event.preventDefault()}>
-    <label>Busca<input value={filters.q} onChange={(event) => onChange("q", event.target.value)} /></label>
+function FiltersForm({ filters, options, onChange, onClear }: { filters: Filters; options: Snapshot["filter_options"]; onChange: (key: FilterKey, value: string) => void; onClear: () => void }) {
+  return <form className="react-legal-cases__filters" aria-label="Filtros de processos" onSubmit={(event) => event.preventDefault()}>
+    <label className="react-legal-cases__search">Busca<input value={filters.q} placeholder="Objeto, cliente ou número interno" onChange={(event) => onChange("q", event.target.value)} /></label>
     <FilterSelect label="Fase" filterKey="phase" value={filters.phase} options={options.phase} onChange={onChange} />
     <FilterSelect label="Status" filterKey="status" value={filters.status} options={options.status} onChange={onChange} />
     <FilterSelect label="Prioridade" filterKey="priority" value={filters.priority} options={options.priority} onChange={onChange} />
     <label>Responsável<input value={filters.responsible_name} onChange={(event) => onChange("responsible_name", event.target.value)} /></label>
     <FilterSelect label="Situação do prazo" filterKey="deadline_state" value={filters.deadline_state} options={options.deadline_state} onChange={onChange} />
+    <button className="react-legal-cases__clear" type="button" onClick={onClear}>Limpar filtros</button>
   </form>
 }
 
@@ -145,22 +158,31 @@ function FilterSelect({ label, filterKey, value, options, onChange }: { label: s
 }
 
 function Cards({ legalCases }: { legalCases: LegalCase[] }) {
-  if (!legalCases.length) return <p>Nenhum processo encontrado.</p>
-  return <section aria-label="Listagem de processos">{legalCases.map((legalCase) => <article key={legalCase.id}>
-    <a href={legalCase.path}><h2>{legalCase.internal_number}</h2></a>
-    <p>{legalCase.client_name} · {legalCase.legal_area_name}</p>
-    <p>{legalCase.status_label} · {legalCase.responsible_name}</p>
-    <p>Próximo prazo: {legalCase.next_deadline_label}</p>
-    <p>Último andamento: {legalCase.last_movement}</p>
-    {legalCase.has_new_imported_events && <p>Novos andamentos importados</p>}
-  </article>)}</section>
+  if (!legalCases.length) return <EmptyState />
+  return <section className="react-legal-cases__cards" aria-label="Listagem de processos">{legalCases.map((legalCase) => <a className={`react-legal-cases__card react-legal-cases__card--${legalCase.deadline_tone}`} href={legalCase.path} key={legalCase.id}>
+    <div className="react-legal-cases__card-head"><h2>{legalCase.internal_number}</h2>{legalCase.has_new_imported_events && <span className="react-legal-cases__new-events">Novos andamentos</span>}</div>
+    <p className="react-legal-cases__client">{legalCase.client_name}</p>
+    <p className="react-legal-cases__area">{legalCase.legal_area_name}</p>
+    <div className="react-legal-cases__badges"><span className="react-legal-cases__badge">{legalCase.status_label}</span><span className="react-legal-cases__badge react-legal-cases__badge--priority">Prioridade {legalCase.priority}</span></div>
+    <dl><div><dt>Próximo prazo</dt><dd className={`react-legal-cases__deadline react-legal-cases__deadline--${legalCase.deadline_tone}`}>{legalCase.next_deadline_label}</dd></div><div><dt>Responsável</dt><dd>{legalCase.responsible_name || "Não definido"}</dd></div></dl>
+    <p className="react-legal-cases__movement"><span>Último andamento</span>{legalCase.last_movement}</p>
+  </a>)}</section>
 }
 
 function CasesTable({ legalCases }: { legalCases: LegalCase[] }) {
-  return <table aria-label="Listagem de processos">
+  if (!legalCases.length) return <EmptyState />
+  return <div className="react-legal-cases__table-wrap"><table className="react-legal-cases__table" aria-label="Listagem de processos">
     <thead><tr><th>Número interno</th><th>Cliente</th><th>Área</th><th>Status</th><th>Responsável</th><th>Próximo prazo</th><th>Último andamento</th></tr></thead>
-    <tbody>{legalCases.length ? legalCases.map((legalCase) => <tr key={legalCase.id}>
-      <td><a href={legalCase.path}>{legalCase.internal_number}</a></td><td>{legalCase.client_name}</td><td>{legalCase.legal_area_name}</td><td>{legalCase.status_label}</td><td>{legalCase.responsible_name}</td><td>{legalCase.next_deadline_label}</td><td>{legalCase.last_movement}</td>
-    </tr>) : <tr><td colSpan={7}>Nenhum processo encontrado.</td></tr>}</tbody>
-  </table>
+    <tbody>{legalCases.map((legalCase) => <tr key={legalCase.id}>
+      <td><a href={legalCase.path}>{legalCase.internal_number}</a>{legalCase.has_new_imported_events && <span className="react-legal-cases__new-events">Novo</span>}</td><td>{legalCase.client_name}</td><td>{legalCase.legal_area_name}</td><td><span className="react-legal-cases__badge">{legalCase.status_label}</span></td><td>{legalCase.responsible_name || "Não definido"}</td><td><span className={`react-legal-cases__deadline react-legal-cases__deadline--${legalCase.deadline_tone}`}>{legalCase.next_deadline_label}</span></td><td>{legalCase.last_movement}</td>
+    </tr>)}</tbody>
+  </table></div>
+}
+
+function LoadingSkeleton() {
+  return <section className="react-legal-cases__skeleton" aria-hidden="true"><span /><span /><span /></section>
+}
+
+function EmptyState() {
+  return <section className="react-legal-cases__empty"><h2>Nenhum processo encontrado para estes filtros.</h2><p>Ajuste ou limpe os filtros para consultar outros processos.</p></section>
 }
