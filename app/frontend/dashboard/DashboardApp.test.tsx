@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest"
-import { render, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { DashboardApp } from "./DashboardApp"
@@ -49,6 +49,7 @@ test("renders the command center from the server snapshot", async () => {
   expect(screen.getByRole("img", { name: "Distribuição por fase" })).toBeVisible()
   expect(screen.getByRole("button", { name: "Em análise: 4 processos" })).toBeVisible()
   expect(screen.getByRole("button", { name: "Análise jurídica: 2 processos" })).toBeVisible()
+  expect(screen.getByRole("img", { name: "Distribuição por status" }).querySelector("circle")).toHaveAttribute("pathLength", "100")
   await waitFor(() => expect(screen.queryByRole("status", { name: /carregando/i })).not.toBeInTheDocument())
 })
 
@@ -75,6 +76,25 @@ test("activates a chart filter with the keyboard", async () => {
 
   expect(screen.getByRole("status")).toHaveTextContent("Filtro selecionado: Em análise (4 processos)")
   expect(filter).toHaveAttribute("aria-pressed", "true")
+  expect(screen.getByRole("link", { name: "Abrir processos filtrados" })).toHaveAttribute("href", "/processos?status=em_analise")
+})
+
+test("keeps a KPI selection in the dashboard and exposes its Rails path", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: { due_today: { label: "Prazos hoje", count: 3, path: "/prazos?due_state=today", tone: "warning" } },
+      critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] }, risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  render(<DashboardApp />)
+  const kpi = await screen.findByRole("link", { name: /Prazos hoje.*3/ })
+
+  expect(fireEvent.click(kpi)).toBe(false)
+  expect(screen.getByRole("status")).toHaveTextContent("Filtro selecionado: Prazos hoje (3 processos)")
+  expect(screen.getByRole("link", { name: "Abrir processos filtrados" })).toHaveAttribute("href", "/prazos?due_state=today")
 })
 
 test("updates a responsible person and confirms without reloading the page", async () => {

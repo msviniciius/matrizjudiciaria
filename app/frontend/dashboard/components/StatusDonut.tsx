@@ -20,7 +20,7 @@ export function StatusDonut({ items, onSelect, selectedPath }: StatusDonutProps)
         const dash = `${segment} ${100 - segment}`
         const segmentOffset = -offset
         offset += segment
-        return <circle className="react-dashboard__donut-segment" cx="60" cy="60" fill="none" key={item.path} r="42" stroke={colors[index % colors.length]} strokeDasharray={dash} strokeDashoffset={segmentOffset} strokeWidth="16">
+        return <circle className="react-dashboard__donut-segment" cx="60" cy="60" fill="none" key={item.path} pathLength="100" r="42" stroke={colors[index % colors.length]} strokeDasharray={dash} strokeDashoffset={segmentOffset} strokeWidth="16">
           <title>{`${item.label}: ${item.count} processos`}</title>
         </circle>
       })}

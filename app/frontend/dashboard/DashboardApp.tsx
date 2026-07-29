@@ -58,9 +58,9 @@ export function DashboardApp() {
       {toast && <p className="react-dashboard__toast" role="status">{toast}</p>}
 
       <section className="react-dashboard__kpis" aria-label="Indicadores operacionais">
-        {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={() => setSelectedFilter(kpi)}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
+        {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); setSelectedFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
       </section>
-      {selectedFilter && <p className="react-dashboard__filter-status" role="status">Filtro selecionado: {selectedFilter.label} ({selectedFilter.count} processos)</p>}
+      {selectedFilter && <p className="react-dashboard__filter-status" role="status">Filtro selecionado: {selectedFilter.label} ({selectedFilter.count} processos) <a href={selectedFilter.path}>Abrir processos filtrados</a></p>}
 
       {nextAction && <section className="react-dashboard__next-action" aria-labelledby="next-action-title">
         <div>
