@@ -46,6 +46,12 @@ class LegalCasesSnapshotTest < ActiveSupport::TestCase
     assert_equal [ @case.id ], snapshot.as_json.fetch(:legal_cases).pluck(:id)
   end
 
+  test "serializes no cases without an active unit outside all-units mode" do
+    snapshot = LegalCasesSnapshot.new(office: @office, unit: nil, all_units_mode: false, filters: {})
+
+    assert_empty snapshot.as_json.fetch(:legal_cases)
+  end
+
   test "marks every future deadline as upcoming" do
     future_case = create_full_legal_case(
       internal_number: "PROC-SNAPSHOT-003",

@@ -47,7 +47,8 @@ class LegalCasesSnapshot
   end
 
   def scope_by_unit(scope)
-    return scope if all_units_mode || unit.blank?
+    return scope if all_units_mode
+    return scope.none if unit.blank?
 
     scope.where(unit_id: unit.id)
   end
