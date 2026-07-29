@@ -3,6 +3,16 @@ class LegalCasesController < ApplicationController
 
   def index
     @filters = legal_case_filters
+    if request.format.json?
+      render json: LegalCasesSnapshot.new(
+        office: current_office,
+        unit: current_unit,
+        all_units_mode: all_units_mode?,
+        filters: @filters
+      ).as_json
+      return
+    end
+
     scope = scope_by_current_unit(current_office.legal_cases).includes(:client).order(updated_at: :desc)
     scope = LegalCaseQuery.new(scope, @filters).call
 

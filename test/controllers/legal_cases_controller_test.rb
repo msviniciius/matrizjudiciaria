@@ -37,6 +37,14 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "returns the legal cases snapshot as JSON" do
+    get legal_cases_url(format: :json), params: { status: "em_analise" }
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal [ @legal_case.id ], JSON.parse(response.body).fetch("legal_cases").pluck("id")
+  end
+
   test "should get new" do
     get new_legal_case_url
     assert_response :success
