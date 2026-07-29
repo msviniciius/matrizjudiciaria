@@ -29,7 +29,10 @@ test("renders the command center from the server snapshot", async () => {
       },
       risk_queue: {},
       feed: [{ title: "Protocolar manifestação", origin: "Prazo", internal_number: "SEI01", highlight: true, path: "/processos/1" }],
-      distribution: { phase: [], status: [] },
+      distribution: {
+        phase: [{ label: "Análise jurídica", count: 2, path: "/processos?phase=analise_juridica" }],
+        status: [{ label: "Em análise", count: 4, path: "/processos?status=em_analise" }]
+      },
       actions: { sync: "/painel/sync" }
     })
   }))
@@ -42,7 +45,36 @@ test("renders the command center from the server snapshot", async () => {
   expect(within(screen.getByRole("region", { name: "Próxima ação" })).getByRole("link", { name: /Protocolar manifestação/ })).toHaveAttribute("href", "/processos/1")
   expect(screen.getByText("Processos sem responsável")).toBeVisible()
   expect(screen.getByRole("link", { name: /^SEI01/ })).toHaveAttribute("href", "/processos/1")
+  expect(screen.getByRole("img", { name: "Distribuição por status" })).toBeVisible()
+  expect(screen.getByRole("img", { name: "Distribuição por fase" })).toBeVisible()
+  expect(screen.getByRole("button", { name: "Em análise: 4 processos" })).toBeVisible()
+  expect(screen.getByRole("button", { name: "Análise jurídica: 2 processos" })).toBeVisible()
   await waitFor(() => expect(screen.queryByRole("status", { name: /carregando/i })).not.toBeInTheDocument())
+})
+
+test("activates a chart filter with the keyboard", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: {}, critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] }, risk_queue: {}, feed: [],
+      distribution: {
+        phase: [],
+        status: [{ label: "Em análise", count: 4, path: "/processos?status=em_analise" }]
+      },
+      actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  render(<DashboardApp />)
+  const user = userEvent.setup()
+  const filter = await screen.findByRole("button", { name: "Em análise: 4 processos" })
+
+  filter.focus()
+  await user.keyboard("{Enter}")
+
+  expect(screen.getByRole("status")).toHaveTextContent("Filtro selecionado: Em análise (4 processos)")
+  expect(filter).toHaveAttribute("aria-pressed", "true")
 })
 
 test("updates a responsible person and confirms without reloading the page", async () => {

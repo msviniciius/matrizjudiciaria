@@ -139,8 +139,8 @@ class DashboardSnapshot
     status_counts = legal_cases.group(:status).count
 
     {
-      phase: phase_counts.map { |phase, count| { label: phase_label(phase), count: count } },
-      status: status_counts.map { |status, count| { label: status_label(status), count: count } }
+      phase: phase_counts.map { |phase, count| { label: phase_label(phase), count: count, path: legal_cases_path(phase: phase) } },
+      status: status_counts.map { |status, count| { label: status_label(status), count: count, path: legal_cases_path(status: status) } }
     }
   end
 
