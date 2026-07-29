@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { DashboardApp } from "./DashboardApp"
@@ -28,7 +28,7 @@ test("renders the command center from the server snapshot", async () => {
         overdue_deadlines_without_reason: []
       },
       risk_queue: {},
-      feed: [],
+      feed: [{ title: "Protocolar manifestação", origin: "Prazo", internal_number: "SEI01", highlight: true, path: "/processos/1" }],
       distribution: { phase: [], status: [] },
       actions: { sync: "/painel/sync" }
     })
@@ -37,6 +37,9 @@ test("renders the command center from the server snapshot", async () => {
   render(<DashboardApp />)
 
   expect(await screen.findByRole("heading", { name: "Fila de atenção" })).toBeVisible()
+  expect(screen.getByRole("heading", { name: "Próxima ação" })).toBeVisible()
+  expect(screen.getByRole("link", { name: /Prazos hoje.*3/ })).toHaveAttribute("href", "/prazos?due_state=today")
+  expect(within(screen.getByRole("region", { name: "Próxima ação" })).getByRole("link", { name: /Protocolar manifestação/ })).toHaveAttribute("href", "/processos/1")
   expect(screen.getByText("Processos sem responsável")).toBeVisible()
   expect(screen.getByRole("link", { name: /^SEI01/ })).toHaveAttribute("href", "/processos/1")
   await waitFor(() => expect(screen.queryByRole("status", { name: /carregando/i })).not.toBeInTheDocument())

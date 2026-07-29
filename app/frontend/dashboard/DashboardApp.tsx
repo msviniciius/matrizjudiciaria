@@ -40,6 +40,7 @@ export function DashboardApp() {
   if (!snapshot) return <p role="status">Carregando painel…</p>
 
   const queues = snapshot.critical_queues
+  const nextAction = snapshot.feed.find((item) => item.highlight)
 
   return (
     <main className="react-dashboard" aria-label="Painel operacional">
@@ -56,6 +57,15 @@ export function DashboardApp() {
       <section className="react-dashboard__kpis" aria-label="Indicadores operacionais">
         {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
       </section>
+
+      {nextAction && <section className="react-dashboard__next-action" aria-labelledby="next-action-title">
+        <div>
+          <p className="react-dashboard__eyebrow">Prioridade do momento</p>
+          <h3 id="next-action-title">Próxima ação</h3>
+          <p>{nextAction.origin} · {nextAction.internal_number}</p>
+        </div>
+        <a href={nextAction.path}>{nextAction.title}<span>Ver processo →</span></a>
+      </section>}
 
       <section className="react-dashboard__section">
         <h3>Fila de atenção</h3>
