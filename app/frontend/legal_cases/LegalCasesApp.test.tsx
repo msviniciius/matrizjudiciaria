@@ -21,7 +21,7 @@ const snapshotWith = (internalNumber: string, legalCases = [{
   deadline_tone: "upcoming",
   has_new_imported_events: false
 }]) => ({
-  meta: { office_name: "Aurora Advocacia", unit_name: "Contencioso", total_count: 1 },
+  meta: { office_name: "Aurora Advocacia", unit_name: "Contencioso", total_count: legalCases.length },
   filters: { q: "", phase: "", status: "", priority: "", responsible_name: "", deadline_state: "" },
   filter_options: {
     q: [],
@@ -87,5 +87,6 @@ test("offers an empty-state message and filter reset when no cases match", async
   render(<LegalCasesApp />)
 
   expect(await screen.findByText("Nenhum processo encontrado para estes filtros.")).toBeVisible()
+  expect(screen.getByRole("status")).toHaveTextContent("0 processo(s)")
   expect(screen.getByRole("button", { name: "Limpar filtros" })).toBeVisible()
 })
