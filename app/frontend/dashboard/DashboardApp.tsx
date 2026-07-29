@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { PhaseBars } from "./components/PhaseBars"
 import { StatusDonut, type DistributionItem } from "./components/StatusDonut"
 import { ContextPanel } from "./components/ContextPanel"
@@ -22,11 +22,14 @@ export function DashboardApp() {
   const [toast, setToast] = useState<string | null>(null)
   const [selectedFilter, setSelectedFilter] = useState<DistributionItem | null>(null)
   const [isContextPanelOpen, setIsContextPanelOpen] = useState(false)
+  const contextPanelTriggerRef = useRef<HTMLElement | null>(null)
 
   const selectFilter = (filter: DistributionItem) => {
+    contextPanelTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setSelectedFilter(filter)
     setIsContextPanelOpen(true)
   }
+  const closeContextPanel = useCallback(() => setIsContextPanelOpen(false), [])
 
   const loadSnapshot = () => fetch("/painel.json", { headers: { Accept: "application/json" } })
     .then((response) => response.ok ? response.json() : Promise.reject(new Error("Não foi possível carregar o painel.")))
@@ -53,7 +56,8 @@ export function DashboardApp() {
   const nextAction = snapshot.feed.find((item) => item.highlight)
 
   return (
-    <main className="react-dashboard" aria-label="Painel operacional">
+    <>
+    <main className="react-dashboard" inert={isContextPanelOpen || undefined} aria-label="Painel operacional">
       <header className="react-dashboard__header">
         <div>
           <p className="react-dashboard__eyebrow">{snapshot.meta.office_name} · painel operacional</p>
@@ -68,8 +72,6 @@ export function DashboardApp() {
         {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); selectFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
       </section>
       {selectedFilter && <p className="react-dashboard__filter-status" role="status">Filtro selecionado: {selectedFilter.label} ({selectedFilter.count} processos) <a href={selectedFilter.path}>Abrir processos filtrados</a></p>}
-      {selectedFilter && isContextPanelOpen && <ContextPanel filter={selectedFilter} onClose={() => setIsContextPanelOpen(false)} />}
-
       {nextAction && <section className="react-dashboard__next-action" aria-labelledby="next-action-title">
         <div>
           <p className="react-dashboard__eyebrow">Prioridade do momento</p>
@@ -95,6 +97,8 @@ export function DashboardApp() {
         <article className="react-dashboard__card"><h3>Distribuição por fase</h3><PhaseBars items={snapshot.distribution.phase} onSelect={selectFilter} selectedPath={selectedFilter?.path} /></article>
       </section>
     </main>
+    {selectedFilter && isContextPanelOpen && <ContextPanel filter={selectedFilter} onClose={closeContextPanel} returnFocusTo={contextPanelTriggerRef.current} />}
+    </>
   )
 }
 

@@ -77,6 +77,8 @@ test("activates a chart filter with the keyboard", async () => {
   expect(screen.getByRole("status")).toHaveTextContent("Filtro selecionado: Em análise (4 processos)")
   expect(filter).toHaveAttribute("aria-pressed", "true")
   expect(screen.getByRole("link", { name: "Abrir processos filtrados" })).toHaveAttribute("href", "/processos?status=em_analise")
+  await user.click(screen.getByRole("button", { name: "Fechar painel" }))
+  expect(filter).toHaveFocus()
 })
 
 test("keeps a KPI selection in the dashboard and exposes its Rails path", async () => {
@@ -109,7 +111,8 @@ test("opens a contextual panel for a KPI and keeps its selected filter after clo
 
   render(<DashboardApp />)
   const user = userEvent.setup()
-  await user.click(await screen.findByRole("link", { name: /Prazos hoje.*3/ }))
+  const kpi = await screen.findByRole("link", { name: /Prazos hoje.*3/ })
+  await user.click(kpi)
 
   const panel = screen.getByRole("dialog", { name: "Detalhes do filtro: Prazos hoje" })
   expect(within(panel).getByRole("heading", { name: "Detalhes do filtro: Prazos hoje" })).toBeVisible()
@@ -118,7 +121,35 @@ test("opens a contextual panel for a KPI and keeps its selected filter after clo
   await user.click(within(panel).getByRole("button", { name: "Fechar painel" }))
 
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  expect(kpi).toHaveFocus()
   expect(screen.getByRole("status")).toHaveTextContent("Filtro selecionado: Prazos hoje (3 processos)")
+})
+
+test("traps Tab navigation inside the contextual panel", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: { due_today: { label: "Prazos hoje", count: 3, path: "/prazos?due_state=today", tone: "warning" } },
+      critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] }, risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  render(<DashboardApp />)
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole("link", { name: /Prazos hoje.*3/ }))
+  const panel = screen.getByRole("dialog")
+  const close = within(panel).getByRole("button", { name: "Fechar painel" })
+  const processList = within(panel).getByRole("link", { name: "Ver processos filtrados" })
+
+  expect(screen.getByRole("main")).toHaveAttribute("inert")
+  expect(close).toHaveFocus()
+  await user.tab()
+  expect(processList).toHaveFocus()
+  await user.tab()
+  expect(close).toHaveFocus()
+  await user.tab({ shift: true })
+  expect(processList).toHaveFocus()
 })
 
 test("updates a responsible person and confirms without reloading the page", async () => {
