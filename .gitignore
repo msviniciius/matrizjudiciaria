@@ -31,6 +31,9 @@
 
 /public/assets
 
+# Local agent workspaces and visual brainstorming artifacts.
+/.worktrees/
+/.superpowers/
+
 # Ignore key files for decrypting credentials and more.
 /config/*.key
-
