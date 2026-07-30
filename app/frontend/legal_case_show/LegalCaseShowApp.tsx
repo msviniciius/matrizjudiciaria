@@ -162,8 +162,8 @@ export function LegalCaseShowApp() {
     <header className="react-legal-case-show__header">
       <div>
         <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
-        <h1>Central de comando</h1>
-        <p className="react-legal-case-show__client">{snapshot.case.client_name}</p>
+        <h1>{snapshot.case.client_name}</h1>
+        <p className="react-legal-case-show__client">Central de comando</p>
         <p className="react-legal-case-show__identifiers">{snapshot.case.external_number ? `CNJ: ${snapshot.case.external_number}` : "Sem número CNJ"}</p>
       </div>
       <div className="react-legal-case-show__badges" aria-label="Situação do processo">

@@ -135,7 +135,7 @@ test("renders the command center and opens an alerted deadline section", async (
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
   render(<LegalCaseShowApp />)
 
-  expect(await screen.findByRole("heading", { name: "Central de comando" })).toBeVisible()
+  expect(await screen.findByRole("heading", { name: "Cliente Aurora" })).toBeVisible()
   expect(screen.getByRole("region", { name: "Central de comando" })).toBeVisible()
   expect(screen.queryByRole("main")).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: /Prazos/ })).toHaveAttribute("aria-expanded", "true")
@@ -169,5 +169,5 @@ test("shows an error and retry action when the snapshot fails", async () => {
 
   expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível carregar")
   await userEvent.setup().click(screen.getByRole("button", { name: "Tentar novamente" }))
-  expect(await screen.findByRole("heading", { name: "Central de comando" })).toBeVisible()
+  expect(await screen.findByRole("heading", { name: "Cliente Aurora" })).toBeVisible()
 })
