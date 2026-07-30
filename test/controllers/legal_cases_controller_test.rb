@@ -192,6 +192,30 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Este processo não possui número externo (CNJ) configurado.", flash[:alert]
   end
 
+  test "sync returns JSON for the React detail screen" do
+    import_job = Pje::Ma::ImportCaseEventsJob
+    original_perform_now = import_job.method(:perform_now)
+    import_job.define_singleton_method(:perform_now) { |**| { imported: 1, skipped: 0 } }
+
+    begin
+      post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
+    ensure
+      import_job.define_singleton_method(:perform_now, original_perform_now)
+    end
+
+    assert_response :success
+    assert_equal "1 andamento(s) novo(s) importado(s) do CNJ. 0 já existiam.", response.parsed_body.fetch("message")
+  end
+
+  test "sync returns JSON validation feedback without an external number" do
+    @legal_case.update!(external_number: "")
+
+    post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
+
+    assert_response :unprocessable_entity
+    assert_equal "Este processo não possui número externo (CNJ) configurado.", response.parsed_body.fetch("error")
+  end
+
   test "should serve calendar feed in ics format with signed token" do
     get legal_case_calendar_feed_url(token: @legal_case.calendar_feed_token)
 

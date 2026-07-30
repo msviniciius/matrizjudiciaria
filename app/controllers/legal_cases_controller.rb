@@ -72,23 +72,26 @@ class LegalCasesController < ApplicationController
 
   def sync
     if @legal_case.external_number.blank?
-      redirect_to @legal_case, alert: "Este processo não possui número externo (CNJ) configurado."
-      return
+      return respond_to do |format|
+        format.html { redirect_to @legal_case, alert: "Este processo não possui número externo (CNJ) configurado." }
+        format.json { render json: { error: "Este processo não possui número externo (CNJ) configurado." }, status: :unprocessable_entity }
+      end
     end
 
     # Sincrono para feedback imediato (a API do CNJ leva ~8s)
     result = Pje::Ma::ImportCaseEventsJob.perform_now(legal_case_ids: [ @legal_case.id ], limit: 1)
+    message, status = sync_feedback(result)
 
-    if result[:imported] > 0
-      redirect_to @legal_case, notice: "#{result[:imported]} andamento(s) novo(s) importado(s) do CNJ. #{result[:skipped]} já existiam."
-    elsif result[:skipped] > 0
-      redirect_to @legal_case, notice: "Nenhum andamento novo. #{result[:skipped]} já estavam sincronizados."
-    else
-      redirect_to @legal_case, alert: "Nenhum andamento encontrado para este processo no CNJ."
+    respond_to do |format|
+      format.html { redirect_to @legal_case, flash: { status => message } }
+      format.json { render json: { message: message } }
     end
   rescue => e
     Rails.logger.error "[PJE_MA] Erro na sincronização manual: #{e.message}"
-    redirect_to @legal_case, alert: "Erro ao sincronizar: #{e.message}"
+    respond_to do |format|
+      format.html { redirect_to @legal_case, alert: "Erro ao sincronizar: #{e.message}" }
+      format.json { render json: { error: "Erro ao sincronizar: #{e.message}" }, status: :internal_server_error }
+    end
   end
 
   def new
@@ -229,6 +232,16 @@ class LegalCasesController < ApplicationController
 
     payload[:warning] = I18n.t("legal_cases.warnings.next_action_blank")
     payload
+  end
+
+  def sync_feedback(result)
+    if result[:imported] > 0
+      [ "#{result[:imported]} andamento(s) novo(s) importado(s) do CNJ. #{result[:skipped]} já existiam.", :notice ]
+    elsif result[:skipped] > 0
+      [ "Nenhum andamento novo. #{result[:skipped]} já estavam sincronizados.", :notice ]
+    else
+      [ "Nenhum andamento encontrado para este processo no CNJ.", :alert ]
+    end
   end
 
   def legal_case_filters
