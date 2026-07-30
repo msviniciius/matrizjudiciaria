@@ -32,10 +32,9 @@
               <td><%= client.email.presence || "-" %></td>
               <td><%= client.cadastro_pendente? ? "Cadastro pendente" : "Completo" %></td>
               <td class="table-actions">
-                <%= link_to "Ver", client_path(client), class: "btn btn-secondary" %>
                 <%= link_to "Editar", edit_client_path(client), class: "btn btn-secondary" %>
-                <%= link_to "Processos", client_path(client), class: "btn btn-secondary" %>
-                <%= button_to "Excluir", client_path(client), method: :delete, class: "btn btn-secondary", form: { data: { turbo_confirm: "Excluir este cliente?" } } %>
+                <% delete_confirmation = client.legal_cases.size.positive? ? "Este cliente possui #{client.legal_cases.size} #{client.legal_cases.size == 1 ? 'processo vinculado' : 'processos vinculados'}. Deseja continuar com a exclusão?" : "Excluir este cliente?" %>
+                <%= button_to "Excluir", client_path(client), method: :delete, class: "btn btn-secondary", form: { data: { turbo_confirm: delete_confirmation } } %>
               </td>
             </tr>
           <% end %>

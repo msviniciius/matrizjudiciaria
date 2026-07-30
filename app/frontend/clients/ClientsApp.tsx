@@ -175,11 +175,12 @@ function ClientsTable({ clients }: { clients: Client[] }) {
 function ClientActions({ client, compact = false }: { client: Client; compact?: boolean }) {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
   const className = compact ? "react-clients__actions react-clients__actions--compact" : "react-clients__actions"
+  const confirmationMessage = client.legal_cases_count > 0
+    ? `Este cliente possui ${client.legal_cases_count} ${client.legal_cases_count === 1 ? "processo vinculado" : "processos vinculados"}. Deseja continuar com a exclusão?`
+    : "Excluir este cliente?"
   return <div className={className}>
-    <a href={client.path} aria-label={`Ver cliente ${client.full_name}`}>Ver</a>
     <a href={client.edit_path} aria-label={`Editar cliente ${client.full_name}`}>Editar</a>
-    <a href={client.processes_path} aria-label={`Ver processos de ${client.full_name}`}>Processos</a>
-    <form action={client.delete_path} method="post" onSubmit={(event) => { if (!window.confirm("Excluir este cliente?")) event.preventDefault() }}>
+    <form action={client.delete_path} method="post" onSubmit={(event) => { if (!window.confirm(confirmationMessage)) event.preventDefault() }}>
       <input type="hidden" name="_method" value="delete" />
       {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
       <button type="submit" aria-label={`Excluir cliente ${client.full_name}`}>Excluir</button>

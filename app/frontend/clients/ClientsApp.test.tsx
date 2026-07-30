@@ -62,7 +62,7 @@ test("uses the containing Rails main landmark without nesting another main", asy
   expect(container.querySelector(".react-clients")?.tagName).toBe("DIV")
 })
 
-test("loads client cards with status, process count and Rails actions", async () => {
+test("loads client cards with status and only edit/delete actions", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith())))
 
   render(<ClientsApp />)
@@ -70,9 +70,9 @@ test("loads client cards with status, process count and Rails actions", async ()
   const card = await screen.findByRole("article", { name: /Cliente Aurora/ })
   expect(card).toHaveTextContent("Cadastro pendente")
   expect(card).toHaveTextContent("3 processos")
-  expect(screen.getByRole("link", { name: "Ver cliente Cliente Aurora" })).toHaveAttribute("href", "/clients/1")
   expect(screen.getByRole("link", { name: "Editar cliente Cliente Aurora" })).toHaveAttribute("href", "/clients/1/edit")
-  expect(screen.getByRole("link", { name: "Ver processos de Cliente Aurora" })).toHaveAttribute("href", "/clients/1")
+  expect(screen.queryByRole("link", { name: "Ver cliente Cliente Aurora" })).not.toBeInTheDocument()
+  expect(screen.queryByRole("link", { name: "Ver processos de Cliente Aurora" })).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: "Excluir cliente Cliente Aurora" })).toBeVisible()
 })
 
@@ -145,7 +145,7 @@ test("shows the empty state and keeps filter reset available", async () => {
 })
 
 test("uses CSRF confirmation semantics before submitting client deletion", async () => {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith())))
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([clientWith("Cliente Aurora", { legal_cases_count: 0 })]))))
   const csrf = document.createElement("meta")
   csrf.name = "csrf-token"
   csrf.content = "csrf-clients-token"
@@ -158,6 +158,16 @@ test("uses CSRF confirmation semantics before submitting client deletion", async
   expect(confirmMock).toHaveBeenCalledWith("Excluir este cliente?")
   expect(screen.getByRole("button", { name: "Excluir cliente Cliente Aurora" }).closest("form")).toHaveAttribute("action", "/clients/1")
   csrf.remove()
+})
+
+test("warns before deleting a client with linked processes", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([clientWith("Cliente com processos", { legal_cases_count: 3 })]))))
+  const confirmMock = vi.spyOn(window, "confirm").mockReturnValue(false)
+
+  render(<ClientsApp />)
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Excluir cliente Cliente com processos" }))
+
+  expect(confirmMock).toHaveBeenCalledWith("Este cliente possui 3 processos vinculados. Deseja continuar com a exclusão?")
 })
 
 test("ignores an older response after a newer filter result", async () => {
