@@ -62,6 +62,45 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes body.fetch("clients").map { |entry| entry.fetch("id") }, other_client.id
   end
 
+  test "index JSON filters pending clients by city and serializes blank contact fields as strings" do
+    active_unit = Unit.create!(office: default_office, name: "Contencioso filtros")
+    matching_client = create_client(
+      full_name: "Cadastro pendente São Luís",
+      cpf_cnpj: "44444444444",
+      cadastro_pendente: true,
+      city: "São Luís",
+      unit: active_unit
+    )
+    create_client(
+      full_name: "Cadastro completo São Luís",
+      cpf_cnpj: "55555555555",
+      cadastro_pendente: false,
+      city: "São Luís",
+      unit: active_unit
+    )
+    create_client(
+      full_name: "Cadastro pendente Imperatriz",
+      cpf_cnpj: "66666666666",
+      cadastro_pendente: true,
+      city: "Imperatriz",
+      unit: active_unit
+    )
+    sign_in_and_select(active_unit)
+
+    get clients_url(format: :json), params: { cadastro_pendente: "true", city: "São Luís" }
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal 1, body.dig("meta", "total_count")
+    assert_equal({ "q" => "", "cadastro_pendente" => "true", "city" => "São Luís" }, body.fetch("filters"))
+
+    client = body.fetch("clients").sole
+    assert_equal matching_client.id, client.fetch("id")
+    assert_equal "", client.fetch("phone")
+    assert_equal "", client.fetch("email")
+    assert_equal "São Luís", client.fetch("city")
+  end
+
   test "should get new" do
     get new_client_url
     assert_response :success
