@@ -35,7 +35,7 @@
     <div class="app-background"></div>
 
     <div class="app-layout" data-sidebar-layout>
-      <aside class="app-sidebar">
+      <aside class="app-sidebar" data-legal-case-sync-background>
         <div class="app-sidebar__brand">
           <span class="app-sidebar__brand-mark" aria-hidden="true">&#9878;</span>
           <span class="app-sidebar__brand-name"><%= app_product_name %></span>
@@ -170,11 +170,12 @@
         type="button"
         class="app-sidebar-overlay"
         data-sidebar-overlay
+        data-legal-case-sync-background
         aria-label="Fechar menu lateral"
       ></button>
 
       <div class="app-content">
-        <header class="app-navbar">
+        <header class="app-navbar" data-legal-case-sync-background>
           <div class="app-navbar__tools">
             <button
               type="button"
@@ -303,7 +304,7 @@
 
         <main class="app-main">
           <% if current_user.present? %>
-            <section class="mobile-install-banner" data-mobile-install-banner hidden>
+            <section class="mobile-install-banner" data-mobile-install-banner data-legal-case-sync-background hidden>
               <div class="mobile-install-banner__head">
                 <h3>Adicionar à Tela de Início</h3>
                 <button type="button" class="mobile-install-banner__link" data-mobile-install-dismiss>Agora não</button>
@@ -325,7 +326,7 @@
           <% end %>
 
           <% if content_for?(:topbar_actions) %>
-            <header class="topbar topbar--actions-only">
+            <header class="topbar topbar--actions-only" data-legal-case-sync-background>
               <div class="topbar-actions">
                 <%= yield :topbar_actions %>
               </div>
@@ -343,7 +344,7 @@
       </div>
     </div>
 
-    <dialog id="app-confirm-modal" class="confirm-modal" hidden>
+    <dialog id="app-confirm-modal" class="confirm-modal" data-legal-case-sync-background hidden>
       <div class="confirm-modal__header">
         <h3>Confirmar ação</h3>
       </div>

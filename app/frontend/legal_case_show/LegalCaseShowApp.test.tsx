@@ -130,8 +130,17 @@ const okResponse = (body: unknown) => ({ ok: true, json: async () => body })
 afterEach(() => {
   vi.unstubAllGlobals()
   document.querySelector('meta[name="csrf-token"]')?.remove()
+  document.querySelectorAll('[data-legal-case-sync-background]').forEach((element) => element.remove())
   window.history.replaceState({}, "", "/")
 })
+
+function addSyncBackgroundRegion() {
+  const region = document.createElement("nav")
+  region.dataset.legalCaseSyncBackground = ""
+  region.innerHTML = '<a href="/legal_cases">Processos</a>'
+  document.body.append(region)
+  return region
+}
 
 test("renders the command center and opens an alerted deadline section", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
@@ -207,6 +216,55 @@ test("synchronizes from the detail screen without a page reload", async () => {
   expect(fetchMock).toHaveBeenNthCalledWith(2, "/legal_cases/1/sync", expect.objectContaining({
     method: "POST", headers: expect.objectContaining({ "X-CSRF-Token": "csrf-detail-token" })
   }))
+})
+
+test("inerts external shell regions only while synchronization is pending", async () => {
+  const shellRegion = addSyncBackgroundRegion()
+  let resolveSync!: (response: unknown) => void
+  const pendingSync = new Promise<unknown>((resolve) => { resolveSync = resolve })
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockReturnValueOnce(pendingSync)
+    .mockResolvedValueOnce(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Atualizar andamentos" }))
+
+  expect(shellRegion).toHaveAttribute("inert")
+  expect(screen.getByTestId("legal-case-sync-overlay")).not.toHaveAttribute("inert")
+
+  resolveSync(okResponse({ message: "Andamentos atualizados." }))
+  await waitFor(() => expect(shellRegion).not.toHaveAttribute("inert"))
+})
+
+test("removes inert from external shell regions after a sync error and on unmount", async () => {
+  const shellRegion = addSyncBackgroundRegion()
+  let rejectSync!: (error: Error) => void
+  const pendingSync = new Promise<unknown>((_resolve, reject) => { rejectSync = reject })
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockReturnValueOnce(pendingSync))
+  const { unmount } = render(<LegalCaseShowApp />)
+
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Atualizar andamentos" }))
+  expect(shellRegion).toHaveAttribute("inert")
+
+  rejectSync(new Error("Serviço indisponível."))
+  await waitFor(() => expect(shellRegion).not.toHaveAttribute("inert"))
+
+  let resolveSecondSync!: (response: unknown) => void
+  const secondPendingSync = new Promise<unknown>((resolve) => { resolveSecondSync = resolve })
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockReturnValueOnce(secondPendingSync))
+  unmount()
+  const secondRender = render(<LegalCaseShowApp />)
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Atualizar andamentos" }))
+  expect(shellRegion).toHaveAttribute("inert")
+
+  secondRender.unmount()
+  expect(shellRegion).not.toHaveAttribute("inert")
+  resolveSecondSync(okResponse({ message: "Ignorado após desmontagem." }))
 })
 
 test("removes the native synchronization control from the legal case view", () => {

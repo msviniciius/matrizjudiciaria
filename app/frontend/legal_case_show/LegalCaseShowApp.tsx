@@ -149,6 +149,19 @@ export function LegalCaseShowApp() {
     loadSnapshot()
   }, [])
 
+  useEffect(() => {
+    if (!syncPending) return
+
+    const backgroundRegions = Array.from(document.querySelectorAll<HTMLElement>("[data-legal-case-sync-background]"))
+      .filter((element) => !element.hasAttribute("inert"))
+
+    backgroundRegions.forEach((element) => element.setAttribute("inert", ""))
+
+    return () => {
+      backgroundRegions.forEach((element) => element.removeAttribute("inert"))
+    }
+  }, [syncPending])
+
   if (isLoading && !snapshot) {
     return <section className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><p role="status">Carregando processo…</p></section>
   }
