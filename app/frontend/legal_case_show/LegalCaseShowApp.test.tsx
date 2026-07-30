@@ -140,6 +140,17 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(screen.getByRole("link", { name: "Editar processo" })).toHaveAttribute("href", "/legal_cases/1/edit")
 })
 
+test("describes an empty timeline and exposes each operational section through a heading toggle", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([]))))
+  render(<LegalCaseShowApp />)
+
+  expect(await screen.findByText("Nenhum andamento cadastrado.")).toBeVisible()
+  ;["Prazos", "Tarefas", "Perícias"].forEach((title) => {
+    expect(screen.getByRole("heading", { name: title })).toBeVisible()
+    expect(screen.getByRole("button", { name: title })).toBeVisible()
+  })
+})
+
 test("reveals older timeline items on demand and keeps actions as links", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWithSixTimelineItems)))
   render(<LegalCaseShowApp />)

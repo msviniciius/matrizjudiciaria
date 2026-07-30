@@ -43,6 +43,15 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#react-legal-cases-root"
     assert_select "script[src*='legal_cases']"
+    assert_select "script[src*='legal_case_show']", count: 0
+  end
+
+  test "show mounts the React command center" do
+    get legal_case_url(@legal_case)
+
+    assert_response :success
+    assert_select "#react-legal-case-show-root"
+    assert_select "script[src*='legal_case_show']"
   end
 
   test "Vite manifest exposes the legal cases entrypoint" do

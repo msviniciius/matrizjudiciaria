@@ -23,7 +23,9 @@
       <%= vite_react_refresh_tag %>
     <% end %>
     <%= vite_javascript_tag "dashboard.tsx" if controller_name == "dashboard" %>
-    <%= vite_javascript_tag "legal_cases.tsx" if controller_name == "legal_cases" %>
+    <% if controller_name == "legal_cases" %>
+      <%= vite_javascript_tag(action_name == "show" ? "legal_case_show.tsx" : "legal_cases.tsx") %>
+    <% end %>
 
   </head>
 

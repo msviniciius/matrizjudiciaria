@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import "./legalCaseShow.css"
 
 type TimelineItem = {
   id: number
@@ -142,11 +143,11 @@ export function LegalCaseShowApp() {
   }, [])
 
   if (isLoading && !snapshot) {
-    return <main aria-label="Central de comando"><p role="status">Carregando processo…</p></main>
+    return <main className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><p role="status">Carregando processo…</p></main>
   }
 
   if (error && !snapshot) {
-    return <main aria-label="Central de comando"><section role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section></main>
+    return <main className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><section className="react-legal-case-show__error" role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section></main>
   }
 
   if (!snapshot) return null
@@ -156,26 +157,34 @@ export function LegalCaseShowApp() {
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
 
   return <main className="react-legal-case-show" aria-label="Central de comando">
-    <header>
-      <p>Processo {snapshot.case.internal_number}</p>
-      <h1>Central de comando</h1>
-      <p>{snapshot.case.client_name}</p>
-      {snapshot.case.external_number && <p>CNJ: {snapshot.case.external_number}</p>}
-      <p>{snapshot.case.phase_label} · {snapshot.case.status_label} · Prioridade {snapshot.case.priority_label}</p>
-      <AlertSummary alerts={snapshot.alerts} />
+    <header className="react-legal-case-show__header">
+      <div>
+        <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
+        <h1>Central de comando</h1>
+        <p className="react-legal-case-show__client">{snapshot.case.client_name}</p>
+        <p className="react-legal-case-show__identifiers">{snapshot.case.external_number ? `CNJ: ${snapshot.case.external_number}` : "Sem número CNJ"}</p>
+      </div>
+      <div className="react-legal-case-show__badges" aria-label="Situação do processo">
+        <span className="react-legal-case-show__badge">{snapshot.case.phase_label}</span>
+        <span className="react-legal-case-show__badge">{snapshot.case.status_label}</span>
+        <span className="react-legal-case-show__badge react-legal-case-show__badge--priority">Prioridade {snapshot.case.priority_label}</span>
+        <AlertSummary alerts={snapshot.alerts} />
+      </div>
     </header>
 
-    {error && <section role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section>}
-    {isLoading && <p role="status">Atualizando processo…</p>}
+    {error && <section className="react-legal-case-show__error" role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section>}
+    {isLoading && <p className="react-legal-case-show__refreshing" role="status">Atualizando processo…</p>}
 
-    <section aria-labelledby="next-action-heading">
+    <div className="react-legal-case-show__layout">
+    <div className="react-legal-case-show__main-column">
+    <section className="react-legal-case-show__next-action" aria-labelledby="next-action-heading">
       <h2 id="next-action-heading">Próxima providência</h2>
       <p>{snapshot.next_action.description}</p>
-      <dl>
+      <dl className="react-legal-case-show__metrics">
         <div><dt>Próximo prazo</dt><dd>{snapshot.next_action.deadline_label}</dd></div>
         <div><dt>Último andamento</dt><dd>{snapshot.next_action.last_movement_label}</dd></div>
       </dl>
-      <nav aria-label="Ações do processo">
+      <nav className="react-legal-case-show__actions" aria-label="Ações do processo">
         <a href={snapshot.actions.edit}>Editar processo</a>
         <a href={snapshot.actions.new_movement}>Novo andamento</a>
         <a href={snapshot.actions.new_deadline}>Novo prazo</a>
@@ -184,23 +193,23 @@ export function LegalCaseShowApp() {
       </nav>
     </section>
 
-    <section aria-labelledby="timeline-heading">
+    <section className="react-legal-case-show__timeline" aria-labelledby="timeline-heading">
       <h2 id="timeline-heading">Timeline</h2>
       {visibleTimeline.length ? <ol>
-        {visibleTimeline.map((item) => <li key={`${item.source}-${item.id}`}>
-          <p>{item.source_label || item.source} · {item.occurred_at_label}</p>
+        {visibleTimeline.map((item) => <li className={item.highlight ? "react-legal-case-show__timeline-item react-legal-case-show__timeline-item--highlight" : "react-legal-case-show__timeline-item"} key={`${item.source}-${item.id}`}>
+          <p className="react-legal-case-show__timeline-meta">{item.source_label || item.source} · {item.occurred_at_label}</p>
           <h3>{item.title}</h3>
           {item.description && <p>{item.description}</p>}
           {item.movement_type && <p>{item.movement_type}</p>}
           {item.exam_summary && <p>Perícia: {item.exam_summary}</p>}
         </li>)}
       </ol> : <p>Nenhum andamento cadastrado.</p>}
-      {remainingTimelineItems > 0 && <button type="button" onClick={() => setShowAllTimeline(true)}>Mostrar mais {remainingTimelineItems} andamento(s) anterior(es)</button>}
+      {remainingTimelineItems > 0 && <button className="react-legal-case-show__timeline-more" type="button" onClick={() => setShowAllTimeline(true)}>Mostrar mais {remainingTimelineItems} andamento(s) anterior(es)</button>}
     </section>
 
     <OperationalSection title="Prazos" hasAlert={deadlineAlert}>
       <CollectionEmpty items={snapshot.deadlines} message="Nenhum prazo cadastrado.">
-        {snapshot.deadlines.map((deadline) => <article key={deadline.id}>
+        {snapshot.deadlines.map((deadline) => <article className="react-legal-case-show__operational-item" key={deadline.id}>
           <h3><a href={deadline.path}>{deadline.title}</a></h3>
           <p>{deadline.due_date_label} · {deadline.status_label} · Prioridade {deadline.priority_label}</p>
           <p>Responsável: {deadline.responsible_name}</p>
@@ -210,7 +219,7 @@ export function LegalCaseShowApp() {
 
     <OperationalSection title="Tarefas" hasAlert={snapshot.alerts.next_action_warning}>
       <CollectionEmpty items={snapshot.tasks} message="Nenhuma tarefa cadastrada.">
-        {snapshot.tasks.map((task) => <article key={task.id}>
+        {snapshot.tasks.map((task) => <article className="react-legal-case-show__operational-item" key={task.id}>
           <h3><a href={task.path}>{task.title}</a></h3>
           {task.description && <p>{task.description}</p>}
           <p>{task.due_date_label} · {task.status_label} · Prioridade {task.priority_label}</p>
@@ -221,7 +230,7 @@ export function LegalCaseShowApp() {
 
     <OperationalSection title="Perícias" hasAlert={snapshot.alerts.exam_pending}>
       <CollectionEmpty items={snapshot.exams} message="Nenhuma perícia cadastrada.">
-        {snapshot.exams.map((exam) => <article key={exam.id}>
+        {snapshot.exams.map((exam) => <article className="react-legal-case-show__operational-item" key={exam.id}>
           <h3><a href={exam.path}>Perícia {exam.nature_label}</a></h3>
           <p>{exam.scope_label} · {exam.scheduled_label} · {exam.status_label}</p>
           <p>Local: {exam.location} · Perito: {exam.expert_name}</p>
@@ -230,7 +239,9 @@ export function LegalCaseShowApp() {
       </CollectionEmpty>
     </OperationalSection>
 
-    <section aria-labelledby="case-data-heading">
+    </div>
+    <aside className="react-legal-case-show__rail" aria-label="Contexto do processo">
+    <section className="react-legal-case-show__case-data" aria-labelledby="case-data-heading">
       <h2 id="case-data-heading">Dados do processo</h2>
       <dl>
         <div><dt>Responsável</dt><dd>{snapshot.case.responsible_name}</dd></div>
@@ -243,12 +254,14 @@ export function LegalCaseShowApp() {
       </dl>
     </section>
 
-    <nav aria-label="Atalhos do processo">
+    <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
       <a href={snapshot.actions.pdf}>Exportar PDF</a>
       <a href={snapshot.actions.calendar}>Adicionar ao calendário</a>
       <a href={snapshot.actions.index}>Voltar aos processos</a>
       {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} />}
     </nav>
+    </aside>
+    </div>
   </main>
 }
 
@@ -262,16 +275,19 @@ function AlertSummary({ alerts }: { alerts: Snapshot["alerts"] }) {
     alerts.has_new_imported_events && "Novos andamentos"
   ].filter(Boolean)
 
-  return <p>{alertLabels.length ? alertLabels.join(" · ") : `Saúde: ${alerts.health_status}`}</p>
+  return <>
+    <span className={`react-legal-case-show__badge react-legal-case-show__badge--health react-legal-case-show__badge--health-${alerts.health_status}`}>Saúde: {alerts.health_status}</span>
+    {alertLabels.map((label) => <span className="react-legal-case-show__badge react-legal-case-show__badge--alert" key={label}>{label}</span>)}
+  </>
 }
 
 function OperationalSection({ title, hasAlert, children }: { title: string; hasAlert: boolean; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(hasAlert)
   const contentId = `legal-case-show-${title.toLocaleLowerCase("pt-BR")}`
 
-  return <section>
-    <h2><button type="button" aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}>{title}</button></h2>
-    <div id={contentId} hidden={!isOpen}>{children}</div>
+  return <section className="react-legal-case-show__operational-section">
+    <h2><button type="button" aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
+    <div className="react-legal-case-show__operational-content" id={contentId} hidden={!isOpen}>{children}</div>
   </section>
 }
 
@@ -282,7 +298,7 @@ function CollectionEmpty<T>({ items, message, children }: { items: T[]; message:
 function SyncForm({ action }: { action: NonNullable<Snapshot["actions"]["sync"]> }) {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
 
-  return <form action={action.path} method={action.method}>
+  return <form className="react-legal-case-show__sync-form" action={action.path} method={action.method}>
     {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
     <button type="submit">Atualizar andamentos</button>
   </form>
