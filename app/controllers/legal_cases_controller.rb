@@ -244,7 +244,7 @@ class LegalCasesController < ApplicationController
   end
 
   def sync_success(message, status)
-    return render json: { message: message } if sync_json_request?
+    return render json: { message: message, level: status.to_s } if sync_json_request?
 
     redirect_to @legal_case, flash: { status => message }
   end

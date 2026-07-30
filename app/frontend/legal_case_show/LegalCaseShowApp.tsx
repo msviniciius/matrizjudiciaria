@@ -186,7 +186,11 @@ export function LegalCaseShowApp() {
       const body = await response.json()
       if (!response.ok) throw new Error(body.error || "Não foi possível sincronizar os andamentos.")
       await loadSnapshot()
-      setSyncMessage(body.message)
+      if (body.level === "alert") {
+        setSyncError(body.message)
+      } else {
+        setSyncMessage(body.message)
+      }
     } catch (syncFailure) {
       setSyncError(syncFailure instanceof Error ? syncFailure.message : "Não foi possível sincronizar os andamentos.")
     } finally {

@@ -286,3 +286,16 @@ test("shows a sync error and re-enables the button when the request fails", asyn
   expect(await screen.findByRole("alert")).toHaveTextContent("Serviço indisponível.")
   expect(button).toBeEnabled()
 })
+
+test("renders a no-movement sync response as an alert", async () => {
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce(okResponse({ message: "Nenhum andamento encontrado para este processo no CNJ.", level: "alert" }))
+    .mockResolvedValueOnce(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Atualizar andamentos" }))
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Nenhum andamento encontrado para este processo no CNJ.")
+  expect(screen.queryByRole("status", { name: /nenhum andamento encontrado/i })).not.toBeInTheDocument()
+})

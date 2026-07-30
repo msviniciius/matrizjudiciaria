@@ -199,6 +199,17 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "1 andamento(s) novo(s) importado(s) do CNJ. 0 já existiam.", response.parsed_body.fetch("message")
+    assert_equal "notice", response.parsed_body.fetch("level")
+  end
+
+  test "sync returns an alert level when no new movement is found" do
+    post sync_legal_case_url(@legal_case),
+      headers: { "ACCEPT" => "application/json" },
+      env: { "legal_cases.sync_importer" => ->(**) { { imported: 0, skipped: 0 } } }
+
+    assert_response :success
+    assert_equal "Nenhum andamento encontrado para este processo no CNJ.", response.parsed_body.fetch("message")
+    assert_equal "alert", response.parsed_body.fetch("level")
   end
 
   test "sync returns JSON validation feedback without an external number" do
