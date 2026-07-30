@@ -26,6 +26,15 @@ class ClientsController < ApplicationController
 
     @clients = scope
     @advanced_filters_open = false
+
+    return unless request.format.json?
+
+    render json: ClientsSnapshot.new(
+      office: current_office,
+      unit: current_unit,
+      clients: @clients,
+      filters: @filters
+    ).as_json
   end
 
   def show
