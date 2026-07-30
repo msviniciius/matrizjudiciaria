@@ -45,6 +45,12 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='legal_cases']"
   end
 
+  test "Vite manifest exposes the legal cases entrypoint" do
+    entrypoint_path = ViteRuby.instance.manifest.path_for("legal_cases.tsx")
+
+    assert_match %r{/vite-test/assets/legal_cases-.*\.js\z}, entrypoint_path
+  end
+
   test "returns an empty legal cases snapshot as JSON without an active unit" do
     get legal_cases_url(format: :json), params: { status: "em_analise" }
 

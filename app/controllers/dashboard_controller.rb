@@ -96,14 +96,14 @@ class DashboardController < ApplicationController
         .limit(6)
     }
 
-    @new_imported_events_count = current_office.legal_cases.with_new_imported_events.count
-    @syncable_count = current_office.legal_cases.syncable.count
+    @new_imported_events_count = dashboard_legal_cases_scope.with_new_imported_events.count
+    @syncable_count = dashboard_legal_cases_scope.syncable.count
 
     @chart_data = build_chart_data
   end
 
   def quick_update_case_responsible
-    legal_case = current_office.legal_cases.find(params.expect(:id))
+    legal_case = dashboard_legal_cases_scope.find(params.expect(:id))
     responsible_name = params[:responsible_name].to_s.strip
 
     if responsible_name.blank?
@@ -116,7 +116,7 @@ class DashboardController < ApplicationController
   end
 
   def quick_update_case_next_action
-    legal_case = current_office.legal_cases.find(params.expect(:id))
+    legal_case = dashboard_legal_cases_scope.find(params.expect(:id))
     next_action = params[:next_action].to_s.strip
 
     if next_action.blank?
@@ -129,7 +129,7 @@ class DashboardController < ApplicationController
   end
 
   def quick_update_deadline_reason
-    deadline = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+    deadline = Deadline.joins(:legal_case).merge(dashboard_legal_cases_scope).find(params.expect(:id))
     delay_reason = params[:delay_reason].to_s.strip
 
     if delay_reason.blank?
@@ -142,7 +142,7 @@ class DashboardController < ApplicationController
   end
 
   def quick_update_task_responsible
-    task = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+    task = Task.joins(:legal_case).merge(dashboard_legal_cases_scope).find(params.expect(:id))
     responsible_name = params[:responsible_name].to_s.strip
 
     if responsible_name.blank?
@@ -156,7 +156,8 @@ class DashboardController < ApplicationController
 
   def sync_all
     tribunals = current_office.enabled_tribunal_codes
-    count = current_office.legal_cases.syncable.count
+    legal_case_ids = dashboard_legal_cases_scope.syncable.order(:id).ids
+    count = legal_case_ids.size
 
     if tribunals.empty?
       respond_with_dashboard_error("Nenhum tribunal configurado. Acesse Configurações > Integrações para habilitar.")
@@ -168,12 +169,23 @@ class DashboardController < ApplicationController
       return
     end
 
-    Pje::Ma::ImportCaseEventsJob.perform_later(office_id: current_office.id)
+    Pje::Ma::ImportCaseEventsJob.perform_later(
+      office_id: current_office.id,
+      legal_case_ids: legal_case_ids
+    )
 
     respond_with_dashboard_success("Sincronização iniciada para #{count} processo(s) em #{tribunals.size} tribunal(is). Os andamentos aparecerão em instantes.", accepted: true)
   end
 
   private
+
+  def dashboard_legal_cases_scope
+    scope = current_office.legal_cases
+    return scope if all_units_mode?
+    return scope.none if current_unit.blank?
+
+    scope.where(unit_id: current_unit.id)
+  end
 
   def dashboard_snapshot
     @dashboard_snapshot ||= DashboardSnapshot.new(

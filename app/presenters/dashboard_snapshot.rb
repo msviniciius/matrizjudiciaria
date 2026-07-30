@@ -1,6 +1,8 @@
 class DashboardSnapshot
   include Rails.application.routes.url_helpers
 
+  CONTEXT_ITEMS_LIMIT = 6
+
   def initialize(office:, unit:, all_units_mode:)
     @office = office
     @unit = unit
@@ -47,7 +49,8 @@ class DashboardSnapshot
   end
 
   def apply_unit_scope(scope)
-    return scope if all_units_mode || unit.blank?
+    return scope if all_units_mode
+    return scope.none if unit.blank?
 
     if scope.klass.column_names.include?("unit_id")
       scope.where(unit_id: unit.id)
@@ -57,18 +60,25 @@ class DashboardSnapshot
   end
 
   def kpis
+    deadline_soon = legal_cases.with_upcoming_deadline
+    without_deadline = legal_cases.without_deadline
+    at_risk = legal_cases.select(&:health_status_vermelho?)
+    overdue_deadlines = deadlines.where("due_date < ?", Date.current).where.not(status: :completed)
+    due_today = deadlines.where(due_date: Date.current).where.not(status: :completed)
+    tasks_today = tasks.where(due_date: Date.current).where.not(status: :completed)
+
     {
-      deadline_soon: kpi("Prazo próximo", legal_cases.with_upcoming_deadline.count, legal_cases_path(deadline_state: "upcoming"), "warning"),
-      without_deadline: kpi("Sem prazo", legal_cases.without_deadline.count, legal_cases_path(deadline_state: "without_deadline"), "neutral"),
-      at_risk: kpi("Em risco", legal_cases.count(&:health_status_vermelho?), legal_cases_path(health: "critica"), "danger"),
-      overdue_deadlines: kpi("Prazos vencidos", deadlines.where("due_date < ?", Date.current).where.not(status: :completed).count, deadlines_path(due_state: "overdue"), "danger"),
-      due_today: kpi("Prazos hoje", deadlines.where(due_date: Date.current).where.not(status: :completed).count, deadlines_path(due_state: "today"), "warning"),
-      tasks_today: kpi("Tarefas hoje", tasks.where(due_date: Date.current).where.not(status: :completed).count, tasks_path(due_state: "today"), "info")
+      deadline_soon: kpi("Prazo próximo", deadline_soon.count, legal_cases_path(deadline_state: "upcoming"), "warning", deadline_soon),
+      without_deadline: kpi("Sem prazo", without_deadline.count, legal_cases_path(deadline_state: "without_deadline"), "neutral", without_deadline),
+      at_risk: kpi("Em risco", at_risk.count, legal_cases_path(health: "critica"), "danger", at_risk),
+      overdue_deadlines: kpi("Prazos vencidos", overdue_deadlines.count, deadlines_path(due_state: "overdue"), "danger", overdue_deadlines),
+      due_today: kpi("Prazos hoje", due_today.count, deadlines_path(due_state: "today"), "warning", due_today),
+      tasks_today: kpi("Tarefas hoje", tasks_today.count, tasks_path(due_state: "today"), "info", tasks_today)
     }
   end
 
-  def kpi(label, count, path, tone)
-    { label: label, count: count, path: path, tone: tone }
+  def kpi(label, count, path, tone, records)
+    { label: label, count: count, path: path, tone: tone, items: context_items(records) }
   end
 
   def critical_queues
@@ -106,16 +116,21 @@ class DashboardSnapshot
   end
 
   def risk_queue
+    due_today = operational_cases.deadline_due_today
+    due_in_48_hours = operational_cases.deadline_due_in_48h
+    overdue = operational_cases.deadline_overdue
+    without_next_action = operational_cases.without_next_action
+
     {
-      due_today: risk("Vence hoje", operational_cases.deadline_due_today.count, legal_cases_path(deadline_state: "today")),
-      due_in_48_hours: risk("Próximas 48h", operational_cases.deadline_due_in_48h.count, legal_cases_path(deadline_state: "upcoming")),
-      overdue: risk("Atrasados", operational_cases.deadline_overdue.count, legal_cases_path(deadline_state: "overdue")),
-      without_next_action: risk("Sem próxima providência", operational_cases.without_next_action.count, legal_cases_path(without_next_action: "1"))
+      due_today: risk("Vence hoje", due_today.count, legal_cases_path(deadline_state: "today", operational: "1"), due_today),
+      due_in_48_hours: risk("Próximas 48h", due_in_48_hours.count, legal_cases_path(deadline_state: "next_48_hours", operational: "1"), due_in_48_hours),
+      overdue: risk("Atrasados", overdue.count, legal_cases_path(deadline_state: "overdue", operational: "1"), overdue),
+      without_next_action: risk("Sem próxima providência", without_next_action.count, legal_cases_path(without_next_action: "1", operational: "1"), without_next_action)
     }
   end
 
-  def risk(label, count, path)
-    { label: label, count: count, path: path }
+  def risk(label, count, path, records)
+    { label: label, count: count, path: path, items: context_items(records) }
   end
 
   def feed
@@ -139,8 +154,40 @@ class DashboardSnapshot
     status_counts = legal_cases.group(:status).count
 
     {
-      phase: phase_counts.map { |phase, count| { label: phase_label(phase), count: count, path: legal_cases_path(phase: phase) } },
-      status: status_counts.map { |status, count| { label: status_label(status), count: count, path: legal_cases_path(status: status) } }
+      phase: phase_counts.map do |phase, count|
+        { label: phase_label(phase), count: count, path: legal_cases_path(phase: phase), items: context_items(legal_cases.where(phase: phase)) }
+      end,
+      status: status_counts.map do |status, count|
+        { label: status_label(status), count: count, path: legal_cases_path(status: status), items: context_items(legal_cases.where(status: status)) }
+      end
+    }
+  end
+
+  def context_items(records)
+    limited_records =
+      if records.respond_to?(:limit)
+        relation = records.limit(CONTEXT_ITEMS_LIMIT)
+        relation = relation.includes(:legal_case) unless relation.klass == LegalCase
+        relation.to_a
+      else
+        records.first(CONTEXT_ITEMS_LIMIT)
+      end
+
+    limited_records
+      .filter_map { |record| record.is_a?(LegalCase) ? record : record.try(:legal_case) }
+      .uniq(&:id)
+      .map { |record| context_case_entry(record) }
+  end
+
+  def context_case_entry(record)
+    {
+      id: record.id,
+      internal_number: record.internal_number,
+      path: legal_case_path(record),
+      responsible_name: record.responsible_name.to_s,
+      next_action: record.next_action.to_s,
+      update_responsible_path: quick_update_case_responsible_path(record),
+      update_next_action_path: quick_update_case_next_action_path(record)
     }
   end
 

@@ -228,6 +228,6 @@ class LegalCasesController < ApplicationController
   end
 
   def legal_case_filters
-    params.permit(:q, :phase, :status, :priority, :responsible_name, :deadline_state)
+    params.permit(:q, :phase, :status, :priority, :responsible_name, :deadline_state, :health, :without_next_action, :operational)
   end
 end

@@ -37,6 +37,7 @@ class LegalCasesSnapshotTest < ActiveSupport::TestCase
     assert_equal @case.id, entry.fetch(:id)
     assert_equal legal_case_path(@case), entry.fetch(:path)
     assert_equal "Em análise", entry.fetch(:status_label)
+    assert_equal "Média", entry[:priority_label]
     assert_equal "overdue", entry.fetch(:deadline_tone)
   end
 

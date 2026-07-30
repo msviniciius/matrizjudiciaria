@@ -1,4 +1,14 @@
-export type DistributionItem = { label: string; count: number; path: string }
+export type ContextCase = {
+  id: number
+  internal_number: string
+  path: string
+  responsible_name: string
+  next_action: string
+  update_responsible_path: string
+  update_next_action_path: string
+}
+
+export type DistributionItem = { label: string; count: number; path: string; items?: ContextCase[] }
 
 type StatusDonutProps = {
   items: DistributionItem[]

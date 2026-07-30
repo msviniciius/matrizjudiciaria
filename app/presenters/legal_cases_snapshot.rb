@@ -1,10 +1,13 @@
+require "set"
+
 class LegalCasesSnapshot
   include Rails.application.routes.url_helpers
 
-  FILTER_KEYS = %i[q phase status priority responsible_name deadline_state].freeze
+  FILTER_KEYS = %i[q phase status priority responsible_name deadline_state health without_next_action operational].freeze
   DEADLINE_STATE_OPTIONS = [
     [ "Atrasado", "overdue" ],
     [ "Vence hoje", "today" ],
+    [ "Próximas 48h", "next_48_hours" ],
     [ "Próximos 7 dias", "upcoming" ],
     [ "Sem prazo", "without_deadline" ]
   ].freeze
@@ -64,7 +67,10 @@ class LegalCasesSnapshot
       status: enum_options(:status),
       priority: enum_options(:priority),
       responsible_name: [],
-      deadline_state: DEADLINE_STATE_OPTIONS.map { |label, value| { label: label, value: value } }
+      deadline_state: DEADLINE_STATE_OPTIONS.map { |label, value| { label: label, value: value } },
+      health: [],
+      without_next_action: [],
+      operational: []
     }
   end
 
@@ -88,6 +94,7 @@ class LegalCasesSnapshot
       status_label: enum_label(:status, record.status),
       phase: record.phase,
       priority: record.priority,
+      priority_label: enum_label(:priority, record.priority),
       responsible_name: record.responsible_name.presence || "-",
       last_movement: record.last_movement.presence || "-",
       next_deadline_on: record.next_deadline_on&.iso8601,
@@ -98,7 +105,7 @@ class LegalCasesSnapshot
   end
 
   def new_imported_event_ids
-    @new_imported_event_ids ||= legal_cases.reorder(nil).with_new_imported_events.pluck(:id)
+    @new_imported_event_ids ||= legal_cases.reorder(nil).with_new_imported_events.pluck(:id).to_set
   end
 
   def enum_label(enum_name, value)

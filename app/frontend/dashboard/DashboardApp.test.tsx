@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest"
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { DashboardApp } from "./DashboardApp"
@@ -12,6 +12,7 @@ test("shows an accessible loading state before the dashboard snapshot arrives", 
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  document.head.querySelector('meta[data-test-csrf="true"]')?.remove()
 })
 
 test("renders the command center from the server snapshot", async () => {
@@ -171,4 +172,106 @@ test("updates a responsible person and confirms without reloading the page", asy
 
   expect(await screen.findByRole("status")).toHaveTextContent("Responsável do processo atualizado.")
   expect(screen.queryByRole("link", { name: /^SEI01/ })).not.toBeInTheDocument()
+})
+
+test("synchronizes with a CSRF-protected POST and refreshes the snapshot", async () => {
+  const csrf = document.createElement("meta")
+  csrf.name = "csrf-token"
+  csrf.content = "csrf-dashboard-token"
+  csrf.dataset.testCsrf = "true"
+  document.head.append(csrf)
+
+  const snapshot = {
+    meta: { office_name: "Kayran Advocacia", unit_name: "Centro", syncable_count: 2, new_imported_events_count: 1 },
+    kpis: {},
+    critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] },
+    risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+  }
+  const refreshedSnapshot = { ...snapshot, meta: { ...snapshot.meta, new_imported_events_count: 0 } }
+  let resolveSync!: (value: unknown) => void
+  const syncResponse = new Promise<unknown>((resolve) => { resolveSync = resolve })
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => snapshot })
+    .mockReturnValueOnce(syncResponse)
+    .mockResolvedValueOnce({ ok: true, json: async () => refreshedSnapshot })
+  vi.stubGlobal("fetch", fetchMock)
+
+  render(<DashboardApp />)
+  const user = userEvent.setup()
+  const sync = await screen.findByRole("button", { name: /Sincronizar andamentos/ })
+  await user.click(sync)
+
+  expect(sync).toBeDisabled()
+  expect(sync).toHaveTextContent("Sincronizando")
+  await act(async () => {
+    resolveSync({ ok: true, json: async () => ({ message: "Sincronização iniciada." }) })
+  })
+  expect(await screen.findByRole("status")).toHaveTextContent("Sincronização iniciada.")
+  expect(fetchMock).toHaveBeenNthCalledWith(2, "/painel/sync", expect.objectContaining({
+    method: "POST",
+    headers: expect.objectContaining({ "X-CSRF-Token": "csrf-dashboard-token" })
+  }))
+  expect(fetchMock).toHaveBeenNthCalledWith(3, "/painel.json", expect.any(Object))
+  expect(screen.getByRole("button", { name: /Sincronizar andamentos.*0/ })).toBeEnabled()
+})
+
+test("keeps the dashboard usable when synchronization fails", async () => {
+  const snapshot = {
+    meta: { office_name: "Kayran Advocacia", unit_name: "Centro", syncable_count: 2, new_imported_events_count: 0 },
+    kpis: {},
+    critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] },
+    risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+  }
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => snapshot })
+    .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "Integração indisponível." }) }))
+
+  render(<DashboardApp />)
+  const user = userEvent.setup()
+  const sync = await screen.findByRole("button", { name: /Sincronizar andamentos/ })
+  await user.click(sync)
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Integração indisponível.")
+  expect(sync).toBeEnabled()
+  expect(screen.getByRole("heading", { name: "Fila de atenção" })).toBeVisible()
+})
+
+test("renders filtered process items and Rails-authorized quick actions in the contextual panel", async () => {
+  const contextItem = {
+    id: 1,
+    internal_number: "SEI01",
+    path: "/processos/1",
+    responsible_name: "",
+    next_action: "",
+    update_responsible_path: "/painel/processos/1/responsavel",
+    update_next_action_path: "/painel/processos/1/providencia"
+  }
+  const snapshot = {
+    meta: { office_name: "Kayran Advocacia", unit_name: "Centro", syncable_count: 0, new_imported_events_count: 0 },
+    kpis: {
+      due_today: { label: "Prazos hoje", count: 1, path: "/prazos?due_state=today", tone: "warning", items: [contextItem] }
+    },
+    critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] },
+    risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+  }
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => snapshot })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ message: "Responsável do processo atualizado." }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => snapshot })
+  vi.stubGlobal("fetch", fetchMock)
+
+  render(<DashboardApp />)
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole("link", { name: /Prazos hoje.*1/ }))
+  const panel = screen.getByRole("dialog")
+
+  expect(within(panel).getByRole("link", { name: "SEI01" })).toHaveAttribute("href", "/processos/1")
+  expect(within(panel).getByLabelText("Responsável do processo SEI01")).toBeVisible()
+  expect(within(panel).getByLabelText("Próxima providência do processo SEI01")).toBeVisible()
+
+  await user.type(within(panel).getByLabelText("Responsável do processo SEI01"), "Marina")
+  await user.click(within(panel).getByRole("button", { name: "Salvar responsável de SEI01" }))
+
+  expect(fetchMock).toHaveBeenNthCalledWith(2, "/painel/processos/1/responsavel", expect.objectContaining({ method: "PATCH" }))
+  expect(await screen.findByText("Responsável do processo atualizado.")).toBeVisible()
 })

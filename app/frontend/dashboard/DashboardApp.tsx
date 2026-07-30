@@ -8,7 +8,7 @@ type QueueCase = { id: number; internal_number: string; path: string; responsibl
 type Deadline = { id: number; title: string; legal_case_number: string; path: string }
 type Snapshot = {
   meta: { office_name: string; unit_name?: string; syncable_count: number; new_imported_events_count: number }
-  kpis: Record<string, { label: string; count: number; path: string; tone: string }>
+  kpis: Record<string, DistributionItem & { tone: string }>
   critical_queues: { without_responsible: QueueCase[]; without_next_action: QueueCase[]; overdue_deadlines_without_reason: Deadline[] }
   risk_queue: Record<string, { label: string; count: number; path: string }>
   feed: { title: string; origin: string; internal_number: string; date?: string; highlight: boolean; path: string }[]
@@ -20,6 +20,8 @@ export function DashboardApp() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [syncPending, setSyncPending] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<DistributionItem | null>(null)
   const [isContextPanelOpen, setIsContextPanelOpen] = useState(false)
   const contextPanelTriggerRef = useRef<HTMLElement | null>(null)
@@ -40,13 +42,35 @@ export function DashboardApp() {
       .catch((reason: Error) => setError(reason.message))
   }, [])
 
-  const updateResponsible = async (path: string, responsibleName: string) => {
+  const updateCase = async (path: string, payload: Record<string, string>, fallbackError: string) => {
     const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
-    const response = await fetch(path, { method: "PATCH", headers: { Accept: "application/json", "Content-Type": "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) }, body: JSON.stringify({ responsible_name: responsibleName }) })
+    const response = await fetch(path, { method: "PATCH", headers: { Accept: "application/json", "Content-Type": "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) }, body: JSON.stringify(payload) })
     const body = await response.json()
-    if (!response.ok) throw new Error(body.error || "Não foi possível atualizar o responsável.")
+    if (!response.ok) throw new Error(body.error || fallbackError)
     await loadSnapshot()
     setToast(body.message)
+  }
+  const updateResponsible = (path: string, responsibleName: string) => updateCase(path, { responsible_name: responsibleName }, "Não foi possível atualizar o responsável.")
+  const updateNextAction = (path: string, nextAction: string) => updateCase(path, { next_action: nextAction }, "Não foi possível atualizar a próxima providência.")
+
+  const syncAll = async () => {
+    const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
+    setSyncPending(true)
+    setSyncError(null)
+    try {
+      const response = await fetch(snapshot!.actions.sync, {
+        method: "POST",
+        headers: { Accept: "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) }
+      })
+      const body = await response.json()
+      if (!response.ok) throw new Error(body.error || "Não foi possível sincronizar os andamentos.")
+      await loadSnapshot()
+      setToast(body.message)
+    } catch (reason) {
+      setSyncError(reason instanceof Error ? reason.message : "Não foi possível sincronizar os andamentos.")
+    } finally {
+      setSyncPending(false)
+    }
   }
 
   if (error) return <p className="react-dashboard__error" role="alert">{error}</p>
@@ -64,9 +88,10 @@ export function DashboardApp() {
           <h2>Central de comando</h2>
           <p>{snapshot.meta.unit_name ? `Unidade ${snapshot.meta.unit_name}` : "Todas as unidades"}</p>
         </div>
-        <a className="react-dashboard__sync" href={snapshot.actions.sync}>Sincronizar andamentos <span>{snapshot.meta.new_imported_events_count}</span></a>
+        <button className="react-dashboard__sync" type="button" disabled={syncPending} onClick={syncAll}>{syncPending ? "Sincronizando…" : "Sincronizar andamentos"} <span>{snapshot.meta.new_imported_events_count}</span></button>
       </header>
       {toast && <p className="react-dashboard__toast" role="status">{toast}</p>}
+      {syncError && <p className="react-dashboard__error" role="alert">{syncError}</p>}
 
       <section className="react-dashboard__kpis" aria-label="Indicadores operacionais">
         {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); selectFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
@@ -97,7 +122,7 @@ export function DashboardApp() {
         <article className="react-dashboard__card"><h3>Distribuição por fase</h3><PhaseBars items={snapshot.distribution.phase} onSelect={selectFilter} selectedPath={selectedFilter?.path} /></article>
       </section>
     </main>
-    {selectedFilter && isContextPanelOpen && <ContextPanel filter={selectedFilter} onClose={closeContextPanel} returnFocusTo={contextPanelTriggerRef.current} />}
+    {selectedFilter && isContextPanelOpen && <ContextPanel filter={selectedFilter} onClose={closeContextPanel} onUpdateResponsible={updateResponsible} onUpdateNextAction={updateNextAction} returnFocusTo={contextPanelTriggerRef.current} />}
     </>
   )
 }

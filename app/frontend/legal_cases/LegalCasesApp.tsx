@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import "./legalCases.css"
 
 type View = "cards" | "table"
-type FilterKey = "q" | "phase" | "status" | "priority" | "responsible_name" | "deadline_state"
+type FilterKey = "q" | "phase" | "status" | "priority" | "responsible_name" | "deadline_state" | "health" | "without_next_action" | "operational"
 
 type Filters = Record<FilterKey, string>
 type FilterOption = { label: string; value: string }
@@ -16,6 +16,7 @@ type LegalCase = {
   status_label: string
   phase: string
   priority: string
+  priority_label: string
   responsible_name: string
   last_movement: string
   next_deadline_on: string | null
@@ -32,10 +33,10 @@ type Snapshot = {
 }
 
 const VIEW_KEY = "legal-cases-view"
-const FILTER_KEYS: FilterKey[] = ["q", "phase", "status", "priority", "responsible_name", "deadline_state"]
+const FILTER_KEYS: FilterKey[] = ["q", "phase", "status", "priority", "responsible_name", "deadline_state", "health", "without_next_action", "operational"]
 
 function emptyFilters(): Filters {
-  return { q: "", phase: "", status: "", priority: "", responsible_name: "", deadline_state: "" }
+  return { q: "", phase: "", status: "", priority: "", responsible_name: "", deadline_state: "", health: "", without_next_action: "", operational: "" }
 }
 
 function filtersFromLocation(): Filters {
@@ -63,6 +64,7 @@ function fetchSnapshot(filters: URLSearchParams, signal?: AbortSignal): Promise<
 export function LegalCasesApp() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [filters, setFilters] = useState<Filters>(filtersFromLocation)
+  const [draftQuery, setDraftQuery] = useState(() => filtersFromLocation().q)
   const [view, setView] = useState<View>(savedView)
   const [error, setError] = useState<string | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(true)
@@ -75,12 +77,14 @@ export function LegalCasesApp() {
     requestRef.current = { id, controller }
     setError(null)
     setIsRefreshing(true)
+    const requestedQuery = nextFilters.q
 
     fetchSnapshot(paramsFor(nextFilters), controller.signal)
       .then((nextSnapshot) => {
         if (requestRef.current.id !== id) return
         setSnapshot(nextSnapshot)
         setFilters(nextSnapshot.filters)
+        setDraftQuery((currentQuery) => currentQuery === requestedQuery ? nextSnapshot.filters.q : currentQuery)
       })
       .catch((reason: unknown) => {
         if (requestRef.current.id !== id || (reason instanceof DOMException && reason.name === "AbortError")) return
@@ -108,6 +112,7 @@ export function LegalCasesApp() {
     const nextFilters = emptyFilters()
     window.history.replaceState({}, "", window.location.pathname)
     setFilters(nextFilters)
+    setDraftQuery("")
     requestSnapshot(nextFilters)
   }
 
@@ -132,7 +137,7 @@ export function LegalCasesApp() {
         </div>
       </header>
 
-      {snapshot && <FiltersForm filters={filters} options={snapshot.filter_options} onChange={updateFilter} onClear={clearFilters} />}
+      {snapshot && <FiltersForm filters={filters} query={draftQuery} options={snapshot.filter_options} onChange={updateFilter} onQueryChange={setDraftQuery} onSearch={(query) => updateFilter("q", query)} onClear={clearFilters} />}
       {isRefreshing && <div className="react-legal-cases__loading" role="status"><span aria-hidden="true" className="react-legal-cases__loading-mark" />{snapshot ? "Atualizando processos…" : "Carregando processos…"}</div>}
       {!snapshot && isRefreshing && <LoadingSkeleton />}
       {error && <section className="react-legal-cases__error" role="alert"><p>{error}</p><button type="button" onClick={retry}>Tentar novamente</button></section>}
@@ -141,15 +146,24 @@ export function LegalCasesApp() {
   )
 }
 
-function FiltersForm({ filters, options, onChange, onClear }: { filters: Filters; options: Snapshot["filter_options"]; onChange: (key: FilterKey, value: string) => void; onClear: () => void }) {
-  return <form className="react-legal-cases__filters" aria-label="Filtros de processos" onSubmit={(event) => event.preventDefault()}>
-    <label className="react-legal-cases__search">Busca<input value={filters.q} placeholder="Objeto, cliente ou número interno" onChange={(event) => onChange("q", event.target.value)} /></label>
-    <FilterSelect label="Fase" filterKey="phase" value={filters.phase} options={options.phase} onChange={onChange} />
-    <FilterSelect label="Status" filterKey="status" value={filters.status} options={options.status} onChange={onChange} />
-    <FilterSelect label="Prioridade" filterKey="priority" value={filters.priority} options={options.priority} onChange={onChange} />
-    <label>Responsável<input value={filters.responsible_name} onChange={(event) => onChange("responsible_name", event.target.value)} /></label>
-    <FilterSelect label="Situação do prazo" filterKey="deadline_state" value={filters.deadline_state} options={options.deadline_state} onChange={onChange} />
-    <button className="react-legal-cases__clear" type="button" onClick={onClear}>Limpar filtros</button>
+function FiltersForm({ filters, query, options, onChange, onQueryChange, onSearch, onClear }: { filters: Filters; query: string; options: Snapshot["filter_options"]; onChange: (key: FilterKey, value: string) => void; onQueryChange: (value: string) => void; onSearch: (value: string) => void; onClear: () => void }) {
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const advancedFiltersId = "legal-cases-advanced-filters"
+
+  return <form className="react-legal-cases__filters" aria-label="Filtros de processos" onSubmit={(event) => { event.preventDefault(); onSearch(query) }}>
+    <div className="react-legal-cases__search-row">
+      <label className="react-legal-cases__search">Busca<input value={query} placeholder="Objeto, cliente ou número interno" onChange={(event) => onQueryChange(event.target.value)} /></label>
+      <button className="react-legal-cases__search-submit" type="submit">Buscar</button>
+      <button className="react-legal-cases__advanced-toggle" type="button" aria-expanded={advancedOpen} aria-controls={advancedFiltersId} onClick={() => setAdvancedOpen((open) => !open)}>Filtros avançados</button>
+      <button className="react-legal-cases__clear" type="button" onClick={onClear}>Limpar filtros</button>
+    </div>
+    <div className="react-legal-cases__advanced-filters" id={advancedFiltersId} hidden={!advancedOpen}>
+      <FilterSelect label="Fase" filterKey="phase" value={filters.phase} options={options.phase} onChange={onChange} />
+      <FilterSelect label="Status" filterKey="status" value={filters.status} options={options.status} onChange={onChange} />
+      <FilterSelect label="Prioridade" filterKey="priority" value={filters.priority} options={options.priority} onChange={onChange} />
+      <label>Responsável<input value={filters.responsible_name} onChange={(event) => onChange("responsible_name", event.target.value)} /></label>
+      <FilterSelect label="Situação do prazo" filterKey="deadline_state" value={filters.deadline_state} options={options.deadline_state} onChange={onChange} />
+    </div>
   </form>
 }
 
@@ -163,7 +177,7 @@ function Cards({ legalCases }: { legalCases: LegalCase[] }) {
     <div className="react-legal-cases__card-head"><h2>{legalCase.internal_number}</h2>{legalCase.has_new_imported_events && <span className="react-legal-cases__new-events">Novos andamentos</span>}</div>
     <p className="react-legal-cases__client">{legalCase.client_name}</p>
     <p className="react-legal-cases__area">{legalCase.legal_area_name}</p>
-    <div className="react-legal-cases__badges"><span className="react-legal-cases__badge">{legalCase.status_label}</span><span className="react-legal-cases__badge react-legal-cases__badge--priority">Prioridade {legalCase.priority}</span></div>
+    <div className="react-legal-cases__badges"><span className="react-legal-cases__badge">{legalCase.status_label}</span><span className="react-legal-cases__badge react-legal-cases__badge--priority">Prioridade {legalCase.priority_label}</span></div>
     <dl><div><dt>Próximo prazo</dt><dd className={`react-legal-cases__deadline react-legal-cases__deadline--${legalCase.deadline_tone}`}>{legalCase.next_deadline_label}</dd></div><div><dt>Responsável</dt><dd>{legalCase.responsible_name || "Não definido"}</dd></div></dl>
     <p className="react-legal-cases__movement"><span>Último andamento</span>{legalCase.last_movement}</p>
   </a>)}</section>
