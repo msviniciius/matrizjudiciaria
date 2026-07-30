@@ -193,14 +193,14 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sync returns JSON for the React detail screen" do
-    import_job = Pje::Ma::ImportCaseEventsJob
-    original_perform_now = import_job.method(:perform_now)
-    import_job.define_singleton_method(:perform_now) { |**| { imported: 1, skipped: 0 } }
+    fake_import_job = Class.new do
+      def self.perform_now(**)
+        { imported: 1, skipped: 0 }
+      end
+    end
 
-    begin
+    stub_const(Pje::Ma, :ImportCaseEventsJob, fake_import_job) do
       post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
-    ensure
-      import_job.define_singleton_method(:perform_now, original_perform_now)
     end
 
     assert_response :success
@@ -214,6 +214,30 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_equal "Este processo não possui número externo (CNJ) configurado.", response.parsed_body.fetch("error")
+  end
+
+  test "sync requires the JSON Accept header before returning JSON validation feedback" do
+    @legal_case.update!(external_number: "")
+
+    post sync_legal_case_url(@legal_case, format: :json)
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "Este processo não possui número externo (CNJ) configurado.", flash[:alert]
+  end
+
+  test "sync returns JSON server feedback when import raises" do
+    fake_import_job = Class.new do
+      def self.perform_now(**)
+        raise StandardError, "CNJ indisponível"
+      end
+    end
+
+    stub_const(Pje::Ma, :ImportCaseEventsJob, fake_import_job) do
+      post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
+    end
+
+    assert_response :internal_server_error
+    assert_equal "Erro ao sincronizar: CNJ indisponível", response.parsed_body.fetch("error")
   end
 
   test "should serve calendar feed in ics format with signed token" do

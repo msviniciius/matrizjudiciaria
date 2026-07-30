@@ -72,26 +72,17 @@ class LegalCasesController < ApplicationController
 
   def sync
     if @legal_case.external_number.blank?
-      return respond_to do |format|
-        format.html { redirect_to @legal_case, alert: "Este processo não possui número externo (CNJ) configurado." }
-        format.json { render json: { error: "Este processo não possui número externo (CNJ) configurado." }, status: :unprocessable_entity }
-      end
+      return sync_error("Este processo não possui número externo (CNJ) configurado.", :unprocessable_entity)
     end
 
     # Sincrono para feedback imediato (a API do CNJ leva ~8s)
     result = Pje::Ma::ImportCaseEventsJob.perform_now(legal_case_ids: [ @legal_case.id ], limit: 1)
     message, status = sync_feedback(result)
 
-    respond_to do |format|
-      format.html { redirect_to @legal_case, flash: { status => message } }
-      format.json { render json: { message: message } }
-    end
+    sync_success(message, status)
   rescue => e
     Rails.logger.error "[PJE_MA] Erro na sincronização manual: #{e.message}"
-    respond_to do |format|
-      format.html { redirect_to @legal_case, alert: "Erro ao sincronizar: #{e.message}" }
-      format.json { render json: { error: "Erro ao sincronizar: #{e.message}" }, status: :internal_server_error }
-    end
+    sync_error("Erro ao sincronizar: #{e.message}", :internal_server_error)
   end
 
   def new
@@ -242,6 +233,22 @@ class LegalCasesController < ApplicationController
     else
       [ "Nenhum andamento encontrado para este processo no CNJ.", :alert ]
     end
+  end
+
+  def sync_json_request?
+    request.headers["Accept"] == "application/json"
+  end
+
+  def sync_success(message, status)
+    return render json: { message: message } if sync_json_request?
+
+    redirect_to @legal_case, flash: { status => message }
+  end
+
+  def sync_error(message, status)
+    return render json: { error: message }, status: status if sync_json_request?
+
+    redirect_to @legal_case, alert: message
   end
 
   def legal_case_filters
