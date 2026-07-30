@@ -20,9 +20,9 @@ Prazos, tarefas e perícias ficam em acordeões. Cada seção abre automaticamen
 
 ## Comportamento e limites
 
-A tela atualiza o snapshot apenas na abertura ou por ação explícita de atualizar; não há polling. Todos os botões levam às telas ou formulários Rails existentes. Sincronização, criação e edição continuam nesses fluxos, sem mutação assíncrona local.
+A tela atualiza o snapshot na abertura e após a sincronização explícita de andamentos; não há polling. A sincronização usa `POST` assíncrono com CSRF, substitui o botão por indicador de carregamento, exibe a mensagem retornada pelo servidor e recarrega somente o snapshot do processo. Os demais botões levam às telas ou formulários Rails existentes.
 
-Ficam fora do escopo edição inline, criação dentro da central, sincronização assíncrona local, alterações nas regras de negócio e mudanças nas telas de formulário.
+Ficam fora do escopo edição inline, criação dentro da central, polling, alterações nas regras de negócio e mudanças nas telas de formulário.
 
 ## Acessibilidade e testes
 
