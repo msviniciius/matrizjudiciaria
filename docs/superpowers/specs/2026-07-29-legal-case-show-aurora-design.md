@@ -20,10 +20,10 @@ Prazos, tarefas e perícias ficam em acordeões. Cada seção abre automaticamen
 
 ## Comportamento e limites
 
-A tela atualiza o snapshot na abertura e após a sincronização explícita de andamentos; não há polling. A sincronização usa `POST` assíncrono com CSRF, substitui o botão por indicador de carregamento, exibe a mensagem retornada pelo servidor e recarrega somente o snapshot do processo. Os demais botões levam às telas ou formulários Rails existentes.
+A tela atualiza o snapshot na abertura e após a sincronização explícita de andamentos; não há polling. A sincronização usa `POST` assíncrono com CSRF, exibe um overlay central de glassmorphism enquanto bloqueia interações, informa “Buscando andamentos…” com spinner Aurora, exibe a mensagem retornada pelo servidor e recarrega somente o snapshot do processo. O overlay desaparece em êxito ou falha e respeita `prefers-reduced-motion`. Os demais botões levam às telas ou formulários Rails existentes.
 
 Ficam fora do escopo edição inline, criação dentro da central, polling, alterações nas regras de negócio e mudanças nas telas de formulário.
 
 ## Acessibilidade e testes
 
-Componentes interativos usam botões com estado ARIA, foco visível e suporte a teclado. A interface respeita `prefers-reduced-motion`. Testes Rails cobrem snapshot e isolamento por unidade; testes React cobrem renderização da central, alertas, acordeões, timeline progressiva e estados vazio/erro.
+Componentes interativos usam botões com estado ARIA, foco visível e suporte a teclado. A interface respeita `prefers-reduced-motion`. O overlay de sincronização tem status anunciado, não expõe o spinner como conteúdo redundante e impede ações de fundo enquanto visível. Testes Rails cobrem snapshot e isolamento por unidade; testes React cobrem renderização da central, alertas, acordeões, timeline progressiva, estados vazio/erro e o overlay de sincronização.
