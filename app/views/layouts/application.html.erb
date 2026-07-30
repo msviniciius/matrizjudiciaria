@@ -20,6 +20,7 @@
     <%= javascript_include_tag :app, "data-turbo-track": "reload", defer: true %>
     <% vite_entrypoint = {
       "dashboard#index" => "dashboard.tsx",
+      "clients#index" => "clients.tsx",
       "legal_cases#index" => "legal_cases.tsx",
       "legal_cases#show" => "legal_case_show.tsx"
     }["#{controller_path}##{action_name}"] %>
