@@ -22,6 +22,11 @@ class LegalCasesController < ApplicationController
   end
 
   def show
+    if request.format.json?
+      render json: LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
+      return
+    end
+
     load_case_related_collections
     @legal_case.touch(:last_viewed_events_at) if @legal_case.has_new_imported_events?
   end

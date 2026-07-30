@@ -96,6 +96,35 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "returns the legal case detail snapshot as JSON" do
+    get legal_case_url(@legal_case, format: :json)
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal @legal_case.id, response.parsed_body.dig("case", "id")
+    assert_equal @legal_case.internal_number, response.parsed_body.dig("case", "internal_number")
+  end
+
+  test "show JSON does not expose a case outside the current unit" do
+    unit = Unit.create!(office: default_office, name: "Contencioso detalhe")
+    other_unit = Unit.create!(office: default_office, name: "Consultivo detalhe")
+    other_unit_case = create_full_legal_case(unit: other_unit)
+    user = User.create!(
+      office: default_office,
+      name: "Admin detalhe",
+      email: "admin-detalhe-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+
+    post login_path, params: { email: user.email, password: "segredo123" }
+    post unit_session_path, params: { unit_id: unit.id }
+    get legal_case_url(other_unit_case, format: :json)
+
+    assert_response :not_found
+  end
+
   test "should get daily closure" do
     get daily_closure_legal_cases_url
     assert_response :success
