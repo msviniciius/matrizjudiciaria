@@ -76,7 +76,7 @@ class LegalCasesController < ApplicationController
     end
 
     # Sincrono para feedback imediato (a API do CNJ leva ~8s)
-    result = Pje::Ma::ImportCaseEventsJob.perform_now(legal_case_ids: [ @legal_case.id ], limit: 1)
+    result = sync_importer.call(legal_case_ids: [ @legal_case.id ], limit: 1)
     message, status = sync_feedback(result)
 
     sync_success(message, status)
@@ -237,6 +237,10 @@ class LegalCasesController < ApplicationController
 
   def sync_json_request?
     request.headers["Accept"] == "application/json"
+  end
+
+  def sync_importer
+    request.env.fetch("legal_cases.sync_importer") { Pje::Ma::ImportCaseEventsJob.method(:perform_now) }
   end
 
   def sync_success(message, status)

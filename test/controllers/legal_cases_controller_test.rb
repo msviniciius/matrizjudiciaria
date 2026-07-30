@@ -193,15 +193,9 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sync returns JSON for the React detail screen" do
-    fake_import_job = Class.new do
-      def self.perform_now(**)
-        { imported: 1, skipped: 0 }
-      end
-    end
-
-    stub_const(Pje::Ma, :ImportCaseEventsJob, fake_import_job) do
-      post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
-    end
+    post sync_legal_case_url(@legal_case),
+      headers: { "ACCEPT" => "application/json" },
+      env: { "legal_cases.sync_importer" => ->(**) { { imported: 1, skipped: 0 } } }
 
     assert_response :success
     assert_equal "1 andamento(s) novo(s) importado(s) do CNJ. 0 já existiam.", response.parsed_body.fetch("message")
@@ -226,15 +220,9 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sync returns JSON server feedback when import raises" do
-    fake_import_job = Class.new do
-      def self.perform_now(**)
-        raise StandardError, "CNJ indisponível"
-      end
-    end
-
-    stub_const(Pje::Ma, :ImportCaseEventsJob, fake_import_job) do
-      post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
-    end
+    post sync_legal_case_url(@legal_case),
+      headers: { "ACCEPT" => "application/json" },
+      env: { "legal_cases.sync_importer" => ->(**) { raise StandardError, "CNJ indisponível" } }
 
     assert_response :internal_server_error
     assert_equal "Erro ao sincronizar: CNJ indisponível", response.parsed_body.fetch("error")
