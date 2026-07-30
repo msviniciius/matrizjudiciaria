@@ -199,6 +199,7 @@ export function LegalCaseShowApp() {
         <p>Buscando andamentos…</p>
       </div>
     </section>}
+    <div data-testid="legal-case-sync-content" inert={syncPending || undefined}>
     <header className="react-legal-case-show__header">
       <div>
         <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
@@ -304,6 +305,7 @@ export function LegalCaseShowApp() {
       {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} onSync={syncCase} pending={syncPending} />}
     </nav>
     </aside>
+    </div>
     </div>
   </section>
 }

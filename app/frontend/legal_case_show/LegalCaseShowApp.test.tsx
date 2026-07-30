@@ -197,9 +197,11 @@ test("synchronizes from the detail screen without a page reload", async () => {
   expect(screen.getByRole("status", { name: /buscando andamentos/i })).toBeVisible()
   expect(screen.getByTestId("legal-case-sync-overlay")).toHaveAttribute("aria-busy", "true")
   expect(screen.getByTestId("legal-case-sync-overlay")).toHaveTextContent("Buscando andamentos…")
+  expect(screen.getByTestId("legal-case-sync-content")).toHaveAttribute("inert")
 
   resolveSync(okResponse({ message: "1 andamento novo importado." }))
   await waitFor(() => expect(screen.queryByTestId("legal-case-sync-overlay")).not.toBeInTheDocument())
+  expect(screen.getByTestId("legal-case-sync-content")).not.toHaveAttribute("inert")
   expect(screen.getByRole("status")).toHaveTextContent("1 andamento novo importado.")
   expect(screen.getByText("Andamento importado")).toBeVisible()
   expect(fetchMock).toHaveBeenNthCalledWith(2, "/legal_cases/1/sync", expect.objectContaining({
