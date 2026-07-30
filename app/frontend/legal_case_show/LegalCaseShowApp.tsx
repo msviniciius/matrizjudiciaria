@@ -187,7 +187,6 @@ export function LegalCaseShowApp() {
         <div><dt>Último andamento</dt><dd>{snapshot.next_action.last_movement_label}</dd></div>
       </dl>
       <nav className="react-legal-case-show__actions" aria-label="Ações do processo">
-        <a href={snapshot.actions.edit}>Editar processo</a>
         <a href={snapshot.actions.new_movement}>Novo andamento</a>
         <a href={snapshot.actions.new_deadline}>Novo prazo</a>
         <a href={snapshot.actions.new_task}>Nova tarefa</a>

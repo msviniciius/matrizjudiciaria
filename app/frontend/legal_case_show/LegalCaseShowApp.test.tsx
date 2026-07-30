@@ -139,7 +139,7 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(screen.getByRole("region", { name: "Central de comando" })).toBeVisible()
   expect(screen.queryByRole("main")).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: /Prazos/ })).toHaveAttribute("aria-expanded", "true")
-  expect(screen.getByRole("link", { name: "Editar processo" })).toHaveAttribute("href", "/legal_cases/1/edit")
+  expect(screen.queryByRole("link", { name: "Editar processo" })).not.toBeInTheDocument()
 })
 
 test("describes an empty timeline and exposes each operational section through a heading toggle", async () => {
