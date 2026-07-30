@@ -71,14 +71,19 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def scope_by_current_unit(scope)
+  def scope_by_current_unit(scope, through: nil)
     # Em teste (sem usuario logado), retorna escopo sem filtro
     return scope if current_user.blank?
     return scope if all_units_mode?
-    return scope unless scope.klass.column_names.include?("unit_id")
     return scope.none if current_unit.blank?
 
-    scope.where(unit_id: current_unit.id)
+    if through.present?
+      scope.where(through => { unit_id: current_unit.id })
+    elsif scope.klass.column_names.include?("unit_id")
+      scope.where(unit_id: current_unit.id)
+    else
+      scope
+    end
   end
 
   def load_navbar_notifications

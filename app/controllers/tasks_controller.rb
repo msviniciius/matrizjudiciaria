@@ -9,6 +9,7 @@ class TasksController < ApplicationController
       .where(legal_cases: { office_id: current_office.id })
       .includes(:legal_case)
       .order(due_date: :asc, created_at: :desc)
+    scope = scope_by_current_unit(scope, through: :legal_cases)
 
     if @filters[:q].present?
       term = "%#{@filters[:q].strip}%"

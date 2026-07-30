@@ -23,6 +23,25 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index only lists tasks from the active unit" do
+    current_unit = Unit.create!(office: default_office, name: "Contencioso tarefas")
+    other_unit = Unit.create!(office: default_office, name: "Consultivo tarefas")
+    @legal_case.update!(unit: current_unit)
+    other_case = create_full_legal_case(unit: other_unit)
+    other_task = Task.create!(
+      legal_case: other_case,
+      title: "Tarefa de outra unidade",
+      status: "pending"
+    )
+    sign_in_and_select(current_unit)
+
+    get tasks_url
+
+    assert_response :success
+    assert_includes response.body, @task.title
+    assert_not_includes response.body, other_task.title
+  end
+
   test "should get new" do
     get new_task_url
     assert_response :success
@@ -64,5 +83,20 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to tasks_url
+  end
+
+  private
+
+  def sign_in_and_select(unit)
+    admin = User.create!(
+      office: default_office,
+      name: "Admin tarefas",
+      email: "admin-tarefas-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+    post login_path, params: { email: admin.email, password: "segredo123" }
+    post unit_session_path, params: { unit_id: unit.id }
   end
 end

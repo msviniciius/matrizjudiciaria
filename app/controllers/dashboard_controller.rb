@@ -171,7 +171,8 @@ class DashboardController < ApplicationController
 
     Pje::Ma::ImportCaseEventsJob.perform_later(
       office_id: current_office.id,
-      legal_case_ids: legal_case_ids
+      legal_case_ids: legal_case_ids,
+      limit: count
     )
 
     respond_with_dashboard_success("Sincronização iniciada para #{count} processo(s) em #{tribunals.size} tribunal(is). Os andamentos aparecerão em instantes.", accepted: true)

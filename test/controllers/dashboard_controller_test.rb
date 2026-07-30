@@ -145,7 +145,7 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
 
     assert_enqueued_with(
       job: Pje::Ma::ImportCaseEventsJob,
-      args: [ { office_id: @office.id, legal_case_ids: [ selected_case.id ] } ]
+      args: [ { office_id: @office.id, legal_case_ids: [ selected_case.id ], limit: 1 } ]
     ) do
       post sync_all_cases_path(format: :json), as: :json
     end

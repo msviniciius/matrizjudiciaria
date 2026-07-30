@@ -25,6 +25,26 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index only lists deadlines from the active unit" do
+    current_unit = Unit.create!(office: default_office, name: "Contencioso prazos")
+    other_unit = Unit.create!(office: default_office, name: "Consultivo prazos")
+    @legal_case.update!(unit: current_unit)
+    other_case = create_full_legal_case(unit: other_unit)
+    other_deadline = Deadline.create!(
+      legal_case: other_case,
+      title: "Prazo de outra unidade",
+      due_date: Date.current + 1.day,
+      status: "pending"
+    )
+    sign_in_and_select(current_unit)
+
+    get deadlines_url
+
+    assert_response :success
+    assert_includes response.body, @deadline.title
+    assert_not_includes response.body, other_deadline.title
+  end
+
   test "should get new" do
     get new_deadline_url
     assert_response :success
@@ -68,5 +88,20 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to deadlines_url
+  end
+
+  private
+
+  def sign_in_and_select(unit)
+    admin = User.create!(
+      office: default_office,
+      name: "Admin prazos",
+      email: "admin-prazos-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+    post login_path, params: { email: admin.email, password: "segredo123" }
+    post unit_session_path, params: { unit_id: unit.id }
   end
 end
