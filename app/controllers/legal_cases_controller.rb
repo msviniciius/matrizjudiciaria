@@ -1,5 +1,5 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar ]
+  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync ]
 
   def index
     @filters = legal_case_filters

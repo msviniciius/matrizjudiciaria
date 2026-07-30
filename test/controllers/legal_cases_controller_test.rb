@@ -145,6 +145,14 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_includes feed_url, ".ics"
   end
 
+  test "syncs a legal case scoped by the callback" do
+    @legal_case.update!(external_number: "")
+    post sync_legal_case_url(@legal_case)
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "Este processo não possui número externo (CNJ) configurado.", flash[:alert]
+  end
+
   test "should serve calendar feed in ics format with signed token" do
     get legal_case_calendar_feed_url(token: @legal_case.calendar_feed_token)
 
