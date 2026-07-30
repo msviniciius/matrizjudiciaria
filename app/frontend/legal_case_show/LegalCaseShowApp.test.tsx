@@ -128,6 +128,7 @@ const okResponse = (body: unknown) => ({ ok: true, json: async () => body })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  document.querySelector('meta[name="csrf-token"]')?.remove()
   window.history.replaceState({}, "", "/")
 })
 
@@ -170,4 +171,46 @@ test("shows an error and retry action when the snapshot fails", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível carregar")
   await userEvent.setup().click(screen.getByRole("button", { name: "Tentar novamente" }))
   expect(await screen.findByRole("heading", { name: "Cliente Aurora" })).toBeVisible()
+})
+
+test("synchronizes from the detail screen without a page reload", async () => {
+  const csrf = document.createElement("meta")
+  csrf.name = "csrf-token"
+  csrf.content = "csrf-detail-token"
+  document.head.append(csrf)
+  let resolveSync!: (response: unknown) => void
+  const pendingSync = new Promise<unknown>((resolve) => { resolveSync = resolve })
+  const refreshedSnapshot = snapshotWith([timelineItem(2, "Andamento importado")])
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockReturnValueOnce(pendingSync)
+    .mockResolvedValueOnce(okResponse(refreshedSnapshot))
+  vi.stubGlobal("fetch", fetchMock)
+
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+  const button = await screen.findByRole("button", { name: "Atualizar andamentos" })
+  await user.click(button)
+  expect(button).toBeDisabled()
+  expect(button).toHaveTextContent("Buscando andamentos")
+
+  resolveSync(okResponse({ message: "1 andamento novo importado." }))
+  expect(await screen.findByRole("status")).toHaveTextContent("1 andamento novo importado.")
+  expect(screen.getByText("Andamento importado")).toBeVisible()
+  expect(fetchMock).toHaveBeenNthCalledWith(2, "/legal_cases/1/sync", expect.objectContaining({
+    method: "POST", headers: expect.objectContaining({ "X-CSRF-Token": "csrf-detail-token" })
+  }))
+})
+
+test("shows a sync error and re-enables the button when the request fails", async () => {
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "Serviço indisponível." }) }))
+  render(<LegalCaseShowApp />)
+
+  const button = await screen.findByRole("button", { name: "Atualizar andamentos" })
+  await userEvent.setup().click(button)
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Serviço indisponível.")
+  expect(button).toBeEnabled()
 })

@@ -127,17 +127,22 @@ export function LegalCaseShowApp() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showAllTimeline, setShowAllTimeline] = useState(false)
+  const [syncPending, setSyncPending] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
 
-  const loadSnapshot = () => {
+  const loadSnapshot = async () => {
     setError(null)
     setIsLoading(true)
-    fetchSnapshot()
-      .then((nextSnapshot) => {
-        setSnapshot(nextSnapshot)
-        setShowAllTimeline(false)
-      })
-      .catch(() => setError("Não foi possível carregar os dados do processo. Tente novamente."))
-      .finally(() => setIsLoading(false))
+    try {
+      const nextSnapshot = await fetchSnapshot()
+      setSnapshot(nextSnapshot)
+      setShowAllTimeline(false)
+    } catch {
+      setError("Não foi possível carregar os dados do processo. Tente novamente.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -153,6 +158,28 @@ export function LegalCaseShowApp() {
   }
 
   if (!snapshot) return null
+
+  const syncCase = async (action: NonNullable<Snapshot["actions"]["sync"]>) => {
+    setSyncPending(true)
+    setSyncError(null)
+    setSyncMessage(null)
+
+    try {
+      const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
+      const response = await fetch(action.path, {
+        method: action.method.toUpperCase(),
+        headers: { Accept: "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) }
+      })
+      const body = await response.json()
+      if (!response.ok) throw new Error(body.error || "Não foi possível sincronizar os andamentos.")
+      await loadSnapshot()
+      setSyncMessage(body.message)
+    } catch (syncFailure) {
+      setSyncError(syncFailure instanceof Error ? syncFailure.message : "Não foi possível sincronizar os andamentos.")
+    } finally {
+      setSyncPending(false)
+    }
+  }
 
   const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, 5)
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
@@ -176,6 +203,8 @@ export function LegalCaseShowApp() {
 
     {error && <section className="react-legal-case-show__error" role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section>}
     {isLoading && <p className="react-legal-case-show__refreshing" role="status">Atualizando processo…</p>}
+    {syncError && <p className="react-legal-case-show__sync-notice react-legal-case-show__sync-notice--error" role="alert">{syncError}</p>}
+    {syncMessage && <p className="react-legal-case-show__sync-notice" role="status">{syncMessage}</p>}
 
     <div className="react-legal-case-show__layout">
     <div className="react-legal-case-show__main-column">
@@ -259,7 +288,7 @@ export function LegalCaseShowApp() {
       <a href={snapshot.actions.pdf}>Exportar PDF</a>
       <a href={snapshot.actions.calendar}>Adicionar ao calendário</a>
       <a href={snapshot.actions.index}>Voltar aos processos</a>
-      {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} />}
+      {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} onSync={syncCase} pending={syncPending} />}
     </nav>
     </aside>
     </div>
@@ -296,11 +325,14 @@ function CollectionEmpty<T>({ items, message, children }: { items: T[]; message:
   return items.length ? <>{children}</> : <p>{message}</p>
 }
 
-function SyncForm({ action }: { action: NonNullable<Snapshot["actions"]["sync"]> }) {
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
-
-  return <form className="react-legal-case-show__sync-form" action={action.path} method={action.method}>
-    {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
-    <button type="submit">Atualizar andamentos</button>
+function SyncForm({ action, onSync, pending }: { action: NonNullable<Snapshot["actions"]["sync"]>; onSync: (action: NonNullable<Snapshot["actions"]["sync"]>) => Promise<void>; pending: boolean }) {
+  return <form className="react-legal-case-show__sync-form" onSubmit={(event) => {
+    event.preventDefault()
+    void onSync(action)
+  }}>
+    <button type="submit" disabled={pending}>
+      {pending && <span className="react-legal-case-show__sync-spinner" aria-hidden="true" />}
+      {pending ? "Buscando andamentos…" : "Atualizar andamentos"}
+    </button>
   </form>
 }
