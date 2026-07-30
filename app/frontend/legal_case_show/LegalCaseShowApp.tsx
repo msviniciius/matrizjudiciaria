@@ -1,3 +1,5 @@
+/// <reference path="../vite-env.d.ts" />
+
 import { useEffect, useState } from "react"
 import "./legalCaseShow.css"
 
@@ -143,11 +145,11 @@ export function LegalCaseShowApp() {
   }, [])
 
   if (isLoading && !snapshot) {
-    return <main className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><p role="status">Carregando processo…</p></main>
+    return <section className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><p role="status">Carregando processo…</p></section>
   }
 
   if (error && !snapshot) {
-    return <main className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><section className="react-legal-case-show__error" role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section></main>
+    return <section className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><section className="react-legal-case-show__error" role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section></section>
   }
 
   if (!snapshot) return null
@@ -156,7 +158,7 @@ export function LegalCaseShowApp() {
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
 
-  return <main className="react-legal-case-show" aria-label="Central de comando">
+  return <section className="react-legal-case-show" aria-label="Central de comando">
     <header className="react-legal-case-show__header">
       <div>
         <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
@@ -262,7 +264,7 @@ export function LegalCaseShowApp() {
     </nav>
     </aside>
     </div>
-  </main>
+  </section>
 }
 
 function AlertSummary({ alerts }: { alerts: Snapshot["alerts"] }) {
@@ -273,7 +275,7 @@ function AlertSummary({ alerts }: { alerts: Snapshot["alerts"] }) {
     alerts.next_action_warning && "Providência pendente",
     alerts.stale_last_movement && "Andamento desatualizado",
     alerts.has_new_imported_events && "Novos andamentos"
-  ].filter(Boolean)
+  ].filter((label): label is string => Boolean(label))
 
   return <>
     <span className={`react-legal-case-show__badge react-legal-case-show__badge--health react-legal-case-show__badge--health-${alerts.health_status}`}>Saúde: {alerts.health_status}</span>
