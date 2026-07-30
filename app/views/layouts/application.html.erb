@@ -18,13 +18,15 @@
     <link rel="manifest" href="<%= pwa_manifest_path(format: :json) %>">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag :app, "data-turbo-track": "reload", defer: true %>
-    <% if controller_name.in?(["dashboard", "legal_cases"]) %>
+    <% vite_entrypoint = {
+      "dashboard#index" => "dashboard.tsx",
+      "legal_cases#index" => "legal_cases.tsx",
+      "legal_cases#show" => "legal_case_show.tsx"
+    }["#{controller_path}##{action_name}"] %>
+    <% if vite_entrypoint.present? %>
       <%= vite_client_tag %>
       <%= vite_react_refresh_tag %>
-    <% end %>
-    <%= vite_javascript_tag "dashboard.tsx" if controller_name == "dashboard" %>
-    <% if controller_name == "legal_cases" %>
-      <%= vite_javascript_tag(action_name == "show" ? "legal_case_show.tsx" : "legal_cases.tsx") %>
+      <%= vite_javascript_tag vite_entrypoint %>
     <% end %>
 
   </head>

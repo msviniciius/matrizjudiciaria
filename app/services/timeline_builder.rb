@@ -43,6 +43,7 @@ class TimelineBuilder
         else
           {
             source: :process_movement,
+            process_movement_id: movement.id,
             title: movement.display_title,
             description: movement.complementary_description,
             date: movement.event_date,
@@ -75,6 +76,7 @@ class TimelineBuilder
         else
           {
             source: from_cnj ? :cnj_import : :manual_event,
+            case_event_id: event.id,
             title: event.description,
             description: from_cnj ? "Importado do #{tribunal}" : "Registro manual",
             date: event.event_date || event.created_at,

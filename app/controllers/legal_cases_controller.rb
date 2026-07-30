@@ -28,7 +28,6 @@ class LegalCasesController < ApplicationController
     end
 
     load_case_related_collections
-    @legal_case.touch(:last_viewed_events_at) if @legal_case.has_new_imported_events?
   end
 
   def pdf

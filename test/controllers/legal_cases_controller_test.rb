@@ -54,6 +54,36 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='legal_case_show']"
   end
 
+  test "show remains read only and preserves the new imported event alert" do
+    imported_event = CaseEvent.create!(
+      legal_case: @legal_case,
+      description: "Andamento ainda não visualizado",
+      entry_kind: "andamento",
+      event_date: Time.current,
+      pje_external_id: "show-read-only-#{SecureRandom.hex(4)}"
+    )
+    @legal_case.update_column(:last_viewed_events_at, imported_event.created_at - 1.minute)
+    viewed_at = @legal_case.reload.last_viewed_events_at
+
+    assert_no_changes -> { @legal_case.reload.last_viewed_events_at } do
+      get legal_case_url(@legal_case)
+    end
+
+    assert_response :success
+    get legal_case_url(@legal_case, format: :json)
+    assert response.parsed_body.dig("alerts", "has_new_imported_events")
+    assert_equal viewed_at, @legal_case.reload.last_viewed_events_at
+  end
+
+  test "does not load legal case React entrypoints outside index and show" do
+    get new_legal_case_url
+
+    assert_response :success
+    assert_select "script[src*='legal_cases']", count: 0
+    assert_select "script[src*='legal_case_show']", count: 0
+    assert_select "script[src*='@vite/client']", count: 0
+  end
+
   test "Vite manifest exposes the legal cases entrypoint" do
     entrypoint_path = ViteRuby.instance.manifest.path_for("legal_cases.tsx")
 

@@ -82,6 +82,7 @@ class LegalCaseShowSnapshotTest < ActiveSupport::TestCase
     snapshot = LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
 
     assert_equal [ recent_event.description, old_event.description ], snapshot.fetch(:timeline).pluck(:title)
+    assert_equal [ recent_event.id, old_event.id ], snapshot.fetch(:timeline).pluck(:id)
     assert_equal snapshot.fetch(:deadlines).pluck(:due_date).sort, snapshot.fetch(:deadlines).pluck(:due_date)
     assert_includes snapshot.fetch(:deadlines).pluck(:id), earlier_deadline.id
     assert_includes snapshot.fetch(:deadlines).pluck(:id), later_deadline.id
@@ -91,5 +92,35 @@ class LegalCaseShowSnapshotTest < ActiveSupport::TestCase
     assert_equal "Médica", snapshot.fetch(:exams).last.fetch(:nature_label)
     assert snapshot.fetch(:alerts).fetch(:deadline_overdue)
     assert snapshot.fetch(:alerts).fetch(:exam_pending)
+  end
+
+  test "serializes a stable non-null id for a process movement timeline item" do
+    phase = ProcessPhase.create!(
+      code: "detail-phase-#{SecureRandom.hex(4)}",
+      name: "Fase do detalhe",
+      order: 99
+    )
+    movement_type = MovementType.create!(
+      code: "detail-movement-#{SecureRandom.hex(4)}",
+      name: "Movimento do detalhe #{SecureRandom.hex(4)}"
+    )
+    movement = ProcessMovement.create!(
+      process: @legal_case,
+      phase: phase,
+      movement_type: movement_type,
+      event_date: Time.current,
+      display_title: "Movimento com ID estável",
+      nature: "nota_interna",
+      impact: "sem_impacto_de_fase",
+      origin: "manual"
+    )
+
+    timeline_entry = LegalCaseShowSnapshot
+      .new(legal_case: @legal_case)
+      .as_json
+      .fetch(:timeline)
+      .find { |item| item.fetch(:source) == "process_movement" }
+
+    assert_equal movement.id, timeline_entry.fetch(:id)
   end
 end
