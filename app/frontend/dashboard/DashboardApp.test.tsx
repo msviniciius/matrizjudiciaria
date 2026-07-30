@@ -10,6 +10,27 @@ test("shows an accessible loading state before the dashboard snapshot arrives", 
   expect(screen.getByRole("status")).toHaveTextContent("Carregando painel")
 })
 
+test("uses the containing Rails main landmark without nesting another main", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: {},
+      critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] },
+      risk_queue: {},
+      feed: [],
+      distribution: { phase: [], status: [] },
+      actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  const { container } = render(<main><DashboardApp /></main>)
+
+  await screen.findByRole("heading", { name: "Central de comando" })
+  expect(container.querySelectorAll("main")).toHaveLength(1)
+  expect(container.querySelector(".react-dashboard")?.tagName).toBe("DIV")
+})
+
 afterEach(() => {
   vi.unstubAllGlobals()
   document.head.querySelector('meta[data-test-csrf="true"]')?.remove()
@@ -143,7 +164,7 @@ test("traps Tab navigation inside the contextual panel", async () => {
   const close = within(panel).getByRole("button", { name: "Fechar painel" })
   const processList = within(panel).getByRole("link", { name: "Ver processos filtrados" })
 
-  expect(screen.getByRole("main")).toHaveAttribute("inert")
+  expect(document.querySelector(".react-dashboard")).toHaveAttribute("inert")
   expect(close).toHaveFocus()
   await user.tab()
   expect(processList).toHaveFocus()

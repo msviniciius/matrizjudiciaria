@@ -124,7 +124,7 @@ export function LegalCasesApp() {
   const retry = () => requestSnapshot(filters)
 
   return (
-    <main className="react-legal-cases" aria-label="Processos">
+    <div className="react-legal-cases" aria-label="Processos">
       <header className="react-legal-cases__header">
         <div>
           <p className="react-legal-cases__eyebrow">{snapshot?.meta.office_name || "Operação jurídica"}</p>
@@ -142,7 +142,7 @@ export function LegalCasesApp() {
       {!snapshot && isRefreshing && <LoadingSkeleton />}
       {error && <section className="react-legal-cases__error" role="alert"><p>{error}</p><button type="button" onClick={retry}>Tentar novamente</button></section>}
       {snapshot && (view === "cards" ? <Cards legalCases={snapshot.legal_cases} /> : <CasesTable legalCases={snapshot.legal_cases} />)}
-    </main>
+    </div>
   )
 }
 

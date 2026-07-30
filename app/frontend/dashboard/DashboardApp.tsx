@@ -81,7 +81,7 @@ export function DashboardApp() {
 
   return (
     <>
-    <main className="react-dashboard" inert={isContextPanelOpen || undefined} aria-label="Painel operacional">
+    <div className="react-dashboard" inert={isContextPanelOpen || undefined} aria-label="Painel operacional">
       <header className="react-dashboard__header">
         <div>
           <p className="react-dashboard__eyebrow">{snapshot.meta.office_name} · painel operacional</p>
@@ -121,7 +121,7 @@ export function DashboardApp() {
         <article className="react-dashboard__card"><h3>Distribuição por status</h3><StatusDonut items={snapshot.distribution.status} onSelect={selectFilter} selectedPath={selectedFilter?.path} /></article>
         <article className="react-dashboard__card"><h3>Distribuição por fase</h3><PhaseBars items={snapshot.distribution.phase} onSelect={selectFilter} selectedPath={selectedFilter?.path} /></article>
       </section>
-    </main>
+    </div>
     {selectedFilter && isContextPanelOpen && <ContextPanel filter={selectedFilter} onClose={closeContextPanel} onUpdateResponsible={updateResponsible} onUpdateNextAction={updateNextAction} returnFocusTo={contextPanelTriggerRef.current} />}
     </>
   )

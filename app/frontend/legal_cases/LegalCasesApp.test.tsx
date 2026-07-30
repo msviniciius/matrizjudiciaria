@@ -4,6 +4,16 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { LegalCasesApp } from "./LegalCasesApp"
 
+test("uses the containing Rails main landmark without nesting another main", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith("PROC-MAIN"))))
+
+  const { container } = render(<main><LegalCasesApp /></main>)
+
+  await screen.findByRole("link", { name: /PROC-MAIN/ })
+  expect(container.querySelectorAll("main")).toHaveLength(1)
+  expect(container.querySelector(".react-legal-cases")?.tagName).toBe("DIV")
+})
+
 const snapshotWith = (internalNumber: string, legalCases = [{
   id: 1,
   path: "/processos/1",
