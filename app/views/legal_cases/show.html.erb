@@ -1,9 +1,6 @@
 <% content_for :title, "Processo #{@legal_case.internal_number}" %>
 
 <% content_for :topbar_actions do %>
-  <% if @legal_case.external_number.present? %>
-    <%= button_to "Atualizar Andamentos", sync_legal_case_path(@legal_case), method: :post, class: "btn btn-secondary", form: { data: { turbo_confirm: "Buscar andamentos no CNJ?" } } %>
-  <% end %>
   <%= link_to "Editar processo", edit_legal_case_path(@legal_case), class: "btn btn-secondary" %>
   <%= link_to "Exportar PDF", pdf_legal_case_path(@legal_case), class: "btn btn-secondary", target: "_blank", rel: "noopener" %>
   <%= link_to "Voltar", legal_cases_path, class: "btn btn-secondary" %>

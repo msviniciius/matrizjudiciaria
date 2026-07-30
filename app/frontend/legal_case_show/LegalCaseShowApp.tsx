@@ -186,6 +186,19 @@ export function LegalCaseShowApp() {
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
 
   return <section className="react-legal-case-show" aria-label="Central de comando">
+    {syncPending && <section
+      className="react-legal-case-show__sync-overlay"
+      data-testid="legal-case-sync-overlay"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="Buscando andamentos"
+    >
+      <div className="react-legal-case-show__sync-glass">
+        <span className="react-legal-case-show__sync-spinner" aria-hidden="true" />
+        <p>Buscando andamentos…</p>
+      </div>
+    </section>}
     <header className="react-legal-case-show__header">
       <div>
         <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>

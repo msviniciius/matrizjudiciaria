@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest"
-import { render, screen } from "@testing-library/react"
+import { readFileSync } from "node:fs"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { LegalCaseShowApp } from "./LegalCaseShowApp"
@@ -193,13 +194,24 @@ test("synchronizes from the detail screen without a page reload", async () => {
   await user.click(button)
   expect(button).toBeDisabled()
   expect(button).toHaveTextContent("Buscando andamentos")
+  expect(screen.getByRole("status", { name: /buscando andamentos/i })).toBeVisible()
+  expect(screen.getByTestId("legal-case-sync-overlay")).toHaveAttribute("aria-busy", "true")
+  expect(screen.getByTestId("legal-case-sync-overlay")).toHaveTextContent("Buscando andamentos…")
 
   resolveSync(okResponse({ message: "1 andamento novo importado." }))
-  expect(await screen.findByRole("status")).toHaveTextContent("1 andamento novo importado.")
+  await waitFor(() => expect(screen.queryByTestId("legal-case-sync-overlay")).not.toBeInTheDocument())
+  expect(screen.getByRole("status")).toHaveTextContent("1 andamento novo importado.")
   expect(screen.getByText("Andamento importado")).toBeVisible()
   expect(fetchMock).toHaveBeenNthCalledWith(2, "/legal_cases/1/sync", expect.objectContaining({
     method: "POST", headers: expect.objectContaining({ "X-CSRF-Token": "csrf-detail-token" })
   }))
+})
+
+test("removes the native synchronization control from the legal case view", () => {
+  const view = readFileSync("app/views/legal_cases/show.html.erb", "utf8")
+
+  expect(view).not.toContain("sync_legal_case_path")
+  expect(view).not.toContain("button_to")
 })
 
 test("shows a sync error and re-enables the button when the request fails", async () => {
