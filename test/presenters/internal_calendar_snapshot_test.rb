@@ -21,7 +21,7 @@ class InternalCalendarSnapshotTest < ActiveSupport::TestCase
       month_label: "Julho de 2026",
       previous_month_param: "2026-06",
       next_month_param: "2026-08",
-      calendar_weeks: [[ Date.new(2026, 7, 30) ]],
+      calendar_weeks: [ [ Date.new(2026, 7, 30) ] ],
       events_by_day: { Date.new(2026, 7, 30) => [ event ] },
       list_events: [ event ],
       google_calendar_url: "https://calendar.google.com/calendar/r?cid=feed"
