@@ -663,6 +663,9 @@ select {
   font-size: .9rem;
   border-color: rgba(151, 196, 255, .38);
 }
+.aurora-form .form-step-title { background: rgba(120, 239, 208, .1); border-left-color: #78efd0; color: var(--aurora-form-ink); }
+.aurora-form .movement-preview { background: rgba(4, 19, 43, .46); border-color: rgba(151, 196, 255, .24); }
+.aurora-form .movement-preview__title { color: var(--aurora-form-muted); }
 .aurora-form .checkbox-field { color: var(--aurora-form-ink); }
 .aurora-form__errors { background: rgba(143, 36, 57, .72); border-color: rgba(255, 152, 174, .48); color: #fff; }
 .aurora-form__actions {
