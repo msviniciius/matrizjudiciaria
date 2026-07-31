@@ -1,13 +1,4 @@
 .react-dashboard {
-  --aurora-ink: #eaf4ff;
-  --aurora-muted: #b7c9e6;
-  --aurora-surface: rgba(15, 32, 60, .82);
-  --aurora-surface-raised: rgba(25, 52, 91, .9);
-  --aurora-border: rgba(151, 196, 255, .24);
-  --aurora-blue: #73b7ff;
-  --aurora-mint: #78efd0;
-  --aurora-danger: #ff98ae;
-  --aurora-warning: #ffd77b;
   color: var(--aurora-ink);
   display: grid;
   gap: 1rem;
