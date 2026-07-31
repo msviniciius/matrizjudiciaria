@@ -122,9 +122,12 @@ export function ClientsApp() {
         <h1>Clientes</h1>
         {snapshot && <p className="react-clients__count" role="status">{snapshot.meta.total_count} cliente(s)</p>}
       </div>
-      <div className="react-clients__view-switch" aria-label="Visualização">
+      <div className="react-clients__header-actions">
+        {snapshot?.actions.new && <a className="react-clients__new" href={snapshot.actions.new}>Novo cliente</a>}
+        <div className="react-clients__view-switch" aria-label="Visualização">
         <button type="button" aria-pressed={view === "cards"} onClick={() => chooseView("cards")}>Cartões</button>
         <button type="button" aria-pressed={view === "table"} onClick={() => chooseView("table")}>Tabela</button>
+        </div>
       </div>
     </header>
 

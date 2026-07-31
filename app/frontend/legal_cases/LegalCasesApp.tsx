@@ -131,9 +131,13 @@ export function LegalCasesApp() {
           <h1>Processos</h1>
           {snapshot && <p className="react-legal-cases__count" role="status">{snapshot.meta.total_count} processo(s)</p>}
         </div>
-        <div className="react-legal-cases__view-switch" aria-label="Visualização">
+        <div className="react-legal-cases__header-actions">
+          {snapshot?.actions.daily_closure && <a className="react-legal-cases__secondary-action" href={snapshot.actions.daily_closure}>Fechamento diário</a>}
+          {snapshot?.actions.new && <a className="react-legal-cases__new" href={snapshot.actions.new}>Novo processo</a>}
+          <div className="react-legal-cases__view-switch" aria-label="Visualização">
           <button type="button" aria-pressed={view === "cards"} onClick={() => chooseView("cards")}>Cartões</button>
           <button type="button" aria-pressed={view === "table"} onClick={() => chooseView("table")}>Tabela</button>
+          </div>
         </div>
       </header>
 

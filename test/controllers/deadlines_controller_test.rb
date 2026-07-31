@@ -25,6 +25,33 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index mounts the React deadlines listing" do
+    get deadlines_url
+
+    assert_response :success
+    assert_select "#react-deadlines-root"
+    assert_select "script[src*='deadlines']"
+  end
+
+  test "index JSON exposes deadlines snapshot" do
+    get deadlines_url(format: :json), params: { q: "teste", status: "pending" }
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal 1, body.dig("meta", "total_count")
+    assert_equal "teste", body.dig("filters", "q")
+    assert_equal "pending", body.dig("filters", "status")
+    assert_equal deadlines_path, body.dig("actions", "index")
+    assert_equal new_deadline_path, body.dig("actions", "new")
+
+    deadline = body.fetch("deadlines").sole
+    assert_equal @deadline.id, deadline.fetch("id")
+    assert_equal "PROC-DEA-001", deadline.fetch("process_number")
+    assert_equal "Prazo teste", deadline.fetch("title")
+    assert_equal deadline_path(@deadline), deadline.fetch("path")
+    assert_equal edit_deadline_path(@deadline), deadline.fetch("edit_path")
+  end
+
   test "index only lists deadlines from the active unit" do
     current_unit = Unit.create!(office: default_office, name: "Contencioso prazos")
     other_unit = Unit.create!(office: default_office, name: "Consultivo prazos")
@@ -38,11 +65,12 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     )
     sign_in_and_select(current_unit)
 
-    get deadlines_url
+    get deadlines_url(format: :json)
 
     assert_response :success
-    assert_includes response.body, @deadline.title
-    assert_not_includes response.body, other_deadline.title
+    deadline_titles = response.parsed_body.fetch("deadlines").map { |deadline| deadline.fetch("title") }
+    assert_includes deadline_titles, @deadline.title
+    assert_not_includes deadline_titles, other_deadline.title
   end
 
   test "should get new" do

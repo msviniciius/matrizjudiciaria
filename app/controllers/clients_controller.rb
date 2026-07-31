@@ -39,6 +39,9 @@ class ClientsController < ApplicationController
 
   def show
     @client_legal_cases = scope_by_current_unit(@client.legal_cases).order(updated_at: :desc)
+    return unless request.format.json?
+
+    render json: ClientShowSnapshot.new(client: @client, legal_cases: @client_legal_cases).as_json
   end
 
   def new

@@ -219,17 +219,17 @@ export function LegalCaseShowApp() {
     <div data-testid="legal-case-sync-content" inert={syncPending || undefined}>
     <header className="react-legal-case-show__header">
       <div>
-        <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
-        <h1>{snapshot.case.client_name}</h1>
         <p className="react-legal-case-show__client">Central de comando</p>
+        <h1>{snapshot.case.client_name}</h1>
+        <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
         <p className="react-legal-case-show__identifiers">{snapshot.case.external_number ? `CNJ: ${snapshot.case.external_number}` : "Sem número CNJ"}</p>
       </div>
-      <div className="react-legal-case-show__badges" aria-label="Situação do processo">
+      <div className="react-legal-case-show__header-actions"><div className="react-legal-case-show__actions"><a href={snapshot.actions.edit}>Editar processo</a><a href={snapshot.actions.pdf} target="_blank" rel="noreferrer">Exportar PDF</a><a href={snapshot.actions.index}>Voltar</a></div><div className="react-legal-case-show__badges" aria-label="Situação do processo">
         <span className="react-legal-case-show__badge">{snapshot.case.phase_label}</span>
         <span className="react-legal-case-show__badge">{snapshot.case.status_label}</span>
         <span className="react-legal-case-show__badge react-legal-case-show__badge--priority">Prioridade {snapshot.case.priority_label}</span>
         <AlertSummary alerts={snapshot.alerts} />
-      </div>
+      </div></div>
     </header>
 
     {error && <section className="react-legal-case-show__error" role="alert"><p>{error}</p><button type="button" onClick={loadSnapshot}>Tentar novamente</button></section>}
@@ -316,9 +316,7 @@ export function LegalCaseShowApp() {
     </section>
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
-      <a href={snapshot.actions.pdf}>Exportar PDF</a>
       <a href={snapshot.actions.calendar}>Adicionar ao calendário</a>
-      <a href={snapshot.actions.index}>Voltar aos processos</a>
       {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} onSync={syncCase} pending={syncPending} />}
     </nav>
     </aside>

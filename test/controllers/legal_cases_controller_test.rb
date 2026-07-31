@@ -84,6 +84,13 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='@vite/client']", count: 0
   end
 
+  test "new preselects a permitted client from the client detail shortcut" do
+    get new_legal_case_url(client_id: @client.id)
+
+    assert_response :success
+    assert_select "select[name='legal_case[client_id]'] option[selected][value='#{@client.id}']"
+  end
+
   test "Vite manifest exposes the legal cases entrypoint" do
     entrypoint_path = ViteRuby.instance.manifest.path_for("legal_cases.tsx")
 

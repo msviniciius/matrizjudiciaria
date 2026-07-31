@@ -35,6 +35,7 @@
 .react-legal-cases__header h1, .react-legal-cases__empty h2, .react-legal-cases__card h2 { margin: 0; }
 .react-legal-cases__eyebrow { color: var(--aurora-muted); font-size: .75rem; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
 .react-legal-cases__count { color: var(--aurora-muted); margin: .35rem 0 0; }
+.react-legal-cases__header-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .6rem; justify-content: flex-end; }.react-legal-cases__new, .react-legal-cases__secondary-action { border-radius: 8px; font-weight: 700; padding: .55rem .75rem; text-decoration: none; }.react-legal-cases__new { background: var(--aurora-mint); color: #102747; }.react-legal-cases__secondary-action { border: 1px solid rgba(120, 239, 208, .5); color: var(--aurora-ink); }
 
 .react-legal-cases__view-switch { background: rgba(7, 23, 51, .42); border: 1px solid rgba(255, 255, 255, .25); border-radius: 10px; display: flex; padding: .2rem; }
 .react-legal-cases__view-switch button, .react-legal-cases__clear, .react-legal-cases__search-submit, .react-legal-cases__advanced-toggle, .react-legal-cases__error button { border: 0; border-radius: 8px; cursor: pointer; font: inherit; padding: .55rem .75rem; }

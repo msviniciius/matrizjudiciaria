@@ -1,3 +1,4 @@
+.react-dashboard__header-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .6rem; justify-content: flex-end; }.react-dashboard__new { background: var(--aurora-mint); border-radius: 8px; color: #102747; font-weight: 700; padding: .55rem .75rem; text-decoration: none; }
 .react-dashboard {
   color: var(--aurora-ink);
   display: grid;
@@ -20,7 +21,7 @@
 .react-dashboard__kpi:hover, .react-dashboard__kpi:focus-visible, .react-dashboard__card:hover { border-color: var(--aurora-blue); transform: translateY(-2px); }
 .react-dashboard__kpi strong { animation: aurora-number-in 420ms ease-out both; display: block; font-size: 2rem; margin-top: .35rem; }
 .react-dashboard__kpi--danger strong { color: var(--aurora-danger); }.react-dashboard__kpi--warning strong { color: var(--aurora-warning); }.react-dashboard__kpi--info strong { color: var(--aurora-blue); }
-.react-dashboard__next-action { align-items: center; animation: aurora-card-in 360ms ease-out both; background: linear-gradient(115deg, rgba(67, 48, 135, .92), rgba(18, 98, 111, .88)); display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) auto; padding: 1.25rem; }
+.react-dashboard__next-action { align-items: center; animation: aurora-card-in 360ms ease-out both; background: radial-gradient(circle at 92% 0%, rgba(39, 91, 104, .16), transparent 38%), linear-gradient(145deg, var(--aurora-surface-raised), var(--aurora-surface)); border-left: 3px solid var(--aurora-warning); display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) auto; padding: 1.25rem; }
 .react-dashboard__next-action a { background: rgba(7, 22, 45, .38); border: 1px solid rgba(255, 255, 255, .2); border-radius: 12px; color: var(--aurora-ink); display: grid; font-weight: 700; gap: .3rem; padding: .8rem 1rem; text-decoration: none; }
 .react-dashboard__next-action a span { color: var(--aurora-mint); font-size: .8rem; font-weight: 600; }
 .react-dashboard__section { display: grid; gap: .7rem; }.react-dashboard__card { background: linear-gradient(145deg, var(--aurora-surface-raised), var(--aurora-surface)); display: grid; gap: .6rem; padding: 1rem; transition: transform 180ms ease, border-color 180ms ease; }

@@ -88,7 +88,7 @@ export function DashboardApp() {
           <h2>Central de comando</h2>
           <p>{snapshot.meta.unit_name ? `Unidade ${snapshot.meta.unit_name}` : "Todas as unidades"}</p>
         </div>
-        <button className="react-dashboard__sync" type="button" disabled={syncPending} onClick={syncAll}>{syncPending ? "Sincronizando…" : "Sincronizar andamentos"} <span>{snapshot.meta.new_imported_events_count}</span></button>
+        <div className="react-dashboard__header-actions"><a className="react-dashboard__new" href={document.getElementById("react-dashboard-root")?.dataset.newProcessPath}>Novo processo</a><button className="react-dashboard__sync" type="button" disabled={syncPending} onClick={syncAll}>{syncPending ? "Sincronizando…" : "Sincronizar andamentos"} <span>{snapshot.meta.new_imported_events_count}</span></button></div>
       </header>
       {toast && <p className="react-dashboard__toast" role="status">{toast}</p>}
       {syncError && <p className="react-dashboard__error" role="alert">{syncError}</p>}
@@ -109,7 +109,7 @@ export function DashboardApp() {
       <section className="react-dashboard__section">
         <h3>Fila de atenção</h3>
         <div className="react-dashboard__queues">
-          <Queue title="Processos sem responsável" items={queues.without_responsible} empty="Todos os processos têm responsável definido." onUpdateResponsible={updateResponsible} />
+          <Queue title="Processos sem responsável" items={queues.without_responsible} empty="Todos os processos têm responsável definido." />
           <Queue title="Sem próxima providência" items={queues.without_next_action} empty="Todos os processos têm próxima providência." />
           <Queue title="Prazos vencidos sem justificativa" items={queues.overdue_deadlines_without_reason} empty="Não há prazos vencidos sem justificativa." />
           <article className="react-dashboard__card"><h4>Central de risco</h4>{Object.values(snapshot.risk_queue).filter((risk) => risk.count > 0).map((risk) => <a href={risk.path} key={risk.label}>{risk.label}<strong>{risk.count}</strong></a>)}</article>
@@ -127,14 +127,6 @@ export function DashboardApp() {
   )
 }
 
-function Queue({ title, items, empty, onUpdateResponsible }: { title: string; items: Array<QueueCase | Deadline>; empty: string; onUpdateResponsible?: (path: string, value: string) => Promise<void> }) {
-  return <article className="react-dashboard__card"><h4>{title}</h4>{items.length ? items.map((item) => "update_responsible_path" in item && onUpdateResponsible ? <ResponsibleItem item={item} onUpdate={onUpdateResponsible} key={item.id} /> : <a href={item.path} key={item.id}>{"internal_number" in item ? item.internal_number : item.title}<small>{"legal_case_number" in item ? item.legal_case_number : "Abrir processo"}</small></a>) : <p>{empty}</p>}</article>
-}
-
-function ResponsibleItem({ item, onUpdate }: { item: QueueCase; onUpdate: (path: string, value: string) => Promise<void> }) {
-  const [value, setValue] = useState(item.responsible_name)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const submit = async (event: React.FormEvent) => { event.preventDefault(); setPending(true); setError(null); try { await onUpdate(item.update_responsible_path, value) } catch (reason) { setError(reason instanceof Error ? reason.message : "Não foi possível atualizar o responsável.") } finally { setPending(false) } }
-  return <div className="react-dashboard__queue-item"><a href={item.path}>{item.internal_number}</a><form onSubmit={submit}><label>Responsável do processo {item.internal_number}<input value={value} onChange={(event) => setValue(event.target.value)} required /></label><button disabled={pending}>{pending ? "Salvando…" : "Salvar responsável"}</button></form>{error && <small role="alert">{error}</small>}</div>
+function Queue({ title, items, empty }: { title: string; items: Array<QueueCase | Deadline>; empty: string }) {
+  return <article className="react-dashboard__card"><h4>{title}</h4>{items.length ? items.map((item) => <a href={item.path} key={item.id}>{"internal_number" in item ? item.internal_number : item.title}<small>{"legal_case_number" in item ? item.legal_case_number : "Abrir processo"}</small></a>) : <p>{empty}</p>}</article>
 }

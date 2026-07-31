@@ -1,16 +1,4 @@
-<% content_for :title, "Painel" %>
-
-<% content_for :topbar_actions do %>
-  <% if @syncable_count.to_i > 0 %>
-    <%= button_to sync_all_cases_path, method: :post, class: "btn btn-secondary", form: { data: { turbo_confirm: "Isso vai buscar os andamentos de #{@syncable_count} processo(s) no CNJ. Continuar?" } } do %>
-      Sincronizar Andamentos
-      <% if @new_imported_events_count.to_i > 0 %>
-        <span class="status-pill status-pill--danger" style="margin-left:0.5rem"><%= @new_imported_events_count %> novo(s)</span>
-      <% end %>
-    <% end %>
-  <% end %>
-  <%= link_to "Novo processo", new_legal_case_path, class: "btn btn-primary" %>
-<% end %>
+<% content_for :title, "Matriz Jurídica · Painel" %>
 
 <% if @unit_selection_required %>
   <dialog class="quick-client-modal quick-client-modal--locked" data-force-unit-modal hidden>
@@ -31,5 +19,5 @@
     </div>
   </dialog>
 <% else %>
-  <div id="react-dashboard-root"></div>
+  <div id="react-dashboard-root" data-new-process-path="<%= new_legal_case_path %>"></div>
 <% end %>

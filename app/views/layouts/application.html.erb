@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Matrizjuridica" %></title>
+    <title><%= content_for(:title).presence || "Matriz Jurídica" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Matrizjuridica">
@@ -12,17 +12,23 @@
 
     <%= yield :head %>
 
-    <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="apple-touch-icon" href="/icon.svg">
     <link rel="manifest" href="<%= pwa_manifest_path(format: :json) %>">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag :app, "data-turbo-track": "reload", defer: true %>
     <% vite_entrypoint = {
       "dashboard#index" => "dashboard.tsx",
       "clients#index" => "clients.tsx",
+      "clients#show" => "client_show.tsx",
+      "deadlines#index" => "deadlines.tsx",
+      "internal_calendars#index" => "internal_calendar.tsx",
       "legal_cases#index" => "legal_cases.tsx",
-      "legal_cases#show" => "legal_case_show.tsx"
+      "legal_cases#show" => "legal_case_show.tsx",
+      "process_movements#index" => "process_movements.tsx",
+      "process_movements#show" => "process_movement_show.tsx",
+      "tasks#index" => "tasks.tsx",
+      "tasks#show" => "task_show.tsx"
     }["#{controller_path}##{action_name}"] %>
     <% if vite_entrypoint.present? %>
       <%= vite_client_tag %>

@@ -62,14 +62,19 @@ class InternalCalendarsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "Calendário interno"
-    assert_includes @response.body, "Prazo de teste"
+    assert_select "#react-internal-calendar-root"
+    assert_select "script[src*='internal_calendar']"
   end
 
   test "should get internal calendar list view" do
-    get internal_calendar_url(month: Date.current.strftime("%Y-%m"), view: "list")
+    get internal_calendar_url(format: :json), params: { month: Date.current.strftime("%Y-%m"), view: "list" }
 
     assert_response :success
-    assert_includes @response.body, "Tarefa de teste"
-    assert_includes @response.body, "Perícia"
+    body = response.parsed_body
+    assert_equal "list", body.dig("meta", "view_mode")
+    assert_equal Date.current.strftime("%Y-%m"), body.dig("meta", "reference_month")
+    assert_equal internal_calendar_path(month: Date.current.strftime("%Y-%m"), view: "month"), body.dig("actions", "month")
+    assert_includes body.fetch("events").map { |event| event.fetch("title") }, "Tarefa de teste"
+    assert_includes body.fetch("events").map { |event| event.fetch("type_label") }, "Perícia"
   end
 end

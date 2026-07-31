@@ -7,7 +7,7 @@ class DeadlinesController < ApplicationController
     scope = Deadline
       .joins(:legal_case)
       .where(legal_cases: { office_id: current_office.id })
-      .includes(:legal_case)
+      .includes(legal_case: :client)
       .order(due_date: :asc, created_at: :desc)
     scope = scope_by_current_unit(scope, through: :legal_cases)
 
@@ -38,6 +38,15 @@ class DeadlinesController < ApplicationController
 
     @deadlines = scope
     @advanced_filters_open = false
+
+    return unless request.format.json?
+
+    render json: DeadlinesSnapshot.new(
+      office: current_office,
+      unit: current_unit,
+      deadlines: @deadlines,
+      filters: @filters
+    ).as_json
   end
 
   # GET /deadlines/1 or /deadlines/1.json

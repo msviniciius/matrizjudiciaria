@@ -91,6 +91,7 @@ class LegalCasesController < ApplicationController
       phase: current_office.default_phase,
       status: current_office.default_status,
       priority: current_office.default_priority,
+      client_id: permitted_prefill_client_id,
       responsible_name: current_user&.name,
       unit: current_unit
     )
@@ -146,6 +147,12 @@ class LegalCasesController < ApplicationController
 
   def set_legal_case
     @legal_case = scope_by_current_unit(current_office.legal_cases).find(params.expect(:id))
+  end
+
+  def permitted_prefill_client_id
+    return if params[:client_id].blank?
+
+    scope_by_current_unit(current_office.clients).find_by(id: params[:client_id])&.id
   end
 
   def legal_case_params
