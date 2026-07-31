@@ -41,6 +41,16 @@
             <button type="button" class="btn btn-secondary btn-xs" data-unit-select-all>Marcar todas</button>
             <button type="button" class="btn btn-secondary btn-xs" data-unit-clear>Limpar</button>
           </div>
+          <div class="unit-access-matrix">
+            <span class="unit-access-matrix__icon" aria-hidden="true">⌂</span>
+            <div>
+              <label class="unit-access-matrix__label" for="user_matrix_access">
+                <%= hidden_field_tag "user[matrix_access]", "0" %>
+                <%= check_box_tag "user[matrix_access]", "1", user.matrix_access?, id: "user_matrix_access" %>
+                <span><strong><%= current_office.name %> (Matriz)</strong><small>Acesso operacional à matriz</small></span>
+              </label>
+            </div>
+          </div>
           <div class="unit-checklist" data-unit-checklist>
             <% if current_office.units.ordered.any? %>
               <% current_office.units.ordered.each do |unit| %>

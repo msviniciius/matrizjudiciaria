@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
   before_action :ensure_unit_context!
   before_action :load_navbar_notifications
 
-  helper_method :current_user, :current_office, :current_unit, :all_units_mode?, :user_signed_in?
+  helper_method :current_user, :current_office, :current_unit, :all_units_mode?, :matrix_mode?, :user_signed_in?
 
   private
 
@@ -28,13 +28,19 @@ class ApplicationController < ActionController::Base
 
   def current_unit
     return nil if current_user.blank?
-    return nil if all_units_mode?
+    return nil if all_units_mode? || matrix_mode?
 
     @current_unit ||= current_user.available_units.find_by(id: session[:current_unit_id])
   end
 
   def all_units_mode?
     current_user&.admin? && session[:all_units] == true
+  end
+
+  def matrix_mode?
+    return false if current_user.blank? || all_units_mode?
+    return true if session[:current_context] == "matrix"
+    session[:current_context].blank? && current_user.matrix_access? && current_user.available_units.empty?
   end
 
   def authenticate_user!
@@ -60,13 +66,17 @@ class ApplicationController < ActionController::Base
     return unless user_signed_in?
 
     units = current_user.available_units
-    return if units.empty?
     return if all_units_mode?
+    if units.empty?
+      session[:current_context] = "matrix" if current_user.matrix_access?
+      return
+    end
     return if current_unit.present?
     return if current_user.admin?
 
-    if units.count == 1
+    if units.count == 1 && !current_user.matrix_access?
       session[:current_unit_id] = units.first.id
+      session[:current_context] = "unit"
       session[:all_units] = false
     end
   end
@@ -75,6 +85,11 @@ class ApplicationController < ActionController::Base
     # Em teste (sem usuario logado), retorna escopo sem filtro
     return scope if current_user.blank?
     return scope if all_units_mode?
+    if matrix_mode?
+      return scope.where(through => { unit_id: nil }) if through.present?
+      return scope.where(unit_id: nil) if scope.klass.column_names.include?("unit_id")
+      return scope
+    end
     return scope.none if current_unit.blank?
 
     if through.present?
@@ -111,9 +126,12 @@ class ApplicationController < ActionController::Base
       .order(:due_date)
       .limit(5)
 
-    unless all_units_mode?
+    if current_unit.present?
       @navbar_deadlines = @navbar_deadlines.where(legal_cases: { unit_id: current_unit&.id })
       @navbar_tasks = @navbar_tasks.where(legal_cases: { unit_id: current_unit&.id })
+    elsif matrix_mode?
+      @navbar_deadlines = @navbar_deadlines.where(legal_cases: { unit_id: nil })
+      @navbar_tasks = @navbar_tasks.where(legal_cases: { unit_id: nil })
     end
 
     @navbar_notification_total = @navbar_deadlines.size + @navbar_tasks.size

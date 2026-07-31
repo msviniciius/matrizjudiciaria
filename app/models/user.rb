@@ -19,6 +19,7 @@ class User < ApplicationRecord
   validates :name, :email, :role, presence: true
   validates :email, uniqueness: { scope: :office_id }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :role, inclusion: { in: ROLES }
+  validates :matrix_access, inclusion: { in: [ true, false ] }
   validates :password, length: { minimum: 6 }, allow_nil: true
   validate :password_confirmation_matches
 

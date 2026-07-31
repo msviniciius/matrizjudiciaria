@@ -5,7 +5,8 @@ class DashboardController < ApplicationController
       return
     end
 
-    @unit_selection_required = current_user.present? && !all_units_mode? && current_unit.blank? && (current_user.admin? || current_user.available_units.exists?)
+    has_contexts = current_user&.matrix_access? || current_user&.available_units&.exists?
+    @unit_selection_required = current_user.present? && !all_units_mode? && current_unit.blank? && !matrix_mode? && has_contexts
     @available_units = current_user&.available_units&.ordered || []
 
     if @unit_selection_required

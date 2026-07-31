@@ -16,6 +16,13 @@
         <%= form.submit "Entrar na unidade", class: "btn btn-primary btn-block" %>
       <% end %>
 
+      <% if current_user&.matrix_access? %>
+        <%= form_with url: unit_session_path, method: :post, class: "auth-form", local: true do |form| %>
+          <%= form.hidden_field :matrix, value: "1" %>
+          <%= form.submit "Acessar matriz", class: "btn btn-secondary btn-block" %>
+        <% end %>
+      <% end %>
+
       <% if current_user&.admin? %>
         <%= form_with url: unit_session_path, method: :post, class: "auth-form", local: true do |form| %>
           <%= form.hidden_field :all_units, value: "1" %>

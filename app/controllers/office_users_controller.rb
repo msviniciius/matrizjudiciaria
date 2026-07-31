@@ -3,7 +3,7 @@ class OfficeUsersController < ApplicationController
   before_action :set_user, only: %i[edit update destroy]
 
   def index
-    @users = current_office.users.order(:name, :email)
+    @users = current_office.users.includes(:units).order(:name, :email)
   end
 
   def new
@@ -55,6 +55,6 @@ class OfficeUsersController < ApplicationController
   end
 
   def user_params
-    params.expect(user: [ :name, :email, :role, :active, :password, :password_confirmation, unit_ids: [] ])
+    params.expect(user: [ :name, :email, :role, :active, :matrix_access, :password, :password_confirmation, unit_ids: [] ])
   end
 end

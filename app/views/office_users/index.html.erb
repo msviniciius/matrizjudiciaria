@@ -12,6 +12,7 @@
         <th>Nome</th>
         <th>E-mail</th>
         <th>Tipo</th>
+        <th>Lotação</th>
         <th>Status</th>
         <th>Último acesso</th>
         <th class="actions-col">Ações</th>
@@ -24,6 +25,19 @@
             <td><%= user.name %></td>
             <td><%= user.email %></td>
             <td><%= user.role_label %></td>
+            <td>
+              <div class="user-locations">
+                <% if user.matrix_access? %>
+                  <span class="user-location">Matriz</span>
+                <% end %>
+                <% user.units.ordered.each do |unit| %>
+                  <span class="user-location"><%= unit.name %></span>
+                <% end %>
+                <% if !user.matrix_access? && user.units.empty? %>
+                  <span class="user-location user-location--empty">Sem lotação</span>
+                <% end %>
+              </div>
+            </td>
             <td><%= user.active? ? "Ativo" : "Inativo" %></td>
             <td><%= user.last_sign_in_at.present? ? l(user.last_sign_in_at, format: :short) : "-" %></td>
             <td class="table-actions office-users-actions">
@@ -40,7 +54,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="6" class="table-empty-state">Nenhum usuário cadastrado para este escritório.</td>
+          <td colspan="7" class="table-empty-state">Nenhum usuário cadastrado para este escritório.</td>
         </tr>
       <% end %>
     </tbody>

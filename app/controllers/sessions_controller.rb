@@ -18,14 +18,22 @@ class SessionsController < ApplicationController
 
       if user.admin?
         session.delete(:current_unit_id)
+        session.delete(:current_context)
         session[:all_units] = false
         redirect_to root_path, notice: "Selecione a unidade para continuar."
-      elsif units.count <= 1
+      elsif user.matrix_access? && units.empty?
+        session.delete(:current_unit_id)
+        session[:current_context] = "matrix"
+        session[:all_units] = false
+        redirect_to root_path, notice: "Login realizado com sucesso."
+      elsif units.count == 1 && !user.matrix_access?
         session[:current_unit_id] = units.first&.id
+        session[:current_context] = "unit"
         session[:all_units] = false
         redirect_to root_path, notice: "Login realizado com sucesso."
       else
         session.delete(:current_unit_id)
+        session.delete(:current_context)
         session[:all_units] = false
         redirect_to root_path, notice: "Selecione a unidade para continuar."
       end

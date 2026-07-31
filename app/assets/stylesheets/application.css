@@ -2273,6 +2273,12 @@ td.table-actions { width: 1%; }
 .unit-access-panel__head label { display: block; margin-bottom: 4px; font-weight: 700; }
 .unit-access-panel__head p { margin: 0; color: var(--muted); font-size: 0.82rem; }
 .unit-access-panel > .unit-checklist-toolbar__actions { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 10px; }
+.unit-access-matrix { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 11px 12px; border: 1px solid rgba(91, 140, 255, 0.4); border-radius: 10px; background: var(--brand-muted); }
+.unit-access-matrix__icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--brand); color: #fff; font-size: 1rem; }
+.unit-access-matrix__label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.unit-access-matrix__label input { accent-color: var(--brand); }
+.unit-access-matrix strong, .unit-access-matrix small { display: block; }
+.unit-access-matrix small { margin-top: 2px; color: var(--muted); font-size: 0.75rem; }
 .unit-checklist { display: grid; gap: 8px; }
 .unit-checklist-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
 .unit-checklist-toolbar__count { font-size: 0.8rem; color: var(--muted); font-weight: 700; }
@@ -2295,6 +2301,10 @@ td.table-actions { width: 1%; }
 }
 
 .unit-checklist__empty { margin: 0; padding: 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 0.85rem; }
+
+.user-locations { display: flex; flex-wrap: wrap; gap: 5px; min-width: 150px; }
+.user-location { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, 0.04); color: var(--text); font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+.user-location--empty { color: var(--muted); font-weight: 500; }
 
 /* ===== Custom Select (JS component) ===== */
 .native-select-hidden {
