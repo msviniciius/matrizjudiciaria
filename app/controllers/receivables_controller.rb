@@ -67,7 +67,6 @@ class ReceivablesController < ApplicationController
       :payment_method,
       :notes,
       :trigger,
-      :status,
       :unit_id,
       :client_id,
       :legal_case_id

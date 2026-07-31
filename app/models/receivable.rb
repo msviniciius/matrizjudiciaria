@@ -27,6 +27,7 @@ class Receivable < ApplicationRecord
   validate :unit_belongs_to_same_office, if: -> { unit.present? && office.present? }
   validate :client_belongs_to_same_office, if: -> { client.present? && office.present? }
   validate :legal_case_belongs_to_same_office, if: -> { legal_case.present? && office.present? }
+  validate :received_status_requires_full_payment
 
   scope :for_period, ->(period) { where(due_date: period) }
   scope :by_status, ->(status) { where(status: status) }
@@ -75,5 +76,12 @@ class Receivable < ApplicationRecord
     return if legal_case.office_id == office_id
 
     errors.add(:legal_case_id, "não pertence ao escritório atual")
+  end
+
+  def received_status_requires_full_payment
+    return unless status_received?
+    return if amount.present? && amount_paid == amount
+
+    errors.add(:status, "só pode ser recebida quando estiver totalmente quitada")
   end
 end

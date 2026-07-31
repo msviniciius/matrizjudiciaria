@@ -69,6 +69,21 @@ class Receivables::QueryTest < ActiveSupport::TestCase
     assert_equal [ matching ], receivables.to_a
   end
 
+  test "filters by a period received as unpermitted controller parameters" do
+    matching = create_receivable(due_date: Date.current - 2.days)
+    create_receivable(due_date: Date.current - 4.days)
+    params = ActionController::Parameters.new(
+      period: {
+        start: (Date.current - 3.days).iso8601,
+        end: (Date.current - 1.day).iso8601
+      }
+    )
+
+    receivables = Receivables::Query.new(office: default_office, params: params).call
+
+    assert_equal [ matching ], receivables.to_a
+  end
+
   private
 
   def create_receivable(office: default_office, **attrs)

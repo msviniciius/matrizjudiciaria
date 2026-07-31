@@ -34,10 +34,9 @@ class Receivables::Query
   def normalize_period(supplied_period)
     return supplied_period if supplied_period.is_a?(Range)
 
-    if supplied_period.respond_to?(:to_h)
-      values = supplied_period.to_h
-      start_date = parse_date(values[:start] || values["start"] || values[:from] || values["from"])
-      end_date = parse_date(values[:end] || values["end"] || values[:to] || values["to"])
+    if supplied_period.respond_to?(:[]) && !supplied_period.is_a?(String)
+      start_date = parse_date(period_value(supplied_period, :start, :from))
+      end_date = parse_date(period_value(supplied_period, :end, :to))
       return start_date..end_date if start_date && end_date
     end
 
@@ -53,6 +52,14 @@ class Receivables::Query
 
     Date.iso8601(value.to_s)
   rescue ArgumentError
+    nil
+  end
+
+  def period_value(supplied_period, *keys)
+    keys.each do |key|
+      value = supplied_period[key] || supplied_period[key.to_s]
+      return value if value.present?
+    end
     nil
   end
 

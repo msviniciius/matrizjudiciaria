@@ -110,6 +110,13 @@ class ReceivableTest < ActiveSupport::TestCase
     end
   end
 
+  test "rejects a received account whose amount has not been fully paid" do
+    receivable = build_receivable(status: "received", amount_paid: 0)
+
+    assert_not receivable.valid?
+    assert_includes receivable.errors[:status], "só pode ser recebida quando estiver totalmente quitada"
+  end
+
   test "is overdue only when an open account is past due" do
     receivable = build_receivable(due_date: Date.yesterday, status: "pending")
     received = build_receivable(due_date: Date.yesterday, status: "received", amount_paid: 1_500)

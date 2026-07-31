@@ -54,6 +54,22 @@ class ReceivablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "canceled", receivable.reload.status
   end
 
+  test "does not let an administrator create an unsettled account as received" do
+    sign_in(@administrator)
+
+    post receivables_url, params: { receivable: {
+      description: "Honorários sem quitação",
+      amount: 1_000,
+      due_date: Date.current,
+      status: "received"
+    } }
+
+    receivable = default_office.receivables.find_by!(description: "Honorários sem quitação")
+    assert_redirected_to receivables_url
+    assert_equal "pending", receivable.status
+    assert_equal 0, receivable.amount_paid
+  end
+
   private
 
   def create_user(role:)
