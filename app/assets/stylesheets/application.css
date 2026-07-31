@@ -711,6 +711,8 @@ select {
 .aurora-admin-listing table th:last-child,
 .aurora-admin-listing table td:last-child,
 .aurora-admin-listing td.table-actions { width: max-content; min-width: max-content; white-space: nowrap; }
+.aurora-admin-listing table th:last-child { text-align: right; }
+.aurora-admin-listing td.table-actions { justify-content: flex-end; text-align: right; }
 .aurora-admin-listing .table-actions .btn { border-color: rgba(151, 196, 255, .28); }
 @media (max-width: 760px) { .aurora-admin-listing .listing-head { align-items: flex-start; flex-direction: column; } }
 
