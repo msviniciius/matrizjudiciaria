@@ -2130,6 +2130,8 @@
     document.querySelectorAll("form.main-filters select, form.app-form select").forEach(build);
   };
 
+  document.addEventListener("custom-select:refresh", initCustomSelects);
+
   document.addEventListener("click", (event) => {
     if (event.target.closest(`[${ROOT_ATTR}]`)) return;
     closeAll();

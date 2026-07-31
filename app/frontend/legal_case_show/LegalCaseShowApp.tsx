@@ -461,6 +461,7 @@ function OutcomeModal({
 
   useEffect(() => {
     selectRef.current?.focus()
+    document.dispatchEvent(new Event("custom-select:refresh"))
   }, [])
 
   useEffect(() => {
@@ -484,7 +485,7 @@ function OutcomeModal({
         <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} disabled={pending} aria-label="Fechar registro de desfecho">×</button>
       </div>
       <p id="outcome-modal-description">Registre o resultado jurídico. Um resultado ganho ativa apenas as cobranças que aguardam esse gatilho; nenhum pagamento será registrado automaticamente.</p>
-      <form onSubmit={(event) => {
+      <form className="app-form" onSubmit={(event) => {
         event.preventDefault()
         void onSubmit({ outcome, outcomeDate, outcomeNotes })
       }}>
