@@ -29,21 +29,30 @@
       </div>
 
       <div class="field-full">
-        <%= form.label :unit_ids, "Unidades de acesso" %>
-        <div class="unit-checklist-toolbar">
-          <span class="unit-checklist-toolbar__count" data-unit-count>0 selecionadas</span>
+        <div class="unit-access-panel">
+          <div class="unit-access-panel__head">
+            <div>
+              <%= form.label :unit_ids, "Unidades de acesso" %>
+              <p>Defina em quais unidades este usuário poderá consultar e operar.</p>
+            </div>
+            <span class="unit-checklist-toolbar__count" data-unit-count>0 selecionadas</span>
+          </div>
           <div class="unit-checklist-toolbar__actions">
             <button type="button" class="btn btn-secondary btn-xs" data-unit-select-all>Marcar todas</button>
             <button type="button" class="btn btn-secondary btn-xs" data-unit-clear>Limpar</button>
           </div>
-        </div>
-        <div class="unit-checklist" data-unit-checklist>
-          <% current_office.units.ordered.each do |unit| %>
-            <label class="unit-checklist__item" data-unit-item>
-              <%= check_box_tag "user[unit_ids][]", unit.id, user.unit_ids.include?(unit.id), id: "user_unit_ids_#{unit.id}" %>
-              <span><%= unit.name %></span>
-            </label>
-          <% end %>
+          <div class="unit-checklist" data-unit-checklist>
+            <% if current_office.units.ordered.any? %>
+              <% current_office.units.ordered.each do |unit| %>
+                <label class="unit-checklist__item" data-unit-item>
+                  <%= check_box_tag "user[unit_ids][]", unit.id, user.unit_ids.include?(unit.id), id: "user_unit_ids_#{unit.id}" %>
+                  <span><%= unit.name %></span>
+                </label>
+              <% end %>
+            <% else %>
+              <p class="unit-checklist__empty">Nenhuma unidade cadastrada para este escritório.</p>
+            <% end %>
+          </div>
         </div>
         <%= hidden_field_tag "user[unit_ids][]", "" %>
       </div>

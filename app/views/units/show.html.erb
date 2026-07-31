@@ -17,6 +17,12 @@
         <tr><th>Nome</th><td><%= @unit.name %></td></tr>
         <tr><th>Slug</th><td><%= @unit.slug %></td></tr>
         <tr><th>Status</th><td><%= @unit.active? ? "Ativa" : "Inativa" %></td></tr>
+        <tr><th>Responsável</th><td><%= @unit.responsible_name.presence || "-" %></td></tr>
+        <tr><th>E-mail</th><td><%= @unit.email.presence || "-" %></td></tr>
+        <tr><th>Telefone</th><td><%= @unit.phone.presence || "-" %></td></tr>
+        <tr><th>Endereço</th><td><%= @unit.address.presence || "-" %></td></tr>
+        <tr><th>Cidade/UF</th><td><%= [ @unit.city, @unit.state ].compact_blank.join("/").presence || "-" %></td></tr>
+        <tr><th>CEP</th><td><%= @unit.zip_code.presence || "-" %></td></tr>
       </tbody>
     </table>
   </div>

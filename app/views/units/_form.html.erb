@@ -15,12 +15,13 @@
     <div class="form-grid">
       <div>
         <%= form.label :name, "Nome" %>
-        <%= form.text_field :name %>
+        <%= form.text_field :name, data: { slug_source: "unit_slug" } %>
       </div>
 
       <div>
         <%= form.label :slug, "Slug" %>
-        <%= form.text_field :slug, placeholder: "ex: matriz" %>
+        <%= form.text_field :slug, placeholder: "ex: matriz", data: { slug_target: true } %>
+        <small class="form-hint">Gerado automaticamente a partir do nome da unidade.</small>
       </div>
 
       <div class="field-checkbox">
@@ -28,6 +29,46 @@
           <%= form.check_box :active %>
           <span>Unidade ativa</span>
         </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h3>Contato e endereço</h3>
+    <div class="form-grid">
+      <div>
+        <%= form.label :responsible_name, "Responsável" %>
+        <%= form.text_field :responsible_name %>
+      </div>
+
+      <div>
+        <%= form.label :email, "E-mail" %>
+        <%= form.email_field :email %>
+      </div>
+
+      <div>
+        <%= form.label :phone, "Telefone" %>
+        <%= form.text_field :phone, data: { mask: "phone" }, inputmode: "numeric" %>
+      </div>
+
+      <div>
+        <%= form.label :zip_code, "CEP" %>
+        <%= form.text_field :zip_code, placeholder: "00000-000", data: { mask: "cep", cep_lookup: true }, inputmode: "numeric" %>
+      </div>
+
+      <div class="field-full">
+        <%= form.label :address, "Endereço" %>
+        <%= form.text_field :address, data: { cep_lookup_street: true } %>
+      </div>
+
+      <div>
+        <%= form.label :city, "Cidade" %>
+        <%= form.text_field :city, data: { cep_lookup_city: true } %>
+      </div>
+
+      <div>
+        <%= form.label :state, "Estado" %>
+        <%= form.text_field :state, maxlength: 2, data: { cep_lookup_state: true, mask: "uf" }, inputmode: "text" %>
       </div>
     </div>
   </section>

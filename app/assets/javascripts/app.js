@@ -34,6 +34,33 @@
 
   document.addEventListener("turbo:load", initUnitChecklist);
   document.addEventListener("DOMContentLoaded", initUnitChecklist);
+
+  const slugify = (value) => value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const initSlugFields = () => {
+    document.querySelectorAll("[data-slug-source]").forEach((source) => {
+      if (source.dataset.slugInitialized === "true") return;
+
+      const target = document.getElementById(source.dataset.slugSource);
+      if (!target) return;
+
+      let lastGenerated = target.value;
+      source.addEventListener("input", () => {
+        if (target.value !== lastGenerated && target.value !== "") return;
+        target.value = slugify(source.value);
+        lastGenerated = target.value;
+      });
+      source.dataset.slugInitialized = "true";
+    });
+  };
+
+  document.addEventListener("DOMContentLoaded", initSlugFields);
+  document.addEventListener("turbo:load", initSlugFields);
 })();
 
 (() => {

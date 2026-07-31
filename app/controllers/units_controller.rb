@@ -46,6 +46,6 @@ class UnitsController < ApplicationController
   end
 
   def unit_params
-    params.expect(unit: [ :name, :slug, :active ])
+    params.expect(unit: [ :name, :slug, :active, :email, :phone, :address, :city, :state, :zip_code, :responsible_name ])
   end
 end
