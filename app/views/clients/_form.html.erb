@@ -15,7 +15,10 @@
   <% end %>
 
   <section class="form-section">
-    <h3>Identificação</h3>
+    <div class="dashboard-section__head">
+      <h3>Identificação</h3>
+      <p>Informe os dados essenciais para localizar e identificar o cliente.</p>
+    </div>
     <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
     <div class="form-grid">
       <div>
@@ -60,7 +63,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Contato</h3>
+    <div class="dashboard-section__head">
+      <h3>Contato</h3>
+      <p>Mantenha os canais de comunicação atualizados.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :phone, "Telefone (opcional)" %>
@@ -80,7 +86,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Endereço</h3>
+    <div class="dashboard-section__head">
+      <h3>Endereço</h3>
+      <p>Use o CEP para preencher automaticamente os dados disponíveis.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :zip_code do %>
@@ -108,7 +117,10 @@
   </section>
 
   <section class="form-section">
-    <h3>Informações Adicionais</h3>
+    <div class="dashboard-section__head">
+      <h3>Informações adicionais</h3>
+      <p>Registre informações complementares e observações importantes.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :mother_name %>
