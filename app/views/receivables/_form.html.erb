@@ -1,0 +1,53 @@
+<%= form_with model: receivable, class: "app-form aurora-form" do |form| %>
+  <% if receivable.errors.any? %>
+    <div class="form-errors">
+      <h2>Revise os campos destacados</h2>
+      <ul><% receivable.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head"><div><h3>Dados da conta</h3><p>Identifique a cobrança e seu vencimento.</p></div></div>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :description, "Descrição" %>
+        <%= form.text_field :description, required: true, autofocus: true %>
+      </div>
+      <div>
+        <%= form.label :amount, "Valor total" %>
+        <%= form.number_field :amount, min: 0.01, step: 0.01, required: true %>
+      </div>
+      <div>
+        <%= form.label :due_date, "Data de vencimento" %>
+        <%= form.date_field :due_date %>
+      </div>
+      <div>
+        <%= form.label :trigger, "Gatilho" %>
+        <%= form.select :trigger, [["Manual", "manual"], ["Processo iniciado", "case_started"], ["Processo ganho", "case_won"]] %>
+      </div>
+      <div>
+        <%= form.label :payment_method, "Forma de pagamento" %>
+        <%= form.text_field :payment_method, placeholder: "Ex.: Pix, transferência" %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head"><div><h3>Vínculos</h3><p>Opcionalmente associe a cobrança a uma unidade, cliente ou processo.</p></div></div>
+    <div class="form-grid">
+      <div><%= form.label :unit_id, "Unidade" %><%= form.collection_select :unit_id, @units, :id, :name, include_blank: "Matriz" %></div>
+      <div><%= form.label :client_id, "Cliente" %><%= form.collection_select :client_id, @clients, :id, :full_name, include_blank: "Sem cliente" %></div>
+      <div class="field-full"><%= form.label :legal_case_id, "Processo" %><%= form.collection_select :legal_case_id, @legal_cases, :id, :internal_number, include_blank: "Sem processo" %></div>
+    </div>
+  </section>
+
+  <section class="form-section aurora-form__section">
+    <%= form.label :notes, "Observações" %>
+    <%= form.text_area :notes, placeholder: "Informações adicionais sobre a cobrança" %>
+  </section>
+
+  <div class="form-actions aurora-form__actions">
+    <%= link_to "Voltar", receivables_path, class: "btn btn-secondary" %>
+    <%= form.submit receivable.persisted? ? "Salvar alterações" : "Cadastrar conta", class: "btn btn-primary" %>
+  </div>
+<% end %>

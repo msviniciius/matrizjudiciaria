@@ -1,9 +1,12 @@
 class ReceivablesController < ApplicationController
   before_action :require_admin!
   before_action :set_receivable, only: %i[edit update destroy register_payment cancel]
+  before_action :load_form_collections, only: %i[new edit]
 
   def index
     @receivables = Receivables::Query.new(office: current_office, params: params).call
+    @summary = Receivables::Summary.new(scope: @receivables, reference_date: Date.current).call
+    load_filter_collections
   end
 
   def new
@@ -16,6 +19,7 @@ class ReceivablesController < ApplicationController
     if @receivable.save
       redirect_to receivables_path, notice: "Conta a receber cadastrada com sucesso."
     else
+      load_form_collections
       render :new, status: :unprocessable_entity
     end
   end
@@ -27,6 +31,7 @@ class ReceivablesController < ApplicationController
     if @receivable.update(receivable_params)
       redirect_to receivables_path, notice: "Conta a receber atualizada com sucesso.", status: :see_other
     else
+      load_form_collections
       render :edit, status: :unprocessable_entity
     end
   end
@@ -76,4 +81,12 @@ class ReceivablesController < ApplicationController
   def payment_params
     params.expect(payment: [ :value, :paid_at, :payment_method ])
   end
+
+  def load_filter_collections
+    @units = current_office.units.order(:name)
+    @clients = current_office.clients.order(:full_name)
+    @legal_cases = current_office.legal_cases.order(:internal_number)
+  end
+
+  alias_method :load_form_collections, :load_filter_collections
 end
