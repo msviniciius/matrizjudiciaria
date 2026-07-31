@@ -60,7 +60,8 @@ body {
   grid-template-columns: 250px minmax(0, 1fr);
   align-items: start;
   min-height: 100vh;
-  transition: grid-template-columns 0.22s ease;
+  transition: grid-template-columns 0.14s cubic-bezier(.22, .8, .28, 1);
+  will-change: grid-template-columns;
 }
 
 .app-layout.is-sidebar-collapsed {
@@ -149,7 +150,8 @@ body {
   background: linear-gradient(180deg, var(--sidebar-start) 0%, var(--sidebar-mid) 45%, var(--sidebar-end) 100%);
   padding: 0 10px 20px;
   color: var(--text);
-  transition: padding 0.22s ease;
+  transition: padding 0.14s cubic-bezier(.22, .8, .28, 1);
+  will-change: padding;
 }
 
 .app-sidebar::-webkit-scrollbar { width: 6px; }
@@ -212,7 +214,7 @@ body {
 .sidebar-toggle__icon {
   font-size: 1.1rem;
   line-height: 1;
-  transition: transform 0.22s ease;
+  transition: transform 0.12s ease;
 }
 
 /* ===== Sidebar Brand Card ===== */
