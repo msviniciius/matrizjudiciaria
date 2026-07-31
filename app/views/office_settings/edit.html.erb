@@ -1,8 +1,8 @@
 <% content_for :title, "Configurações do Escritório" %>
 
-<%= form_with model: @office, url: office_setting_path, method: :patch, class: "app-form office-settings-form", data: { office_settings_form: true } do |form| %>
+<%= form_with model: @office, url: office_setting_path, method: :patch, class: "app-form office-settings-form aurora-settings-form", data: { office_settings_form: true } do |form| %>
   <% if @office.errors.any? %>
-    <div class="form-errors">
+    <div class="form-errors aurora-form__errors">
       <h2>Foram encontrados <%= pluralize(@office.errors.count, "erro", "erros") %>:</h2>
       <ul>
         <% @office.errors.each do |error| %>
@@ -12,7 +12,7 @@
     </div>
   <% end %>
 
-  <section class="case-section office-settings-shell">
+  <section class="case-section office-settings-shell aurora-settings-shell">
     <div class="office-settings-top">
       <div>
         <h3>Configurações do Escritório</h3>
@@ -96,12 +96,24 @@
 
             <div>
               <%= form.label :primary_color, "Cor primária" %>
-              <%= form.color_field :primary_color, data: { office_preview_primary: true } %>
+              <div class="office-color-control" data-office-color-control>
+                <%= form.color_field :primary_color, data: { office_preview_primary: true, office_color_picker: "primary" } %>
+                <%= form.text_field :primary_color, name: "office_color_hex_primary", value: @office.primary_color, data: { office_color_hex: "primary" }, aria: { label: "Código hexadecimal da cor primária" }, pattern: "#[0-9a-fA-F]{6}" %>
+              </div>
             </div>
 
             <div>
               <%= form.label :secondary_color, "Cor secundária" %>
-              <%= form.color_field :secondary_color, data: { office_preview_secondary: true } %>
+              <div class="office-color-control" data-office-color-control>
+                <%= form.color_field :secondary_color, data: { office_preview_secondary: true, office_color_picker: "secondary" } %>
+                <%= form.text_field :secondary_color, name: "office_color_hex_secondary", value: @office.secondary_color, data: { office_color_hex: "secondary" }, aria: { label: "Código hexadecimal da cor secundária" }, pattern: "#[0-9a-fA-F]{6}" %>
+              </div>
+              <div class="office-color-presets" aria-label="Presets de cores Aurora">
+                <button type="button" data-office-color-preset="#5b8cff">Azul</button>
+                <button type="button" data-office-color-preset="#78efd0">Mint</button>
+                <button type="button" data-office-color-preset="#8b7cf6">Violeta</button>
+                <button type="button" data-office-color-preset="#ffd77b">Âmbar</button>
+              </div>
             </div>
 
             <div class="field-full">
@@ -175,9 +187,9 @@
         </section>
 
         <section class="form-section office-tab-panel" data-office-panel="equipe" role="tabpanel" hidden>
-          <div class="section-head-actions">
+          <div class="dashboard-section__head section-head-actions">
             <h3>Equipe e Acessos</h3>
-            <%= link_to "Novo usuário", new_office_setting_user_path, class: "btn btn-secondary" %>
+            <%= link_to "Novo usuário", new_office_setting_user_path, class: "btn btn-primary" %>
           </div>
 
           <div class="table-wrap office-users-table">

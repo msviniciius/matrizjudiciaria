@@ -1,5 +1,10 @@
 class DashboardController < ApplicationController
   def index
+    if request.format.json?
+      render json: dashboard_snapshot.as_json
+      return
+    end
+
     @unit_selection_required = current_user.present? && !all_units_mode? && current_unit.blank? && (current_user.admin? || current_user.available_units.exists?)
     @available_units = current_user&.available_units&.ordered || []
 
@@ -91,84 +96,119 @@ class DashboardController < ApplicationController
         .limit(6)
     }
 
-    @new_imported_events_count = current_office.legal_cases.with_new_imported_events.count
-    @syncable_count = current_office.legal_cases.syncable.count
+    @new_imported_events_count = dashboard_legal_cases_scope.with_new_imported_events.count
+    @syncable_count = dashboard_legal_cases_scope.syncable.count
 
     @chart_data = build_chart_data
   end
 
   def quick_update_case_responsible
-    legal_case = current_office.legal_cases.find(params.expect(:id))
+    legal_case = dashboard_legal_cases_scope.find(params.expect(:id))
     responsible_name = params[:responsible_name].to_s.strip
 
     if responsible_name.blank?
-      redirect_back fallback_location: legal_case_path(legal_case), alert: "Informe o responsável para atualizar o processo."
+      respond_with_dashboard_error("Informe o responsável para atualizar o processo.", fallback_location: legal_case_path(legal_case))
       return
     end
 
     legal_case.update!(responsible_name: responsible_name)
-    redirect_back fallback_location: legal_case_path(legal_case), notice: "Responsável do processo atualizado."
+    respond_with_dashboard_success("Responsável do processo atualizado.", fallback_location: legal_case_path(legal_case))
   end
 
   def quick_update_case_next_action
-    legal_case = current_office.legal_cases.find(params.expect(:id))
+    legal_case = dashboard_legal_cases_scope.find(params.expect(:id))
     next_action = params[:next_action].to_s.strip
 
     if next_action.blank?
-      redirect_back fallback_location: legal_case_path(legal_case), alert: "Informe a próxima providência para atualizar o processo."
+      respond_with_dashboard_error("Informe a próxima providência para atualizar o processo.", fallback_location: legal_case_path(legal_case))
       return
     end
 
     legal_case.update!(next_action: next_action)
-    redirect_back fallback_location: legal_case_path(legal_case), notice: "Próxima providência atualizada."
+    respond_with_dashboard_success("Próxima providência atualizada.", fallback_location: legal_case_path(legal_case))
   end
 
   def quick_update_deadline_reason
-    deadline = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+    deadline = Deadline.joins(:legal_case).merge(dashboard_legal_cases_scope).find(params.expect(:id))
     delay_reason = params[:delay_reason].to_s.strip
 
     if delay_reason.blank?
-      redirect_to painel_path, alert: "Informe a justificativa para regularizar o prazo."
+      respond_with_dashboard_error("Informe a justificativa para regularizar o prazo.")
       return
     end
 
     deadline.update!(delay_reason: delay_reason)
-    redirect_to painel_path, notice: "Justificativa do prazo atualizada."
+    respond_with_dashboard_success("Justificativa do prazo atualizada.")
   end
 
   def quick_update_task_responsible
-    task = Task.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+    task = Task.joins(:legal_case).merge(dashboard_legal_cases_scope).find(params.expect(:id))
     responsible_name = params[:responsible_name].to_s.strip
 
     if responsible_name.blank?
-      redirect_to painel_path, alert: "Informe o responsável para regularizar a tarefa."
+      respond_with_dashboard_error("Informe o responsável para regularizar a tarefa.")
       return
     end
 
     task.update!(responsible_name: responsible_name)
-    redirect_to painel_path, notice: "Responsável da tarefa atualizado."
+    respond_with_dashboard_success("Responsável da tarefa atualizado.")
   end
 
   def sync_all
     tribunals = current_office.enabled_tribunal_codes
-    count = current_office.legal_cases.syncable.count
+    legal_case_ids = dashboard_legal_cases_scope.syncable.order(:id).ids
+    count = legal_case_ids.size
 
     if tribunals.empty?
-      redirect_to painel_path, alert: "Nenhum tribunal configurado. Acesse Configurações > Integrações para habilitar."
+      respond_with_dashboard_error("Nenhum tribunal configurado. Acesse Configurações > Integrações para habilitar.")
       return
     end
 
     if count.zero?
-      redirect_to painel_path, alert: "Nenhum processo com número externo configurado para sincronizar."
+      respond_with_dashboard_error("Nenhum processo com número externo configurado para sincronizar.")
       return
     end
 
-    Pje::Ma::ImportCaseEventsJob.perform_later(office_id: current_office.id)
+    Pje::Ma::ImportCaseEventsJob.perform_later(
+      office_id: current_office.id,
+      legal_case_ids: legal_case_ids,
+      limit: count
+    )
 
-    redirect_to painel_path, notice: "Sincronização iniciada para #{count} processo(s) em #{tribunals.size} tribunal(is). Os andamentos aparecerão em instantes."
+    respond_with_dashboard_success("Sincronização iniciada para #{count} processo(s) em #{tribunals.size} tribunal(is). Os andamentos aparecerão em instantes.", accepted: true)
   end
 
   private
+
+  def dashboard_legal_cases_scope
+    scope = current_office.legal_cases
+    return scope if all_units_mode?
+    return scope.none if current_unit.blank?
+
+    scope.where(unit_id: current_unit.id)
+  end
+
+  def dashboard_snapshot
+    @dashboard_snapshot ||= DashboardSnapshot.new(
+      office: current_office,
+      unit: current_unit,
+      all_units_mode: all_units_mode?
+    )
+  end
+
+  def respond_with_dashboard_success(message, fallback_location: painel_path, accepted: false)
+    respond_to do |format|
+      format.html { redirect_back fallback_location: fallback_location, notice: message }
+      format.json { render json: { message: message }, status: accepted ? :accepted : :ok }
+    end
+  end
+
+  def respond_with_dashboard_error(message, fallback_location: painel_path)
+    respond_to do |format|
+      format.html { redirect_back fallback_location: fallback_location, alert: message }
+      format.json { render json: { error: message }, status: :unprocessable_content }
+    end
+  end
 
   def build_chart_data
     phase_counts = @report_counts[:por_fase]

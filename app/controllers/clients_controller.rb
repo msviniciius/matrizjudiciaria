@@ -26,10 +26,22 @@ class ClientsController < ApplicationController
 
     @clients = scope
     @advanced_filters_open = false
+
+    return unless request.format.json?
+
+    render json: ClientsSnapshot.new(
+      office: current_office,
+      unit: current_unit,
+      clients: @clients,
+      filters: @filters
+    ).as_json
   end
 
   def show
     @client_legal_cases = scope_by_current_unit(@client.legal_cases).order(updated_at: :desc)
+    return unless request.format.json?
+
+    render json: ClientShowSnapshot.new(client: @client, legal_cases: @client_legal_cases).as_json
   end
 
   def new

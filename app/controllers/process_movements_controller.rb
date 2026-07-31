@@ -4,7 +4,7 @@ class ProcessMovementsController < ApplicationController
   def index
     @filters = filter_params.to_h.symbolize_keys
     @process_movements = filtered_scope
-      .includes(:process, :movement_type, :movement_template, :exam, :phase)
+      .includes({ process: :client }, :movement_type, :movement_template, :exam, :phase)
       .recent
 
     @reports = {
@@ -16,9 +16,21 @@ class ProcessMovementsController < ApplicationController
     }
 
     @advanced_filters_open = @filters.except(:q).values.any?(&:present?)
+
+    return unless request.format.json?
+
+    render json: ProcessMovementsSnapshot.new(
+      process_movements: @process_movements,
+      reports: @reports,
+      filters: @filters,
+      office: current_office
+    ).as_json
   end
 
   def show
+    return unless request.format.json?
+
+    render json: ProcessMovementShowSnapshot.new(process_movement: @process_movement).as_json
   end
 
   def new
@@ -56,7 +68,9 @@ class ProcessMovementsController < ApplicationController
   private
 
   def set_process_movement
-    @process_movement = office_process_movements.find(params.expect(:id))
+    @process_movement = office_process_movements
+      .includes(:phase, :movement_type, :movement_template, :exam, :next_phase, :audits, process: :client)
+      .find(params.expect(:id))
   end
 
   def filtered_scope

@@ -18,6 +18,20 @@ class InternalCalendarsController < ApplicationController
     @list_events = @events.sort_by { |event| [ event[:date], event[:time] || Time.zone.at(0) ] }
 
     @google_calendar_url = build_google_calendar_url
+
+    return unless request.format.json?
+
+    render json: InternalCalendarSnapshot.new(
+      view_mode: @view_mode,
+      reference_month: @reference_month,
+      month_label: @month_label,
+      previous_month_param: @previous_month_param,
+      next_month_param: @next_month_param,
+      calendar_weeks: @calendar_weeks,
+      events_by_day: @events_by_day,
+      list_events: @list_events,
+      google_calendar_url: @google_calendar_url
+    ).as_json
   end
 
   def google_calendar

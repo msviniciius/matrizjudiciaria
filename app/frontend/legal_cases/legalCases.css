@@ -1,0 +1,80 @@
+.react-legal-cases {
+  --aurora-ink: #eaf4ff;
+  --aurora-muted: #b7c9e6;
+  --aurora-surface: rgba(15, 32, 60, .82);
+  --aurora-surface-raised: rgba(25, 52, 91, .9);
+  --aurora-border: rgba(151, 196, 255, .24);
+  --aurora-blue: #73b7ff;
+  --aurora-mint: #78efd0;
+  --aurora-danger: #ff98ae;
+  --aurora-warning: #ffd77b;
+  color: var(--aurora-ink);
+  display: grid;
+  gap: 1rem;
+}
+
+.react-legal-cases__header, .react-legal-cases__filters, .react-legal-cases__card, .react-legal-cases__table-wrap, .react-legal-cases__empty, .react-legal-cases__error, .react-legal-cases__skeleton {
+  border: 1px solid var(--aurora-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(4, 12, 31, .24);
+}
+
+.react-legal-cases__header {
+  align-items: center;
+  background: radial-gradient(circle at 92% 0%, rgba(39, 91, 104, .2), transparent 38%), linear-gradient(135deg, #08152d 0%, #0b203b 58%, #0b2933 100%);
+  border-color: rgba(151, 196, 255, .3);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+}
+.react-legal-cases__header::after { background: linear-gradient(90deg, rgba(212, 169, 78, .72), rgba(212, 169, 78, 0)); content: ""; height: 2px; left: 1.5rem; position: absolute; right: 42%; top: 0; }
+
+.react-legal-cases__header h1, .react-legal-cases__empty h2, .react-legal-cases__card h2 { margin: 0; }
+.react-legal-cases__eyebrow { color: var(--aurora-muted); font-size: .75rem; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
+.react-legal-cases__count { color: var(--aurora-muted); margin: .35rem 0 0; }
+.react-legal-cases__header-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .6rem; justify-content: flex-end; }.react-legal-cases__new, .react-legal-cases__secondary-action { border-radius: 8px; font-weight: 700; padding: .55rem .75rem; text-decoration: none; }.react-legal-cases__new { background: var(--aurora-mint); color: #102747; }.react-legal-cases__secondary-action { border: 1px solid rgba(120, 239, 208, .5); color: var(--aurora-ink); }
+
+.react-legal-cases__view-switch { background: rgba(7, 23, 51, .42); border: 1px solid rgba(255, 255, 255, .25); border-radius: 10px; display: flex; padding: .2rem; }
+.react-legal-cases__view-switch button, .react-legal-cases__clear, .react-legal-cases__search-submit, .react-legal-cases__advanced-toggle, .react-legal-cases__error button { border: 0; border-radius: 8px; cursor: pointer; font: inherit; padding: .55rem .75rem; }
+.react-legal-cases__view-switch button { background: transparent; color: var(--aurora-ink); }
+.react-legal-cases__view-switch button[aria-pressed="true"] { background: var(--aurora-mint); color: #102747; font-weight: 700; }
+
+.react-legal-cases__filters { background: linear-gradient(145deg, var(--aurora-surface-raised), var(--aurora-surface)); display: grid; gap: .8rem; padding: 1rem; }
+.react-legal-cases__filters label { color: var(--aurora-muted); display: grid; font-size: .8rem; gap: .35rem; }
+.react-legal-cases__search-row { align-items: end; display: grid; gap: .65rem; grid-template-columns: minmax(12rem, 1fr) auto auto auto; }
+.react-legal-cases__filters input, .react-legal-cases__filters select { background: rgba(4, 19, 43, .68); border: 1px solid #3e5c83; border-radius: 8px; color: var(--aurora-ink); font: inherit; min-height: 2.55rem; padding: .55rem .65rem; width: 100%; }
+.react-legal-cases__filters option { background: #102747; color: var(--aurora-ink); }
+.react-legal-cases__search-submit { background: var(--aurora-mint); color: #102747; font-weight: 700; }
+.react-legal-cases__advanced-toggle, .react-legal-cases__clear { background: transparent; border: 1px solid var(--aurora-mint); color: var(--aurora-ink); }
+.react-legal-cases__advanced-toggle[aria-expanded="true"] { background: rgba(120, 239, 208, .14); }
+.react-legal-cases__advanced-filters { display: grid; gap: .8rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.react-legal-cases__advanced-filters[hidden] { display: none; }
+
+.react-legal-cases__loading { align-items: center; color: var(--aurora-muted); display: flex; font-size: .9rem; gap: .5rem; }
+.react-legal-cases__loading-mark { animation: aurora-legal-spin 900ms linear infinite; border: 2px solid var(--aurora-border); border-radius: 50%; border-top-color: var(--aurora-mint); height: 1rem; width: 1rem; }
+.react-legal-cases__skeleton { background: var(--aurora-surface); display: grid; gap: .75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1rem; }
+.react-legal-cases__skeleton span { animation: aurora-legal-pulse 1.2s ease-in-out infinite alternate; background: rgba(151, 196, 255, .16); border-radius: 10px; height: 9rem; }
+
+.react-legal-cases__cards { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.react-legal-cases__card { background: linear-gradient(145deg, var(--aurora-surface-raised), var(--aurora-surface)); color: var(--aurora-ink); display: grid; gap: .65rem; padding: 1rem; text-decoration: none; transition: border-color 180ms ease, transform 180ms ease; }
+.react-legal-cases__card:hover { border-color: var(--aurora-blue); transform: translateY(-2px); }
+.react-legal-cases__card--overdue { border-color: rgba(255, 152, 174, .7); }.react-legal-cases__card--today { border-color: rgba(255, 215, 123, .75); }
+.react-legal-cases__card-head, .react-legal-cases__badges { align-items: center; display: flex; flex-wrap: wrap; gap: .45rem; justify-content: space-between; }
+.react-legal-cases__card h2 { font-size: 1rem; }.react-legal-cases__client { font-weight: 700; margin: 0; }.react-legal-cases__area, .react-legal-cases__movement { color: var(--aurora-muted); margin: 0; }
+.react-legal-cases__badge, .react-legal-cases__new-events { border-radius: 999px; display: inline-flex; font-size: .72rem; font-weight: 700; padding: .22rem .5rem; }
+.react-legal-cases__badge { background: rgba(115, 183, 255, .16); border: 1px solid rgba(115, 183, 255, .45); }.react-legal-cases__badge--priority { background: rgba(255, 215, 123, .14); border-color: rgba(255, 215, 123, .55); color: var(--aurora-warning); }.react-legal-cases__new-events { background: rgba(120, 239, 208, .14); color: var(--aurora-mint); }
+.react-legal-cases__card dl { border-top: 1px solid var(--aurora-border); display: grid; gap: .65rem; grid-template-columns: 1fr 1fr; margin: 0; padding-top: .65rem; }.react-legal-cases__card dt, .react-legal-cases__movement span { color: var(--aurora-muted); display: block; font-size: .72rem; margin-bottom: .18rem; }.react-legal-cases__card dd { margin: 0; }
+.react-legal-cases__deadline { font-weight: 700; }.react-legal-cases__deadline--overdue { color: var(--aurora-danger); }.react-legal-cases__deadline--today, .react-legal-cases__deadline--upcoming { color: var(--aurora-warning); }.react-legal-cases__movement { border-top: 1px solid var(--aurora-border); padding-top: .65rem; }
+
+.react-legal-cases__table-wrap { background: var(--aurora-surface); overflow-x: auto; }.react-legal-cases__table { border-collapse: collapse; min-width: 780px; width: 100%; }.react-legal-cases__table th, .react-legal-cases__table td { border-bottom: 1px solid var(--aurora-border); padding: .75rem; text-align: left; vertical-align: top; }.react-legal-cases__table th { color: var(--aurora-muted); font-size: .75rem; text-transform: uppercase; }.react-legal-cases__table td:first-child a { color: var(--aurora-ink); font-weight: 700; }.react-legal-cases__table .react-legal-cases__new-events { margin-left: .4rem; }
+
+.react-legal-cases__empty, .react-legal-cases__error { padding: 1.25rem; }.react-legal-cases__empty { background: linear-gradient(145deg, var(--aurora-surface-raised), var(--aurora-surface)); text-align: center; }.react-legal-cases__empty p { color: var(--aurora-muted); margin-bottom: 0; }.react-legal-cases__error { align-items: center; background: #8f2439; color: #fff; display: flex; gap: 1rem; justify-content: space-between; }.react-legal-cases__error p { margin: 0; }.react-legal-cases__error button { background: #fff; color: #71182a; font-weight: 700; }
+
+.react-legal-cases :focus-visible { outline: 3px solid var(--aurora-warning); outline-offset: 3px; }
+@keyframes aurora-legal-spin { to { transform: rotate(360deg); } }
+@keyframes aurora-legal-pulse { from { opacity: .45; } to { opacity: .9; } }
+@media (max-width: 760px) { .react-legal-cases__header, .react-legal-cases__error { align-items: flex-start; flex-direction: column; }.react-legal-cases__search-row, .react-legal-cases__advanced-filters { grid-template-columns: 1fr; }.react-legal-cases__card dl { grid-template-columns: 1fr; }.react-legal-cases__cards { grid-template-columns: 1fr; }.react-legal-cases__skeleton { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .react-legal-cases *, .react-legal-cases *::before, .react-legal-cases *::after { animation: none !important; scroll-behavior: auto; transition: none !important; } }

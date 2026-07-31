@@ -1,8 +1,8 @@
 <% back_path = local_assigns[:back_path] %>
 
-<%= form_with(model: process_movement, class: "app-form", data: { movement_form: true }) do |form| %>
+<%= form_with(model: process_movement, class: "app-form aurora-form", data: { movement_form: true }) do |form| %>
   <% if process_movement.errors.any? %>
-    <div class="form-errors">
+    <div class="form-errors aurora-form__errors">
       <h2>Foram encontrados <%= pluralize(process_movement.errors.count, "erro", "erros") %>:</h2>
       <ul>
         <% process_movement.errors.each do |error| %>
@@ -12,11 +12,12 @@
     </div>
   <% end %>
 
-  <section class="form-section">
-    <h3>Andamento Processual</h3>
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head">
+      <h3>Dados básicos</h3>
+      <p>Identifique o processo e descreva o evento processual.</p>
+    </div>
     <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
-
-    <h4 class="form-step-title">1. Dados básicos</h4>
     <div class="form-grid">
       <div>
         <%= form.label :process_id, "Processo *" %>
@@ -78,7 +79,13 @@
       </div>
     </div>
 
-    <h4 class="form-step-title">2. Vínculos e contexto</h4>
+  </section>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head">
+      <h3>Vínculos e contexto</h3>
+      <p>Associe informações administrativas complementares ao andamento.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :administrative_situation, "Situação administrativa (opcional)" %>
@@ -86,7 +93,13 @@
       </div>
     </div>
 
-    <h4 class="form-step-title">3. Automação</h4>
+  </section>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head">
+      <h3>Automação</h3>
+      <p>Defina as próximas ações que serão executadas automaticamente.</p>
+    </div>
     <div class="form-grid">
       <div class="field-full">
         <%= form.label :next_phase_id, "Próxima fase" %>
@@ -138,7 +151,7 @@
     </div>
   </div>
 
-  <div class="form-actions">
+  <div class="form-actions aurora-form__actions">
     <% if back_path.present? %>
       <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
     <% end %>

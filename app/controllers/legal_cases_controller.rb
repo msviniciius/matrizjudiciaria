@@ -1,8 +1,18 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar ]
+  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync ]
 
   def index
     @filters = legal_case_filters
+    if request.format.json?
+      render json: LegalCasesSnapshot.new(
+        office: current_office,
+        unit: current_unit,
+        all_units_mode: all_units_mode?,
+        filters: @filters
+      ).as_json
+      return
+    end
+
     scope = scope_by_current_unit(current_office.legal_cases).includes(:client).order(updated_at: :desc)
     scope = LegalCaseQuery.new(scope, @filters).call
 
@@ -12,8 +22,12 @@ class LegalCasesController < ApplicationController
   end
 
   def show
+    if request.format.json?
+      render json: LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
+      return
+    end
+
     load_case_related_collections
-    @legal_case.touch(:last_viewed_events_at) if @legal_case.has_new_imported_events?
   end
 
   def pdf
@@ -58,23 +72,17 @@ class LegalCasesController < ApplicationController
 
   def sync
     if @legal_case.external_number.blank?
-      redirect_to @legal_case, alert: "Este processo não possui número externo (CNJ) configurado."
-      return
+      return sync_error("Este processo não possui número externo (CNJ) configurado.", :unprocessable_entity)
     end
 
     # Sincrono para feedback imediato (a API do CNJ leva ~8s)
-    result = Pje::Ma::ImportCaseEventsJob.perform_now(legal_case_ids: [ @legal_case.id ], limit: 1)
+    result = sync_importer.call(legal_case_ids: [ @legal_case.id ], limit: 1)
+    message, status = sync_feedback(result)
 
-    if result[:imported] > 0
-      redirect_to @legal_case, notice: "#{result[:imported]} andamento(s) novo(s) importado(s) do CNJ. #{result[:skipped]} já existiam."
-    elsif result[:skipped] > 0
-      redirect_to @legal_case, notice: "Nenhum andamento novo. #{result[:skipped]} já estavam sincronizados."
-    else
-      redirect_to @legal_case, alert: "Nenhum andamento encontrado para este processo no CNJ."
-    end
+    sync_success(message, status)
   rescue => e
     Rails.logger.error "[PJE_MA] Erro na sincronização manual: #{e.message}"
-    redirect_to @legal_case, alert: "Erro ao sincronizar: #{e.message}"
+    sync_error("Erro ao sincronizar: #{e.message}", :internal_server_error)
   end
 
   def new
@@ -83,6 +91,7 @@ class LegalCasesController < ApplicationController
       phase: current_office.default_phase,
       status: current_office.default_status,
       priority: current_office.default_priority,
+      client_id: permitted_prefill_client_id,
       responsible_name: current_user&.name,
       unit: current_unit
     )
@@ -138,6 +147,12 @@ class LegalCasesController < ApplicationController
 
   def set_legal_case
     @legal_case = scope_by_current_unit(current_office.legal_cases).find(params.expect(:id))
+  end
+
+  def permitted_prefill_client_id
+    return if params[:client_id].blank?
+
+    scope_by_current_unit(current_office.clients).find_by(id: params[:client_id])&.id
   end
 
   def legal_case_params
@@ -217,7 +232,37 @@ class LegalCasesController < ApplicationController
     payload
   end
 
+  def sync_feedback(result)
+    if result[:imported] > 0
+      [ "#{result[:imported]} andamento(s) novo(s) importado(s) do CNJ. #{result[:skipped]} já existiam.", :notice ]
+    elsif result[:skipped] > 0
+      [ "Nenhum andamento novo. #{result[:skipped]} já estavam sincronizados.", :notice ]
+    else
+      [ "Nenhum andamento encontrado para este processo no CNJ.", :alert ]
+    end
+  end
+
+  def sync_json_request?
+    request.headers["Accept"] == "application/json"
+  end
+
+  def sync_importer
+    request.env.fetch("legal_cases.sync_importer") { Pje::Ma::ImportCaseEventsJob.method(:perform_now) }
+  end
+
+  def sync_success(message, status)
+    return render json: { message: message, level: status.to_s } if sync_json_request?
+
+    redirect_to @legal_case, flash: { status => message }
+  end
+
+  def sync_error(message, status)
+    return render json: { error: message }, status: status if sync_json_request?
+
+    redirect_to @legal_case, alert: message
+  end
+
   def legal_case_filters
-    params.permit(:q, :phase, :status, :priority, :responsible_name, :deadline_state)
+    params.permit(:q, :phase, :status, :priority, :responsible_name, :deadline_state, :health, :without_next_action, :operational)
   end
 end

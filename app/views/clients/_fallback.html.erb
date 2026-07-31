@@ -1,0 +1,47 @@
+<section class="case-section case-section--filters">
+  <%= form_with url: clients_path, method: :get, local: true, class: "main-filters" do |form| %>
+    <div class="main-filters__bar">
+      <%= form.text_field :q, value: @filters[:q], placeholder: "Nome, CPF/CNPJ, telefone ou e-mail", aria: { label: "Buscar clientes" } %>
+      <%= form.submit "Buscar", class: "btn btn-primary" %>
+    </div>
+    <div class="form-grid">
+      <div>
+        <%= form.label :cadastro_pendente, "Status do cadastro" %>
+        <%= form.select :cadastro_pendente, [["Pendente", "true"], ["Completo", "false"]], { include_blank: "Todos", selected: @filters[:cadastro_pendente] } %>
+      </div>
+      <div>
+        <%= form.label :city, "Cidade" %>
+        <%= form.text_field :city, value: @filters[:city], placeholder: "Cidade do cliente" %>
+      </div>
+    </div>
+  <% end %>
+</section>
+
+<section class="case-section case-section--listing">
+  <div class="listing-head"><h3>Listagem</h3><p>Exibindo <strong><%= @clients.size %></strong> cliente(s)</p></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th>Status</th><th>Ações</th></tr></thead>
+      <tbody>
+        <% if @clients.any? %>
+          <% @clients.each do |client| %>
+            <tr>
+              <td><%= link_to client.full_name, client_path(client) %></td>
+              <td><%= client.cpf_cnpj.presence || "-" %></td>
+              <td><%= client.phone.presence || "-" %></td>
+              <td><%= client.email.presence || "-" %></td>
+              <td><%= client.cadastro_pendente? ? "Cadastro pendente" : "Completo" %></td>
+              <td class="table-actions">
+                <%= link_to "Editar", edit_client_path(client), class: "btn btn-secondary" %>
+                <% delete_confirmation = client.legal_cases.size.positive? ? "Este cliente possui #{client.legal_cases.size} #{client.legal_cases.size == 1 ? 'processo vinculado' : 'processos vinculados'}. Deseja continuar com a exclusão?" : "Excluir este cliente?" %>
+                <%= button_to "Excluir", client_path(client), method: :delete, class: "btn btn-secondary", form: { data: { turbo_confirm: delete_confirmation } } %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr><td colspan="6" class="table-empty-state">Nenhum cliente cadastrado.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

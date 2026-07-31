@@ -12,7 +12,10 @@ class LegalCaseQuery
     apply_status
     apply_priority
     apply_responsible
+    apply_operational
     apply_deadline_state
+    apply_health
+    apply_without_next_action
     scope
   end
 
@@ -57,6 +60,12 @@ class LegalCaseQuery
     @scope = scope.where("COALESCE(legal_cases.responsible_name, '') ILIKE ?", term)
   end
 
+  def apply_operational
+    return unless @filters[:operational] == "1"
+
+    @scope = scope.operational
+  end
+
   def apply_deadline_state
     case @filters[:deadline_state]
     when "overdue"
@@ -65,8 +74,23 @@ class LegalCaseQuery
       @scope = scope.where(next_deadline_on: Date.current)
     when "upcoming"
       @scope = scope.where(next_deadline_on: Date.current..(Date.current + 7.days))
+    when "next_48_hours"
+      @scope = scope.where(next_deadline_on: (Date.current + 1.day)..(Date.current + 2.days))
     when "without_deadline"
       @scope = scope.where(next_deadline_on: nil)
     end
+  end
+
+  def apply_health
+    return unless @filters[:health] == "critica"
+
+    critical_ids = scope.select(&:health_status_vermelho?).map(&:id)
+    @scope = scope.where(id: critical_ids)
+  end
+
+  def apply_without_next_action
+    return unless @filters[:without_next_action] == "1"
+
+    @scope = scope.without_next_action
   end
 end

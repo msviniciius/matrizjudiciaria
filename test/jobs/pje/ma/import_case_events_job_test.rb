@@ -61,6 +61,45 @@ class PjeMaImportCaseEventsJobTest < ActiveSupport::TestCase
     refute_includes LegalCase.needing_sync, @legal_case
   end
 
+  test "sincroniza somente os IDs de processos informados" do
+    other_case = LegalCase.create!(
+      office: @office,
+      client: @client,
+      legal_area: @legal_area,
+      process_type: @process_type,
+      external_number: "0000002-00.2026.8.10.0001",
+      internal_number: "SEIIMPORT-OTHER",
+      phase: "judicial",
+      status: "em_analise",
+      responsible_name: "Dr. Outra Unidade",
+      next_action: "Não sincronizar",
+      next_deadline_on: Date.current + 5.days
+    )
+    fetched_numbers = []
+    fake_client = Object.new
+    fake_client.define_singleton_method(:with_persistent_connection) { |&block| block.call(fake_client) }
+    fake_client.define_singleton_method(:fetch_case) do |external_number|
+      fetched_numbers << external_number
+      nil
+    end
+
+    client_singleton = Pje::Cnj::Client.singleton_class
+    original_constructor = client_singleton.instance_method(:new)
+    client_singleton.define_method(:new) { |*, **| fake_client }
+    begin
+      Pje::Ma::ImportCaseEventsJob.perform_now(
+        office_id: @office.id,
+        tribunal: "tjma",
+        legal_case_ids: [ @legal_case.id ]
+      )
+    ensure
+      client_singleton.define_method(:new, original_constructor)
+    end
+
+    assert_equal [ @legal_case.external_number ], fetched_numbers
+    assert_nil other_case.reload.last_synced_at
+  end
+
   test "deduplicacao rejeita case_event com mesmo pje_external_id" do
     pje_id = "08004664120258100030_1051_2026-02-07T01:08:49.000Z"
 

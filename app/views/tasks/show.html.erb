@@ -1,22 +1,2 @@
-<section class="case-section">
-  <h3>Detalhes da tarefa</h3>
-  <div class="table-wrap details-table">
-    <table>
-      <tbody>
-        <tr><th>Processo</th><td><%= @task.legal_case&.internal_number || "-" %></td></tr>
-        <tr><th>Título</th><td><%= @task.title %></td></tr>
-        <tr><th>Descrição</th><td><%= @task.description.presence || "-" %></td></tr>
-        <tr><th>Status</th><td><%= enum_label(Task, :status, @task.status) %></td></tr>
-        <tr><th>Prioridade</th><td><%= @task.priority.present? ? enum_label(Task, :priority, @task.priority) : "-" %></td></tr>
-        <tr><th>Data limite</th><td><%= @task.due_date.present? ? l(@task.due_date, format: :short) : "-" %></td></tr>
-        <tr><th>Responsável</th><td><%= @task.responsible_name.presence || "-" %></td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<div class="case-actions case-actions--footer">
-  <%= link_to "Editar tarefa", edit_task_path(@task), class: "btn btn-secondary" %>
-  <%= link_to "Voltar", tasks_path, class: "btn btn-secondary" %>
-  <%= button_to "Excluir tarefa", @task, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Tem certeza que deseja excluir esta tarefa?" } } %>
-</div>
+<div id="react-task-show-root"></div>
+<noscript><%= render "task", task: @task %></noscript>

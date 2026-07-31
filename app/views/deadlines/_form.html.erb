@@ -2,9 +2,9 @@
 <% show_path = local_assigns[:show_path] %>
 <% show_label = local_assigns[:show_label] || "Ver" %>
 
-<%= form_with(model: deadline, class: "app-form", data: { inline_validation_form: true }) do |form| %>
+<%= form_with(model: deadline, class: "app-form aurora-form", data: { inline_validation_form: true }) do |form| %>
   <% if deadline.errors.any? %>
-    <div class="form-errors">
+    <div class="form-errors aurora-form__errors">
       <h2>Foram encontrados <%= pluralize(deadline.errors.count, "erro", "erros") %> neste cadastro:</h2>
       <ul>
         <% deadline.errors.each do |error| %>
@@ -14,8 +14,11 @@
     </div>
   <% end %>
 
-  <section class="form-section">
-    <h3>Dados do Prazo</h3>
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head">
+      <h3>Dados do prazo</h3>
+      <p>Associe o prazo ao processo e defina sua classificação operacional.</p>
+    </div>
     <p class="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
     <div class="form-grid">
       <div class="field-full">
@@ -48,8 +51,11 @@
     </div>
   </section>
 
-  <section class="form-section">
-    <h3>Prazo e Justificativa</h3>
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head">
+      <h3>Prazo e justificativa</h3>
+      <p>Informe a data limite e o contexto necessário para acompanhamento.</p>
+    </div>
     <div class="form-grid">
       <div>
         <%= form.label :due_date, "Data limite *" %>
@@ -64,7 +70,7 @@
     </div>
   </section>
 
-  <div class="form-actions">
+  <div class="form-actions aurora-form__actions">
     <% if back_path.present? %>
       <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
     <% end %>

@@ -37,6 +37,74 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index mounts the React legal cases application" do
+    get legal_cases_url
+
+    assert_response :success
+    assert_select "#react-legal-cases-root"
+    assert_select "script[src*='legal_cases']"
+    assert_select "script[src*='legal_case_show']", count: 0
+  end
+
+  test "show mounts the React command center" do
+    get legal_case_url(@legal_case)
+
+    assert_response :success
+    assert_select "#react-legal-case-show-root"
+    assert_select "script[src*='legal_case_show']"
+  end
+
+  test "show remains read only and preserves the new imported event alert" do
+    imported_event = CaseEvent.create!(
+      legal_case: @legal_case,
+      description: "Andamento ainda não visualizado",
+      entry_kind: "andamento",
+      event_date: Time.current,
+      pje_external_id: "show-read-only-#{SecureRandom.hex(4)}"
+    )
+    @legal_case.update_column(:last_viewed_events_at, imported_event.created_at - 1.minute)
+    viewed_at = @legal_case.reload.last_viewed_events_at
+
+    assert_no_changes -> { @legal_case.reload.last_viewed_events_at } do
+      get legal_case_url(@legal_case)
+    end
+
+    assert_response :success
+    get legal_case_url(@legal_case, format: :json)
+    assert response.parsed_body.dig("alerts", "has_new_imported_events")
+    assert_equal viewed_at, @legal_case.reload.last_viewed_events_at
+  end
+
+  test "does not load legal case React entrypoints outside index and show" do
+    get new_legal_case_url
+
+    assert_response :success
+    assert_select "script[src*='legal_cases']", count: 0
+    assert_select "script[src*='legal_case_show']", count: 0
+    assert_select "script[src*='@vite/client']", count: 0
+  end
+
+  test "new preselects a permitted client from the client detail shortcut" do
+    get new_legal_case_url(client_id: @client.id)
+
+    assert_response :success
+    assert_select "select[name='legal_case[client_id]'] option[selected][value='#{@client.id}']"
+  end
+
+  test "Vite manifest exposes the legal cases entrypoint" do
+    entrypoint_path = ViteRuby.instance.manifest.path_for("legal_cases.tsx")
+
+    assert_match %r{/vite-test/assets/legal_cases-.*\.js\z}, entrypoint_path
+  end
+
+  test "returns an empty legal cases snapshot as JSON without an active unit" do
+    get legal_cases_url(format: :json), params: { status: "em_analise" }
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_empty JSON.parse(response.body).fetch("legal_cases")
+  end
+
   test "should get new" do
     get new_legal_case_url
     assert_response :success
@@ -74,6 +142,35 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "returns the legal case detail snapshot as JSON" do
+    get legal_case_url(@legal_case, format: :json)
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal @legal_case.id, response.parsed_body.dig("case", "id")
+    assert_equal @legal_case.internal_number, response.parsed_body.dig("case", "internal_number")
+  end
+
+  test "show JSON does not expose a case outside the current unit" do
+    unit = Unit.create!(office: default_office, name: "Contencioso detalhe")
+    other_unit = Unit.create!(office: default_office, name: "Consultivo detalhe")
+    other_unit_case = create_full_legal_case(unit: other_unit)
+    user = User.create!(
+      office: default_office,
+      name: "Admin detalhe",
+      email: "admin-detalhe-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+
+    post login_path, params: { email: user.email, password: "segredo123" }
+    post unit_session_path, params: { unit_id: unit.id }
+    get legal_case_url(other_unit_case, format: :json)
+
+    assert_response :not_found
+  end
+
   test "should get daily closure" do
     get daily_closure_legal_cases_url
     assert_response :success
@@ -92,6 +189,61 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_includes feed_url, "webcal://"
     assert_includes feed_url, "/calendar_feeds/legal_case/"
     assert_includes feed_url, ".ics"
+  end
+
+  test "syncs a legal case scoped by the callback" do
+    @legal_case.update!(external_number: "")
+    post sync_legal_case_url(@legal_case)
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "Este processo não possui número externo (CNJ) configurado.", flash[:alert]
+  end
+
+  test "sync returns JSON for the React detail screen" do
+    post sync_legal_case_url(@legal_case),
+      headers: { "ACCEPT" => "application/json" },
+      env: { "legal_cases.sync_importer" => ->(**) { { imported: 1, skipped: 0 } } }
+
+    assert_response :success
+    assert_equal "1 andamento(s) novo(s) importado(s) do CNJ. 0 já existiam.", response.parsed_body.fetch("message")
+    assert_equal "notice", response.parsed_body.fetch("level")
+  end
+
+  test "sync returns an alert level when no new movement is found" do
+    post sync_legal_case_url(@legal_case),
+      headers: { "ACCEPT" => "application/json" },
+      env: { "legal_cases.sync_importer" => ->(**) { { imported: 0, skipped: 0 } } }
+
+    assert_response :success
+    assert_equal "Nenhum andamento encontrado para este processo no CNJ.", response.parsed_body.fetch("message")
+    assert_equal "alert", response.parsed_body.fetch("level")
+  end
+
+  test "sync returns JSON validation feedback without an external number" do
+    @legal_case.update!(external_number: "")
+
+    post sync_legal_case_url(@legal_case), headers: { "ACCEPT" => "application/json" }
+
+    assert_response :unprocessable_entity
+    assert_equal "Este processo não possui número externo (CNJ) configurado.", response.parsed_body.fetch("error")
+  end
+
+  test "sync requires the JSON Accept header before returning JSON validation feedback" do
+    @legal_case.update!(external_number: "")
+
+    post sync_legal_case_url(@legal_case, format: :json)
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "Este processo não possui número externo (CNJ) configurado.", flash[:alert]
+  end
+
+  test "sync returns JSON server feedback when import raises" do
+    post sync_legal_case_url(@legal_case),
+      headers: { "ACCEPT" => "application/json" },
+      env: { "legal_cases.sync_importer" => ->(**) { raise StandardError, "CNJ indisponível" } }
+
+    assert_response :internal_server_error
+    assert_equal "Erro ao sincronizar: CNJ indisponível", response.parsed_body.fetch("error")
   end
 
   test "should serve calendar feed in ics format with signed token" do

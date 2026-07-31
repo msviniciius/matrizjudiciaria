@@ -50,6 +50,9 @@
     const previewSecondary = form.querySelector("[data-office-preview-secondary]");
     const integrationsCount = form.querySelector("[data-office-integrations-count]");
     const integrationChecks = Array.from(form.querySelectorAll("[data-office-integrations-group] input[type='checkbox']"));
+    const colorPickers = Array.from(form.querySelectorAll("[data-office-color-picker]"));
+    const colorHexFields = Array.from(form.querySelectorAll("[data-office-color-hex]"));
+    const colorPresets = Array.from(form.querySelectorAll("[data-office-color-preset]"));
 
     const activateTab = (tabKey) => {
       navButtons.forEach((button) => {
@@ -104,6 +107,25 @@
       const total = integrationChecks.filter((checkbox) => checkbox.checked).length;
       integrationsCount.textContent = String(total);
     };
+
+    const syncColor = (key, value) => {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (!/^#[0-9a-f]{6}$/i.test(normalized)) return;
+      const picker = form.querySelector(`[data-office-color-picker='${key}']`);
+      const hex = form.querySelector(`[data-office-color-hex='${key}']`);
+      if (picker) picker.value = normalized;
+      if (hex) hex.value = normalized;
+    };
+
+    colorPickers.forEach((picker) => picker.addEventListener("input", () => syncColor(picker.dataset.officeColorPicker, picker.value)));
+    colorHexFields.forEach((field) => field.addEventListener("input", () => syncColor(field.dataset.officeColorHex, field.value)));
+    colorPresets.forEach((preset) => preset.addEventListener("click", () => {
+      const color = preset.dataset.officeColorPreset;
+      const target = preset.closest("[data-office-color-control], div")?.querySelector("[data-office-color-hex]");
+      syncColor(target?.dataset.officeColorHex || "primary", color);
+      updatePreview();
+      updateDirtyState();
+    }));
 
     form.addEventListener("input", () => {
       updateDirtyState();
