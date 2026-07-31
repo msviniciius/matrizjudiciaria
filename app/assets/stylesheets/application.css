@@ -1950,6 +1950,12 @@ td.table-actions { width: 1%; }
 .aurora-settings-form .office-tab-panel input,
 .aurora-settings-form .office-tab-panel select,
 .aurora-settings-form .office-tab-panel textarea { background: rgba(4, 19, 43, .68); border-color: #3e5c83; color: #eaf4ff; }
+.aurora-settings-form .office-color-control { align-items: center; display: grid; gap: 8px; grid-template-columns: 52px minmax(0, 1fr); }
+.aurora-settings-form .office-color-control input[type="color"] { cursor: pointer; height: 46px; min-height: 46px; padding: 4px; }
+.aurora-settings-form .office-color-control input[data-office-color-hex] { font-family: "IBM Plex Mono", monospace; letter-spacing: .04em; }
+.aurora-settings-form .office-color-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.aurora-settings-form .office-color-presets button { background: rgba(7, 23, 51, .48); border: 1px solid rgba(151, 196, 255, .28); border-radius: 999px; color: #b7c9e6; cursor: pointer; font-size: .74rem; min-height: 30px; padding: 4px 10px; }
+.aurora-settings-form .office-color-presets button:hover { background: rgba(120, 239, 208, .14); border-color: #78efd0; color: #eaf4ff; }
 .aurora-settings-form .office-settings-preview .office-preview-card { background: rgba(7, 23, 51, .48); border-color: rgba(120, 239, 208, .3); box-shadow: 0 16px 32px rgba(4, 12, 31, .2); }
 .aurora-settings-form .office-settings-actions { background: rgba(15, 32, 60, .8); border-color: rgba(151, 196, 255, .3); }
 .aurora-settings-form .office-settings-actions .btn-primary { background: #78efd0; color: #102747; }

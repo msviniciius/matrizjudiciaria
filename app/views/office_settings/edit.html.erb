@@ -96,12 +96,24 @@
 
             <div>
               <%= form.label :primary_color, "Cor primária" %>
-              <%= form.color_field :primary_color, data: { office_preview_primary: true } %>
+              <div class="office-color-control" data-office-color-control>
+                <%= form.color_field :primary_color, data: { office_preview_primary: true, office_color_picker: "primary" } %>
+                <%= form.text_field :primary_color, name: "office_color_hex_primary", value: @office.primary_color, data: { office_color_hex: "primary" }, aria: { label: "Código hexadecimal da cor primária" }, pattern: "#[0-9a-fA-F]{6}" %>
+              </div>
             </div>
 
             <div>
               <%= form.label :secondary_color, "Cor secundária" %>
-              <%= form.color_field :secondary_color, data: { office_preview_secondary: true } %>
+              <div class="office-color-control" data-office-color-control>
+                <%= form.color_field :secondary_color, data: { office_preview_secondary: true, office_color_picker: "secondary" } %>
+                <%= form.text_field :secondary_color, name: "office_color_hex_secondary", value: @office.secondary_color, data: { office_color_hex: "secondary" }, aria: { label: "Código hexadecimal da cor secundária" }, pattern: "#[0-9a-fA-F]{6}" %>
+              </div>
+              <div class="office-color-presets" aria-label="Presets de cores Aurora">
+                <button type="button" data-office-color-preset="#5b8cff">Azul</button>
+                <button type="button" data-office-color-preset="#78efd0">Mint</button>
+                <button type="button" data-office-color-preset="#8b7cf6">Violeta</button>
+                <button type="button" data-office-color-preset="#ffd77b">Âmbar</button>
+              </div>
             </div>
 
             <div class="field-full">
