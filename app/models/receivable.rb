@@ -47,6 +47,8 @@ class Receivable < ApplicationRecord
   end
 
   def register_payment!(value:, paid_at: Date.current, payment_method: nil)
+    raise ArgumentError, "payment value must be greater than zero" unless value > 0
+
     self.amount_paid = amount_paid + value
     self.paid_at = paid_at if amount_paid >= amount
     self.status = amount_paid.zero? ? "pending" : (amount_paid >= amount ? "received" : "partial")

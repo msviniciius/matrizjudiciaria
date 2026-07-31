@@ -23,6 +23,47 @@ class ReceivableTest < ActiveSupport::TestCase
     assert_includes receivable.errors[:unit_id], "não pertence ao escritório atual"
   end
 
+  test "rejects a client from another office" do
+    other_office = Office.create!(name: "Escritório Externo", slug: "escritorio-externo")
+    foreign_client = Client.create!(
+      office: other_office,
+      full_name: "Cliente Externo",
+      cpf_cnpj: SecureRandom.hex(6)
+    )
+    receivable = build_receivable(client: foreign_client)
+
+    assert_not receivable.valid?
+    assert_includes receivable.errors[:client_id], "não pertence ao escritório atual"
+  end
+
+  test "rejects a legal case from another office" do
+    create_case_dependencies
+    other_office = Office.create!(name: "Escritório do Processo", slug: "escritorio-do-processo")
+    foreign_client = Client.create!(
+      office: other_office,
+      full_name: "Cliente do Processo Externo",
+      cpf_cnpj: SecureRandom.hex(6)
+    )
+    foreign_case = create_full_legal_case(office: other_office, client: foreign_client)
+    receivable = build_receivable(legal_case: foreign_case)
+
+    assert_not receivable.valid?
+    assert_includes receivable.errors[:legal_case_id], "não pertence ao escritório atual"
+  end
+
+  test "rejects invalid monetary amounts" do
+    zero_amount = build_receivable(amount: 0)
+    negative_paid = build_receivable(amount_paid: -1)
+    overpaid = build_receivable(amount_paid: 1_501)
+
+    assert_not zero_amount.valid?
+    assert_includes zero_amount.errors[:amount], "deve ser maior que 0"
+    assert_not negative_paid.valid?
+    assert_includes negative_paid.errors[:amount_paid], "deve ser maior ou igual a 0"
+    assert_not overpaid.valid?
+    assert_includes overpaid.errors[:amount_paid], "deve ser menor ou igual a 1500"
+  end
+
   test "returns the unpaid balance" do
     receivable = build_receivable(amount: 1_500, amount_paid: 400)
 
@@ -53,6 +94,20 @@ class ReceivableTest < ActiveSupport::TestCase
     assert_equal 0, receivable.balance
     assert_equal "received", receivable.status
     assert_equal paid_on, receivable.paid_at
+  end
+
+  test "rejects zero or negative payments without changing the balance" do
+    receivable = build_receivable
+    receivable.save!
+
+    [ 0, -100 ].each do |value|
+      assert_raises(ArgumentError) do
+        receivable.register_payment!(value: value)
+      end
+
+      assert_equal 0, receivable.reload.amount_paid
+      assert_equal "pending", receivable.status
+    end
   end
 
   test "is overdue only when an open account is past due" do
