@@ -70,6 +70,84 @@ class ReceivablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, receivable.amount_paid
   end
 
+  test "inherits client and unit from the selected process" do
+    sign_in(@administrator)
+    client = create_client(full_name: "Cliente do processo")
+    unit = Unit.create!(office: default_office, name: "Unidade do processo", slug: "unidade-processo")
+    legal_case = create_full_legal_case(client: client, unit: unit)
+    other_client = create_client(full_name: "Cliente incompatível")
+
+    post receivables_url, params: { receivable: {
+      description: "Honorários do processo",
+      amount: 1_000,
+      trigger: "manual",
+      legal_case_id: legal_case.id,
+      client_id: other_client.id,
+      unit_id: nil
+    } }
+
+    receivable = default_office.receivables.find_by!(description: "Honorários do processo")
+    assert_equal legal_case.id, receivable.legal_case_id
+    assert_equal client.id, receivable.client_id
+    assert_equal unit.id, receivable.unit_id
+  end
+
+  test "rejects a process belonging to another office" do
+    sign_in(@administrator)
+    other_office = create_other_office
+    other_client = Client.create!(office: other_office, full_name: "Cliente externo", cpf_cnpj: SecureRandom.hex(6))
+    create_case_dependencies
+    foreign_case = create_legal_case(
+      office: other_office,
+      client: other_client,
+      legal_area: @test_legal_area,
+      process_type: @test_process_type
+    )
+
+    post receivables_url, params: { receivable: {
+      description: "Cobrança indevida",
+      amount: 1_000,
+      trigger: "manual",
+      legal_case_id: foreign_case.id
+    } }
+
+    assert_response :not_found
+    assert_not default_office.receivables.exists?(description: "Cobrança indevida")
+  end
+
+  test "allows a receivable linked only to a client" do
+    sign_in(@administrator)
+    client = create_client(full_name: "Cliente sem processo")
+
+    assert_difference("Receivable.count") do
+      post receivables_url, params: { receivable: {
+        description: "Consulta avulsa",
+        amount: 500,
+        trigger: "manual",
+        client_id: client.id
+      } }
+    end
+
+    receivable = default_office.receivables.find_by!(description: "Consulta avulsa")
+    assert_nil receivable.legal_case_id
+    assert_equal client.id, receivable.client_id
+  end
+
+  test "returns process context for administrators" do
+    sign_in(@administrator)
+    client = create_client(full_name: "Cliente JSON")
+    unit = Unit.create!(office: default_office, name: "Unidade JSON", slug: "unidade-json")
+    legal_case = create_full_legal_case(client: client, unit: unit)
+
+    get process_context_receivable_url(legal_case), as: :json
+
+    assert_response :success
+    payload = response.parsed_body
+    assert_equal legal_case.id, payload["legal_case_id"]
+    assert_equal client.id, payload["client_id"]
+    assert_equal unit.id, payload["unit_id"]
+  end
+
   private
 
   def create_user(role:)

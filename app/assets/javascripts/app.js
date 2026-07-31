@@ -64,6 +64,45 @@
 })();
 
 (() => {
+  const initReceivableProcessSelect = () => {
+    document.querySelectorAll("[data-receivable-process-select]").forEach((select) => {
+      if (select.dataset.receivableProcessBound === "true") return;
+      select.dataset.receivableProcessBound = "true";
+
+      select.addEventListener("change", async () => {
+        const processId = select.value;
+        if (!processId) return;
+
+        const clientSelect = select.form?.querySelector("[data-receivable-linked-client]");
+        const unitSelect = select.form?.querySelector("[data-receivable-linked-unit]");
+        const template = select.dataset.contextUrlTemplate;
+        if (!template || !clientSelect || !unitSelect) return;
+
+        select.disabled = true;
+        try {
+          const response = await fetch(template.replace("PROCESS_ID", encodeURIComponent(processId)), {
+            headers: { Accept: "application/json" }
+          });
+          if (!response.ok) throw new Error("Não foi possível carregar o vínculo do processo.");
+          const context = await response.json();
+          clientSelect.value = context.client_id || "";
+          unitSelect.value = context.unit_id || "";
+          clientSelect.dispatchEvent(new Event("change", { bubbles: true }));
+          unitSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        } catch (error) {
+          console.error(error);
+        } finally {
+          select.disabled = false;
+        }
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initReceivableProcessSelect);
+  document.addEventListener("DOMContentLoaded", initReceivableProcessSelect);
+})();
+
+(() => {
   const initOfficeSettingsInteractions = () => {
     const form = document.querySelector("[data-office-settings-form]");
     if (!form) return;

@@ -28,6 +28,9 @@ Rails.application.routes.draw do
   resources :deadline_settings, except: :show
   resources :receivables, except: [ :show ] do
     member do
+      get :process_context
+    end
+    member do
       patch :register_payment
       patch :cancel
     end

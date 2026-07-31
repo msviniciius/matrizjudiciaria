@@ -13,8 +13,20 @@ class ReceivablesController < ApplicationController
     @receivable = current_office.receivables.new
   end
 
+  def process_context
+    legal_case = current_office.legal_cases.includes(:client, :unit).find(params.expect(:id))
+
+    render json: {
+      legal_case_id: legal_case.id,
+      client_id: legal_case.client_id,
+      client_name: legal_case.client.full_name,
+      unit_id: legal_case.unit_id,
+      unit_name: legal_case.unit&.name
+    }
+  end
+
   def create
-    @receivable = current_office.receivables.new(receivable_params)
+    @receivable = current_office.receivables.new(normalized_receivable_params)
 
     if @receivable.save
       redirect_to receivables_path, notice: "Conta a receber cadastrada com sucesso."
@@ -28,7 +40,7 @@ class ReceivablesController < ApplicationController
   end
 
   def update
-    if @receivable.update(receivable_params)
+    if @receivable.update(normalized_receivable_params)
       redirect_to receivables_path, notice: "Conta a receber atualizada com sucesso.", status: :see_other
     else
       load_form_collections
@@ -76,6 +88,14 @@ class ReceivablesController < ApplicationController
       :client_id,
       :legal_case_id
     ])
+  end
+
+  def normalized_receivable_params
+    attributes = receivable_params
+    return attributes if attributes[:legal_case_id].blank?
+
+    legal_case = current_office.legal_cases.find(attributes[:legal_case_id])
+    attributes.merge(client_id: legal_case.client_id, unit_id: legal_case.unit_id)
   end
 
   def payment_params
