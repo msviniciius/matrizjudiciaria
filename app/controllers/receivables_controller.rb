@@ -66,7 +66,9 @@ class ReceivablesController < ApplicationController
   end
 
   def cancel
-    @receivable.update!(status: "canceled")
+    attributes = { status: "canceled" }
+    attributes[:paid_at] = Date.current if @receivable.amount_paid.to_d.positive? && @receivable.paid_at.nil?
+    @receivable.update!(attributes)
     redirect_to receivables_path, notice: "Conta a receber cancelada com sucesso.", status: :see_other
   end
 
@@ -105,7 +107,7 @@ class ReceivablesController < ApplicationController
   def load_filter_collections
     @units = current_office.units.order(:name)
     @clients = current_office.clients.order(:full_name)
-    @legal_cases = current_office.legal_cases.order(:internal_number)
+    @legal_cases = current_office.legal_cases.includes(:client, :unit).order(:internal_number)
   end
 
   alias_method :load_form_collections, :load_filter_collections
