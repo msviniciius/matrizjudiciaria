@@ -32,6 +32,39 @@ class LegalCaseShowSnapshotTest < ActiveSupport::TestCase
     assert_equal "30/07/2026", snapshot.fetch(:case).fetch(:outcome_date_label)
   end
 
+  test "serializes the recorded outcome metadata and administrator outcome action" do
+    administrator = User.create!(
+      office: default_office,
+      name: "Marina Administradora",
+      email: "marina-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+    confirmed_at = Time.zone.local(2026, 7, 31, 12, 15)
+    @legal_case.update!(
+      outcome: "won",
+      outcome_date: Date.new(2026, 7, 30),
+      outcome_notes: "Sentença favorável transitada em julgado.",
+      outcome_confirmed_by: administrator,
+      outcome_confirmed_at: confirmed_at
+    )
+
+    snapshot = LegalCaseShowSnapshot.new(legal_case: @legal_case, current_user: administrator).as_json
+
+    assert_equal "won", snapshot.dig(:case, :outcome)
+    assert_equal "Ganho", snapshot.dig(:case, :outcome_label)
+    assert_equal "Sentença favorável transitada em julgado.", snapshot.dig(:case, :outcome_notes)
+    assert_equal confirmed_at.iso8601, snapshot.dig(:case, :outcome_confirmed_at)
+    assert_equal "31/07/2026", snapshot.dig(:case, :outcome_confirmed_at_label)
+    assert_equal administrator.name, snapshot.dig(:case, :outcome_confirmed_by_name)
+    assert_equal true, snapshot.dig(:permissions, :can_record_outcome)
+    assert_equal(
+      { path: record_outcome_legal_case_path(@legal_case), method: "patch" },
+      snapshot.dig(:actions, :record_outcome)
+    )
+  end
+
   test "serializes labelled collections in the detail ordering and derived alerts" do
     earlier_deadline = Deadline.create!(
       legal_case: @legal_case,

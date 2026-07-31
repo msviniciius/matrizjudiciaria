@@ -303,11 +303,13 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     )
 
     sign_in(administrator)
-    patch record_outcome_legal_case_url(@legal_case), params: { legal_case: {
-      outcome: "won",
-      outcome_date: "2026-07-30",
-      outcome_notes: "Sentença favorável transitada em julgado."
-    } }
+    assert_no_difference("ReceivablePayment.count") do
+      patch record_outcome_legal_case_url(@legal_case), params: { legal_case: {
+        outcome: "won",
+        outcome_date: "2026-07-30",
+        outcome_notes: "Sentença favorável transitada em julgado."
+      } }
+    end
 
     assert_redirected_to legal_case_url(@legal_case)
     assert_equal "won", @legal_case.reload.outcome
@@ -318,6 +320,57 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pending", receivable.reload.status
     assert_not_nil receivable.triggered_at
     assert_equal 0, receivable.amount_paid
+  end
+
+  test "returns outcome actions in the show snapshot only for administrators" do
+    attendant = create_user(role: "attendant")
+    administrator = create_user(role: "admin")
+
+    sign_in(attendant)
+    get legal_case_url(@legal_case, format: :json)
+
+    assert_response :success
+    assert_not response.parsed_body.dig("permissions", "can_record_outcome")
+    assert_nil response.parsed_body.dig("actions", "record_outcome")
+
+    sign_in(administrator)
+    get legal_case_url(@legal_case, format: :json)
+
+    assert_response :success
+    assert response.parsed_body.dig("permissions", "can_record_outcome")
+    assert_equal(
+      { "path" => record_outcome_legal_case_path(@legal_case), "method" => "patch" },
+      response.parsed_body.dig("actions", "record_outcome")
+    )
+  end
+
+  test "rolls back the recorded outcome when activating a receivable fails" do
+    administrator = create_user(role: "admin")
+    receivable = Receivable.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      description: "Honorários de êxito inválidos",
+      amount: 1_500,
+      trigger: "case_won",
+      status: "awaiting_trigger"
+    )
+    receivable.update_column(:amount_paid, 1_501)
+
+    sign_in(administrator)
+    assert_no_difference("ReceivablePayment.count") do
+      patch record_outcome_legal_case_url(@legal_case), params: { legal_case: {
+        outcome: "won",
+        outcome_date: "2026-07-30",
+        outcome_notes: "Tentativa que deve ser revertida."
+      } }
+    end
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "undefined", @legal_case.reload.outcome
+    assert_nil @legal_case.outcome_confirmed_at
+    assert_nil @legal_case.outcome_confirmed_by
+    assert_equal "awaiting_trigger", receivable.reload.status
+    assert_nil receivable.triggered_at
   end
 
   test "does not allow a non-administrator to record a case outcome" do
