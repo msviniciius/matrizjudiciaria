@@ -14,11 +14,6 @@ production:
   gssencmode: disable
   pool: <%= ENV.fetch('RAILS_MAX_THREADS', 5) %>
   url: <%= ENV['DATABASE_URL'] %>
-  database: <%= ENV.fetch('DATABASE_NAME', 'matrizjuridica_production') %>
-  host: <%= ENV['DATABASE_HOST'] %>
-  port: <%= ENV.fetch('DATABASE_PORT', 5432) %>
-  password: <%= ENV['DATABASE_PASSWORD'] %>
-  username: <%= ENV['DATABASE_USERNAME'] %>
 
 test:
   adapter: postgresql
