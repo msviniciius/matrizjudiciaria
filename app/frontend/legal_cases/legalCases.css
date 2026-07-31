@@ -21,12 +21,16 @@
 
 .react-legal-cases__header {
   align-items: center;
-  background: radial-gradient(circle at top right, rgba(120, 239, 208, .32), transparent 34%), linear-gradient(120deg, #152d58, #342764 58%, #15515e);
+  background: radial-gradient(circle at 92% 0%, rgba(39, 91, 104, .2), transparent 38%), linear-gradient(135deg, #08152d 0%, #0b203b 58%, #0b2933 100%);
+  border-color: rgba(151, 196, 255, .3);
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+  overflow: hidden;
   padding: 1.25rem 1.5rem;
+  position: relative;
 }
+.react-legal-cases__header::after { background: linear-gradient(90deg, rgba(212, 169, 78, .72), rgba(212, 169, 78, 0)); content: ""; height: 2px; left: 1.5rem; position: absolute; right: 42%; top: 0; }
 
 .react-legal-cases__header h1, .react-legal-cases__empty h2, .react-legal-cases__card h2 { margin: 0; }
 .react-legal-cases__eyebrow { color: var(--aurora-muted); font-size: .75rem; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
