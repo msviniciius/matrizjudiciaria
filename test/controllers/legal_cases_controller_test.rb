@@ -54,6 +54,22 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='legal_case_show']"
   end
 
+  test "show provides a process identity fallback when JavaScript is unavailable" do
+    @legal_case.update!(outcome: "won")
+
+    get legal_case_url(@legal_case)
+
+    assert_response :success
+    assert_select "noscript" do
+      assert_select "h1", text: @legal_case.internal_number
+      assert_select "dd", text: @client.full_name
+      assert_select "dd", text: "Em análise"
+      assert_select "dd", text: "Ganho"
+      assert_select "a[href='#{edit_legal_case_path(@legal_case)}']", text: "Editar processo"
+      assert_select "a[href='#{legal_cases_path}']", text: "Voltar para processos"
+    end
+  end
+
   test "show remains read only and preserves the new imported event alert" do
     imported_event = CaseEvent.create!(
       legal_case: @legal_case,
