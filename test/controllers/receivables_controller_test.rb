@@ -52,6 +52,7 @@ class ReceivablesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to receivables_url
     assert_equal "canceled", receivable.reload.status
+    assert_equal Date.current, receivable.paid_at
   end
 
   test "does not let an administrator create an unsettled account as received" do
