@@ -57,7 +57,8 @@ class ReceivablesController < ApplicationController
     @receivable.register_payment!(
       value: payment_params[:value].to_d,
       paid_at: payment_params[:paid_at].presence || Date.current,
-      payment_method: payment_params[:payment_method]
+      payment_method: payment_params[:payment_method],
+      recorded_by: current_user
     )
 
     redirect_to receivables_path, notice: "Recebimento registrado com sucesso.", status: :see_other
@@ -66,7 +67,7 @@ class ReceivablesController < ApplicationController
   end
 
   def cancel
-    attributes = { status: "canceled" }
+    attributes = { status: "canceled", canceled_by: current_user, canceled_at: Time.current }
     attributes[:paid_at] = Date.current if @receivable.amount_paid.to_d.positive? && @receivable.paid_at.nil?
     @receivable.update!(attributes)
     redirect_to receivables_path, notice: "Conta a receber cancelada com sucesso.", status: :see_other

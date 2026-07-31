@@ -5,6 +5,8 @@ class Receivable < ApplicationRecord
   belongs_to :unit, optional: true
   belongs_to :client, optional: true
   belongs_to :legal_case, optional: true
+  belongs_to :payment_recorded_by, class_name: "User", optional: true
+  belongs_to :canceled_by, class_name: "User", optional: true
 
   enum :status, {
     awaiting_trigger: "awaiting_trigger",
@@ -27,6 +29,9 @@ class Receivable < ApplicationRecord
   validate :unit_belongs_to_same_office, if: -> { unit.present? && office.present? }
   validate :client_belongs_to_same_office, if: -> { client.present? && office.present? }
   validate :legal_case_belongs_to_same_office, if: -> { legal_case.present? && office.present? }
+  validate :legal_case_links_match
+
+  before_validation :apply_trigger_state, on: :create
   validate :received_status_requires_full_payment
 
   scope :for_period, ->(period) { where(due_date: period).or(where(due_date: nil)) }
@@ -48,13 +53,15 @@ class Receivable < ApplicationRecord
     save!
   end
 
-  def register_payment!(value:, paid_at: Date.current, payment_method: nil)
+  def register_payment!(value:, paid_at: Date.current, payment_method: nil, recorded_by: nil)
     raise ArgumentError, "payment value must be greater than zero" unless value > 0
 
     self.amount_paid = amount_paid + value
     self.paid_at = paid_at if amount_paid >= amount
     self.status = amount_paid.zero? ? "pending" : (amount_paid >= amount ? "received" : "partial")
     self.payment_method = payment_method if payment_method.present?
+    self.payment_recorded_by = recorded_by if recorded_by.present?
+    self.payment_recorded_at = Time.current
     save!
   end
 
@@ -83,5 +90,22 @@ class Receivable < ApplicationRecord
     return if amount.present? && amount_paid == amount
 
     errors.add(:status, "só pode ser recebida quando estiver totalmente quitada")
+  end
+
+  def legal_case_links_match
+    return unless legal_case.present?
+
+    errors.add(:client_id, "deve corresponder ao cliente do processo") if client_id.present? && client_id != legal_case.client_id
+    errors.add(:unit_id, "deve corresponder à unidade do processo") if unit_id.present? && unit_id != legal_case.unit_id
+  end
+
+  def apply_trigger_state
+    if trigger_case_won?
+      self.status = "awaiting_trigger"
+      self.triggered_at = nil
+    elsif trigger_case_started?
+      self.status = "pending"
+      self.triggered_at ||= Time.current
+    end
   end
 end
