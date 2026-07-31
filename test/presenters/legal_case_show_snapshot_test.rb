@@ -23,6 +23,15 @@ class LegalCaseShowSnapshotTest < ActiveSupport::TestCase
     assert_equal "Em análise", snapshot.fetch(:case).fetch(:status_label)
   end
 
+  test "serializes a localized label for the recorded outcome date" do
+    @legal_case.update!(outcome: "won", outcome_date: Date.new(2026, 7, 30))
+
+    snapshot = LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
+
+    assert_equal "2026-07-30", snapshot.fetch(:case).fetch(:outcome_date)
+    assert_equal "30/07/2026", snapshot.fetch(:case).fetch(:outcome_date_label)
+  end
+
   test "serializes labelled collections in the detail ordering and derived alerts" do
     earlier_deadline = Deadline.create!(
       legal_case: @legal_case,

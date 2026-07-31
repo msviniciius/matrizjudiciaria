@@ -47,6 +47,7 @@ class LegalCaseShowSnapshot
       outcome: legal_case.outcome,
       outcome_label: enum_label(LegalCase, :outcome, legal_case.outcome),
       outcome_date: legal_case.outcome_date&.iso8601,
+      outcome_date_label: date_label(legal_case.outcome_date, fallback: "Não informada"),
       outcome_confirmed_at: legal_case.outcome_confirmed_at&.iso8601,
       outcome_confirmed_at_label: date_label(legal_case.outcome_confirmed_at, fallback: "Ainda não registrado"),
       outcome_notes: legal_case.outcome_notes,

@@ -43,6 +43,8 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     tem_pericia: true,
     outcome: "undefined",
     outcome_label: "Não definido",
+    outcome_date: null,
+    outcome_date_label: "Não informada",
     outcome_confirmed_at: null,
     outcome_confirmed_at_label: "Ainda não registrado",
     outcome_notes: null,
@@ -180,6 +182,7 @@ test("lets an administrator register the outcome from a contextual modal", async
       outcome: "won",
       outcome_label: "Ganho",
       outcome_date: "2026-07-30",
+      outcome_date_label: "30/07/2026",
       outcome_notes: "Sentença favorável.",
       outcome_confirmed_at_label: "30/07/2026"
     }
@@ -196,6 +199,84 @@ test("lets an administrator register the outcome from a contextual modal", async
   expect(screen.getByLabelText("Observação")).toHaveValue("Sentença favorável.")
 })
 
+test("renders the localized outcome date and confirmation details in the outcome summary", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    case: {
+      ...alertedSnapshot.case,
+      outcome: "won",
+      outcome_label: "Ganho",
+      outcome_date: "2026-07-30",
+      outcome_date_label: "30/07/2026",
+      outcome_confirmed_at: "2026-07-31T12:00:00Z",
+      outcome_confirmed_at_label: "31/07/2026",
+      outcome_confirmed_by_name: "Marina"
+    }
+  })))
+
+  render(<LegalCaseShowApp />)
+
+  expect(await screen.findByRole("heading", { name: "Desfecho do processo" })).toBeVisible()
+  expect(screen.getByText("Data do desfecho").nextElementSibling).toHaveTextContent("30/07/2026")
+  expect(screen.getByText("Registrado em").nextElementSibling).toHaveTextContent("31/07/2026")
+  expect(screen.getByText("Registrado por").nextElementSibling).toHaveTextContent("Marina")
+})
+
+test("keeps the modal open and exposes a server error when recording fails", async () => {
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce({ ok: false, json: async () => ({ errors: { outcome: ["não pode ficar em branco"] } }) }))
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+
+  await user.click(await screen.findByRole("button", { name: "Registrar desfecho" }))
+  fireEvent.change(screen.getByLabelText("Data do desfecho"), { target: { value: "2026-07-30" } })
+  await user.click(screen.getByRole("button", { name: "Confirmar desfecho" }))
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("não pode ficar em branco")
+  expect(screen.getByRole("dialog", { name: "Registrar desfecho" })).toBeVisible()
+})
+
+test("disables outcome submission controls while the request is pending", async () => {
+  let resolveOutcome!: (response: unknown) => void
+  const pendingOutcome = new Promise<unknown>((resolve) => { resolveOutcome = resolve })
+  vi.stubGlobal("fetch", vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockReturnValueOnce(pendingOutcome)
+    .mockResolvedValueOnce(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+
+  await user.click(await screen.findByRole("button", { name: "Registrar desfecho" }))
+  fireEvent.change(screen.getByLabelText("Data do desfecho"), { target: { value: "2026-07-30" } })
+  await user.click(screen.getByRole("button", { name: "Confirmar desfecho" }))
+
+  expect(screen.getByRole("button", { name: "Registrando…" })).toBeDisabled()
+  expect(screen.getByRole("button", { name: "Cancelar" })).toBeDisabled()
+  expect(screen.getByLabelText("Resultado")).toBeDisabled()
+  expect(screen.getByLabelText("Data do desfecho")).toBeDisabled()
+
+  resolveOutcome(okResponse({}))
+  await screen.findByRole("status")
+})
+
+test("restores focus to the outcome action after closing the modal", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+  const trigger = await screen.findByRole("button", { name: "Registrar desfecho" })
+
+  await user.click(trigger)
+  expect(screen.getByRole("dialog", { name: "Registrar desfecho" })).toBeVisible()
+  expect(screen.getByTestId("legal-case-sync-content")).toHaveAttribute("inert")
+
+  await user.click(screen.getByRole("button", { name: "Cancelar" }))
+
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "Registrar desfecho" })).not.toBeInTheDocument())
+  expect(screen.getByTestId("legal-case-sync-content")).not.toHaveAttribute("inert")
+  expect(trigger).toHaveFocus()
+})
+
 test("saves an outcome and reloads the process snapshot", async () => {
   const refreshedSnapshot = {
     ...alertedSnapshot,
@@ -204,6 +285,7 @@ test("saves an outcome and reloads the process snapshot", async () => {
       outcome: "won",
       outcome_label: "Ganho",
       outcome_date: "2026-07-30",
+      outcome_date_label: "30/07/2026",
       outcome_confirmed_at: "2026-07-31T12:00:00Z",
       outcome_confirmed_at_label: "31/07/2026",
       outcome_confirmed_by_name: "Marina"

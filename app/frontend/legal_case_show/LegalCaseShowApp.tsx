@@ -86,6 +86,7 @@ type Snapshot = {
     outcome: Outcome
     outcome_label: string
     outcome_date: string | null
+    outcome_date_label: string
     outcome_confirmed_at: string | null
     outcome_confirmed_at_label: string
     outcome_notes: string | null
@@ -154,6 +155,7 @@ export function LegalCaseShowApp() {
   const [outcomeError, setOutcomeError] = useState<string | null>(null)
   const [outcomeMessage, setOutcomeMessage] = useState<string | null>(null)
   const outcomeButtonRef = useRef<HTMLButtonElement>(null)
+  const restoreOutcomeButtonFocus = useRef(false)
 
   const loadSnapshot = async () => {
     setError(null)
@@ -187,6 +189,13 @@ export function LegalCaseShowApp() {
       backgroundRegions.forEach((element) => element.removeAttribute("inert"))
     }
   }, [interactionLocked])
+
+  useEffect(() => {
+    if (outcomeModalOpen || !restoreOutcomeButtonFocus.current) return
+
+    restoreOutcomeButtonFocus.current = false
+    outcomeButtonRef.current?.focus()
+  }, [outcomeModalOpen])
 
   if (isLoading && !snapshot) {
     return <section className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><p role="status">Carregando processo…</p></section>
@@ -233,8 +242,8 @@ export function LegalCaseShowApp() {
   const closeOutcomeModal = () => {
     if (outcomePending) return
 
+    restoreOutcomeButtonFocus.current = true
     setOutcomeModalOpen(false)
-    outcomeButtonRef.current?.focus()
   }
 
   const recordOutcome = async (payload: { outcome: Outcome; outcomeDate: string; outcomeNotes: string }) => {
@@ -265,9 +274,9 @@ export function LegalCaseShowApp() {
 
       const refreshedSnapshot = await fetchSnapshot()
       setSnapshot(refreshedSnapshot)
+      restoreOutcomeButtonFocus.current = true
       setOutcomeModalOpen(false)
       setOutcomeMessage("Desfecho do processo registrado com sucesso.")
-      outcomeButtonRef.current?.focus()
     } catch (outcomeFailure) {
       setOutcomeError(outcomeFailure instanceof Error ? outcomeFailure.message : "Não foi possível registrar o desfecho.")
     } finally {
@@ -425,7 +434,7 @@ function OutcomeSummary({ legalCase }: { legalCase: Snapshot["case"] }) {
     <h2 id="outcome-summary-heading">Desfecho do processo</h2>
     <p><strong>{legalCase.outcome_label}</strong></p>
     <dl>
-      <div><dt>Data do desfecho</dt><dd>{legalCase.outcome_date || "Não informada"}</dd></div>
+      <div><dt>Data do desfecho</dt><dd>{legalCase.outcome_date_label}</dd></div>
       <div><dt>Registrado em</dt><dd>{legalCase.outcome_confirmed_at_label}</dd></div>
       <div><dt>Registrado por</dt><dd>{legalCase.outcome_confirmed_by_name || "Não informado"}</dd></div>
     </dl>
