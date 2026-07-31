@@ -1,6 +1,8 @@
 require "test_helper"
 
 class InternalCalendarSnapshotTest < ActiveSupport::TestCase
+  include Rails.application.routes.url_helpers
+
   test "serializes month calendar days and list events" do
     reference_month = Date.new(2026, 7, 1)
     event = {
