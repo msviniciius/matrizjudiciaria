@@ -1934,6 +1934,8 @@ td.table-actions { width: 1%; }
 .aurora-settings-form .office-users-table { background: rgba(7, 23, 51, .38); border-color: rgba(151, 196, 255, .24); }
 .aurora-settings-form .office-users-table thead th { background: rgba(120, 239, 208, .08); color: #b7c9e6; }
 .aurora-settings-form .office-users-table tbody tr:hover td { background: rgba(120, 239, 208, .06); }
+.aurora-settings-form .office-users-table table th:last-child { text-align: right; }
+.aurora-settings-form .office-users-table table td:last-child { min-width: 0; width: auto; }
 .aurora-settings-form .office-users-table td.table-actions { display: flex !important; justify-content: flex-end !important; min-width: 0; text-align: right; white-space: nowrap; }
 
 .office-integration-option:hover { border-color: var(--line-strong); background: rgba(255, 255, 255, 0.04); }
