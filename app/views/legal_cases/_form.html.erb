@@ -1,6 +1,6 @@
-<%= form_with(model: legal_case, class: "app-form") do |form| %>
+<%= form_with(model: legal_case, class: "app-form aurora-form") do |form| %>
   <% if legal_case.errors.any? %>
-    <div class="form-errors">
+    <div class="form-errors aurora-form__errors">
       <h2>Foram encontrados <%= pluralize(legal_case.errors.count, "erro", "erros") %> neste cadastro:</h2>
       <ul>
         <% legal_case.errors.each do |error| %>
@@ -18,7 +18,7 @@
   <% office_users = current_office.users.active.order(:name).to_a %>
   <% modal_exam = legal_case.process_exams.find(&:new_record?) || legal_case.process_exams.first || legal_case.process_exams.build %>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Dados do cliente</h3>
       <p>Selecione o cliente responsável pelo processo.</p>
@@ -54,7 +54,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Dados do Processo</h3>
       <p>Preencha as informações principais do caso.</p>
@@ -99,7 +99,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Classificação</h3>
       <p>Defina fase, status e prioridade operacional.</p>
@@ -122,7 +122,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Situação Atual</h3>
       <p>Snapshot de acompanhamento do processo.</p>
@@ -156,7 +156,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Perícias</h3>
       <p>Ative para controlar perícias vinculadas ao processo.</p>
@@ -230,7 +230,7 @@
     </div>
   </section>
 
-  <div class="form-actions">
+  <div class="form-actions aurora-form__actions">
     <%= link_to "Voltar", legal_cases_path, class: "btn btn-secondary" %>
     <% if legal_case.persisted? %>
       <%= link_to "Ver processo", legal_case_path(legal_case), class: "btn btn-secondary" %>
