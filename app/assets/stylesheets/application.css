@@ -125,6 +125,17 @@ body {
 }
 .app-navbar__crumbs strong { color: #eaf4ff; }
 
+/* Aurora dark palette */
+.app-sidebar { background: radial-gradient(circle at 20% 0%, rgba(72, 151, 145, .08), transparent 28%), linear-gradient(180deg, #050b1b 0%, #070f24 52%, #040914 100%); }
+.app-sidebar__brand, .app-navbar { background: linear-gradient(135deg, rgba(8, 22, 49, .98), rgba(9, 43, 53, .94)); }
+.app-navbar__crumbs { background: linear-gradient(120deg, rgba(8, 22, 49, .84), rgba(9, 43, 53, .7)); }
+.sidebar-section { background: rgba(8, 18, 38, .62); border-color: rgba(126, 165, 214, .16); }
+.nav-link.is-active { background: linear-gradient(90deg, rgba(45, 78, 143, .72), rgba(36, 92, 91, .24)); border-color: rgba(92, 190, 173, .34); box-shadow: inset 3px 0 0 #63c7b0, 0 8px 18px rgba(0, 0, 0, .26); }
+.aurora-form__section, .aurora-admin-listing { background: linear-gradient(145deg, rgba(12, 29, 57, .94), rgba(7, 16, 34, .94)); }
+.aurora-form__actions, .aurora-settings-form .office-settings-actions { background: rgba(7, 16, 34, .88); }
+.aurora-settings-shell { background: radial-gradient(circle at top right, rgba(72, 151, 145, .08), transparent 32%), linear-gradient(145deg, rgba(12, 29, 57, .96), rgba(5, 12, 26, .98)); }
+.aurora-settings-form .office-settings-nav { background: rgba(4, 11, 25, .5); }
+
 .app-navbar__right {
   display: flex;
   align-items: center;
