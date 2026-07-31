@@ -39,6 +39,8 @@ class LegalCase < ApplicationRecord
     suspenso
   ].freeze
 
+  OUTCOMES = %w[undefined won lost settled partially_won].freeze
+
   belongs_to :client
   belongs_to :office
   belongs_to :unit, optional: true
@@ -46,6 +48,7 @@ class LegalCase < ApplicationRecord
   belongs_to :process_type, optional: true
   belongs_to :court, optional: true
   belongs_to :district, optional: true
+  belongs_to :outcome_confirmed_by, class_name: "User", optional: true
 
   has_many :case_events, dependent: :destroy
   has_many :process_movements, foreign_key: :process_id, dependent: :destroy
@@ -67,6 +70,14 @@ class LegalCase < ApplicationRecord
 
   enum :phase, OFFICIAL_PHASES.index_with(&:itself), prefix: true
 
+  enum :outcome, {
+    undefined: "undefined",
+    won: "won",
+    lost: "lost",
+    settled: "settled",
+    partially_won: "partially_won"
+  }, prefix: true
+
   before_validation :normalize_legacy_phase_and_status
   before_validation :apply_office_operational_defaults
   before_validation :assign_internal_number, on: :create
@@ -77,8 +88,11 @@ class LegalCase < ApplicationRecord
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :phase, inclusion: { in: phases.keys }
+  validates :outcome, inclusion: { in: outcomes.keys }
   validate :validate_operational_snapshot_quality
   validate :client_belongs_to_same_office, if: -> { client.present? && office.present? }
+  validate :outcome_confirmation_user_belongs_to_same_office,
+    if: -> { outcome_confirmed_by.present? && office.present? }
 
   scope :with_upcoming_deadline, ->(days = 7) { where(next_deadline_on: Date.current..(Date.current + days.to_i.days)) }
   scope :without_deadline, -> { where(next_deadline_on: nil) }
@@ -268,6 +282,12 @@ class LegalCase < ApplicationRecord
     return if client.office_id == office_id
 
     errors.add(:client_id, "não pertence ao escritório atual")
+  end
+
+  def outcome_confirmation_user_belongs_to_same_office
+    return if outcome_confirmed_by.office_id == office_id
+
+    errors.add(:outcome_confirmed_by, "não pertence ao escritório atual")
   end
 
   def normalize_legacy_phase_and_status

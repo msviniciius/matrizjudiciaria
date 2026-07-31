@@ -5,6 +5,10 @@ class User < ApplicationRecord
   belongs_to :office
   has_many :user_units, dependent: :destroy
   has_many :units, through: :user_units
+  has_many :outcome_confirmed_legal_cases,
+    class_name: "LegalCase",
+    foreign_key: :outcome_confirmed_by_id,
+    dependent: :nullify
 
   ROLES = %w[admin attendant associate intern].freeze
   ROLE_LABELS = {
