@@ -89,7 +89,10 @@ class LegalCaseTest < ActiveSupport::TestCase
     assert_equal expected_outcomes, LegalCase::OUTCOMES
 
     expected_outcomes.each do |outcome|
-      legal_case = build_case(outcome: outcome)
+      legal_case = build_case(
+        outcome: outcome,
+        outcome_date: outcome == "undefined" ? nil : Date.current
+      )
 
       assert legal_case.valid?, "esperava aceitar o resultado #{outcome.inspect}"
     end
@@ -106,6 +109,7 @@ class LegalCaseTest < ActiveSupport::TestCase
     confirmed_at = Time.zone.local(2026, 7, 31, 16, 0, 0)
     legal_case = build_case(
       outcome: "won",
+      outcome_date: Date.current,
       outcome_confirmed_by: confirming_user,
       outcome_confirmed_at: confirmed_at
     )
@@ -120,10 +124,21 @@ class LegalCaseTest < ActiveSupport::TestCase
   test "rejeita confirmacao por usuario de outro escritorio" do
     other_office = Office.create!(name: "Outro Escritorio", slug: "outro-escritorio")
     confirming_user = create_user(office: other_office)
-    legal_case = build_case(outcome: "won", outcome_confirmed_by: confirming_user)
+    legal_case = build_case(
+      outcome: "won",
+      outcome_date: Date.current,
+      outcome_confirmed_by: confirming_user
+    )
 
     assert_not legal_case.valid?
     assert_includes legal_case.errors[:outcome_confirmed_by], "não pertence ao escritório atual"
+  end
+
+  test "requires an outcome date when recording a legal outcome" do
+    legal_case = build_case(outcome: "won", outcome_date: nil)
+
+    assert_not legal_case.valid?(:outcome_recording)
+    assert_includes legal_case.errors[:outcome_date], "não pode ficar em branco"
   end
 
   private

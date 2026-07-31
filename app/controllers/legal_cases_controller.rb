@@ -1,5 +1,6 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync ]
+  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync record_outcome ]
+  before_action :require_admin!, only: :record_outcome
 
   def index
     @filters = legal_case_filters
@@ -124,13 +125,36 @@ class LegalCasesController < ApplicationController
     @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
 
     respond_to do |format|
-      if save_legal_case_and_trigger_receivables
+      if @legal_case.save
         format.html { redirect_to @legal_case, status: :see_other, flash: success_flash("Processo atualizado com sucesso.", @legal_case) }
         format.json { render :show, status: :ok, location: @legal_case }
       else
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @legal_case.errors, status: :unprocessable_entity }
       end
+    end
+  end
+
+  def record_outcome
+    LegalCase.transaction do
+      @legal_case.assign_attributes(outcome_params)
+      @legal_case.outcome_confirmed_by = current_user
+      @legal_case.outcome_confirmed_at = Time.current
+      @legal_case.save!(context: :outcome_recording)
+
+      Receivables::OutcomeTrigger.call(legal_case: @legal_case, confirmed_by: current_user) if @legal_case.outcome_won?
+    end
+
+    respond_to do |format|
+      format.html { redirect_to @legal_case, notice: "Desfecho do processo registrado com sucesso." }
+      format.json { render json: LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json }
+    end
+  rescue ActiveRecord::RecordInvalid, ArgumentError => error
+    @legal_case.errors.add(:base, error.message) if @legal_case.errors.empty?
+
+    respond_to do |format|
+      format.html { redirect_to @legal_case, alert: @legal_case.errors.full_messages.to_sentence }
+      format.json { render json: { errors: @legal_case.errors }, status: :unprocessable_entity }
     end
   end
 
@@ -193,23 +217,12 @@ class LegalCasesController < ApplicationController
     ]
 
     permitted << :responsible_name
-    permitted << :outcome if current_user&.admin?
 
     params.require(:legal_case).permit(*permitted)
   end
 
-  def save_legal_case_and_trigger_receivables
-    LegalCase.transaction do
-      @legal_case.save!
-
-      if @legal_case.saved_change_to_outcome? && @legal_case.outcome_won?
-        Receivables::OutcomeTrigger.call(legal_case: @legal_case, confirmed_by: current_user)
-      end
-    end
-
-    true
-  rescue ActiveRecord::RecordInvalid
-    false
+  def outcome_params
+    params.require(:legal_case).permit(:outcome, :outcome_date, :outcome_notes)
   end
 
   def load_case_related_collections

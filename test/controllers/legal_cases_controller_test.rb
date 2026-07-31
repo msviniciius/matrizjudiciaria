@@ -291,7 +291,7 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "", @legal_case.reload.next_action
   end
 
-  test "allows an administrator to confirm a win and activate awaiting receivables" do
+  test "allows an administrator to record a win and activate awaiting receivables" do
     administrator = create_user(role: "admin")
     receivable = Receivable.create!(
       office: default_office,
@@ -303,50 +303,73 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     )
 
     sign_in(administrator)
-    patch legal_case_url(@legal_case), params: { legal_case: { outcome: "won" } }
+    patch record_outcome_legal_case_url(@legal_case), params: { legal_case: {
+      outcome: "won",
+      outcome_date: "2026-07-30",
+      outcome_notes: "Sentença favorável transitada em julgado."
+    } }
 
     assert_redirected_to legal_case_url(@legal_case)
     assert_equal "won", @legal_case.reload.outcome
     assert_equal administrator, @legal_case.outcome_confirmed_by
     assert_not_nil @legal_case.outcome_confirmed_at
+    assert_equal Date.new(2026, 7, 30), @legal_case.outcome_date
+    assert_equal "Sentença favorável transitada em julgado.", @legal_case.outcome_notes
     assert_equal "pending", receivable.reload.status
     assert_not_nil receivable.triggered_at
     assert_equal 0, receivable.amount_paid
   end
 
-  test "does not allow a non-administrator to change a case outcome" do
+  test "does not allow a non-administrator to record a case outcome" do
     unit = Unit.create!(office: default_office, name: "Contencioso")
     attendant = create_user(role: "attendant")
     UserUnit.create!(user: attendant, unit: unit)
     @legal_case.update!(unit: unit)
 
     sign_in(attendant)
+    patch record_outcome_legal_case_url(@legal_case, format: :json), params: { legal_case: {
+      outcome: "won",
+      outcome_date: "2026-07-30"
+    } }
+
+    assert_redirected_to root_url
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "rejects an invalid outcome without changing the case" do
+    administrator = create_user(role: "admin")
+
+    sign_in(administrator)
+    patch record_outcome_legal_case_url(@legal_case, format: :json), params: { legal_case: {
+      outcome: "inconclusive",
+      outcome_date: "2026-07-30"
+    } }
+
+    assert_response :unprocessable_entity
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "rejects a malformed outcome date without changing the case" do
+    administrator = create_user(role: "admin")
+
+    sign_in(administrator)
+    patch record_outcome_legal_case_url(@legal_case, format: :json), params: { legal_case: {
+      outcome: "won",
+      outcome_date: "not-a-date"
+    } }
+
+    assert_response :unprocessable_entity
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "does not change an outcome through the general update endpoint" do
+    administrator = create_user(role: "admin")
+
+    sign_in(administrator)
     patch legal_case_url(@legal_case), params: { legal_case: { outcome: "won" } }
 
     assert_redirected_to legal_case_url(@legal_case)
     assert_equal "undefined", @legal_case.reload.outcome
-  end
-
-  test "does not activate awaiting receivables when an administrator updates an already won case" do
-    administrator = create_user(role: "admin")
-    @legal_case.update!(outcome: "won")
-    receivable = Receivable.create!(
-      office: default_office,
-      legal_case: @legal_case,
-      description: "Honorários de êxito já confirmado",
-      amount: 1_500,
-      trigger: "case_won",
-      status: "awaiting_trigger"
-    )
-
-    sign_in(administrator)
-    patch legal_case_url(@legal_case), params: { legal_case: { next_action: "Atualizar relatório" } }
-
-    assert_redirected_to legal_case_url(@legal_case)
-    assert_equal "awaiting_trigger", receivable.reload.status
-    assert_nil receivable.triggered_at
-    assert_nil @legal_case.reload.outcome_confirmed_by
-    assert_nil @legal_case.outcome_confirmed_at
   end
 
   test "should destroy legal_case" do

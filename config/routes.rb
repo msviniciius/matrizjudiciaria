@@ -50,6 +50,7 @@ Rails.application.routes.draw do
       get :pdf
       get :google_calendar
       post :sync
+      patch :outcome, to: "legal_cases#record_outcome", as: :record_outcome
     end
 
     resources :process_exams, only: [ :new, :create ]

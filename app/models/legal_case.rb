@@ -90,6 +90,8 @@ class LegalCase < ApplicationRecord
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :phase, inclusion: { in: phases.keys }
   validates :outcome, inclusion: { in: outcomes.keys }
+  validates :outcome_date, presence: true, on: :outcome_recording
+  validate :outcome_date_cannot_be_in_the_future, on: :outcome_recording
   validate :validate_operational_snapshot_quality
   validate :client_belongs_to_same_office, if: -> { client.present? && office.present? }
   validate :outcome_confirmation_user_belongs_to_same_office,
@@ -289,6 +291,12 @@ class LegalCase < ApplicationRecord
     return if outcome_confirmed_by.office_id == office_id
 
     errors.add(:outcome_confirmed_by, "não pertence ao escritório atual")
+  end
+
+  def outcome_date_cannot_be_in_the_future
+    return if outcome_date.blank? || outcome_date <= Date.current
+
+    errors.add(:outcome_date, "não pode estar no futuro")
   end
 
   def normalize_legacy_phase_and_status
