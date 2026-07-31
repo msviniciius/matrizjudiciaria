@@ -291,11 +291,86 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "", @legal_case.reload.next_action
   end
 
+  test "allows an administrator to confirm a win and activate awaiting receivables" do
+    administrator = create_user(role: "admin")
+    receivable = Receivable.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      description: "Honorários de êxito",
+      amount: 1_500,
+      trigger: "case_won",
+      status: "awaiting_trigger"
+    )
+
+    sign_in(administrator)
+    patch legal_case_url(@legal_case), params: { legal_case: { outcome: "won" } }
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "won", @legal_case.reload.outcome
+    assert_equal administrator, @legal_case.outcome_confirmed_by
+    assert_not_nil @legal_case.outcome_confirmed_at
+    assert_equal "pending", receivable.reload.status
+    assert_not_nil receivable.triggered_at
+    assert_equal 0, receivable.amount_paid
+  end
+
+  test "does not allow a non-administrator to change a case outcome" do
+    unit = Unit.create!(office: default_office, name: "Contencioso")
+    attendant = create_user(role: "attendant")
+    UserUnit.create!(user: attendant, unit: unit)
+    @legal_case.update!(unit: unit)
+
+    sign_in(attendant)
+    patch legal_case_url(@legal_case), params: { legal_case: { outcome: "won" } }
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "does not activate awaiting receivables when an administrator updates an already won case" do
+    administrator = create_user(role: "admin")
+    @legal_case.update!(outcome: "won")
+    receivable = Receivable.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      description: "Honorários de êxito já confirmado",
+      amount: 1_500,
+      trigger: "case_won",
+      status: "awaiting_trigger"
+    )
+
+    sign_in(administrator)
+    patch legal_case_url(@legal_case), params: { legal_case: { next_action: "Atualizar relatório" } }
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "awaiting_trigger", receivable.reload.status
+    assert_nil receivable.triggered_at
+    assert_nil @legal_case.reload.outcome_confirmed_by
+    assert_nil @legal_case.outcome_confirmed_at
+  end
+
   test "should destroy legal_case" do
     assert_difference("LegalCase.count", -1) do
       delete legal_case_url(@legal_case)
     end
 
     assert_redirected_to legal_cases_url
+  end
+
+  private
+
+  def create_user(role:)
+    User.create!(
+      office: default_office,
+      name: "Usuário #{role}",
+      email: "#{role}-#{SecureRandom.hex(4)}@example.com",
+      role: role,
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+  end
+
+  def sign_in(user)
+    post login_path, params: { email: user.email, password: "segredo123" }
   end
 end

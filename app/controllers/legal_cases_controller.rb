@@ -124,7 +124,7 @@ class LegalCasesController < ApplicationController
     @legal_case.process_exams.each { |exam| exam.created_by_user_id ||= current_user.id }
 
     respond_to do |format|
-      if @legal_case.save
+      if save_legal_case_and_trigger_receivables
         format.html { redirect_to @legal_case, status: :see_other, flash: success_flash("Processo atualizado com sucesso.", @legal_case) }
         format.json { render :show, status: :ok, location: @legal_case }
       else
@@ -193,8 +193,23 @@ class LegalCasesController < ApplicationController
     ]
 
     permitted << :responsible_name
+    permitted << :outcome if current_user&.admin?
 
     params.require(:legal_case).permit(*permitted)
+  end
+
+  def save_legal_case_and_trigger_receivables
+    LegalCase.transaction do
+      @legal_case.save!
+
+      if @legal_case.saved_change_to_outcome? && @legal_case.outcome_won?
+        Receivables::OutcomeTrigger.call(legal_case: @legal_case, confirmed_by: current_user)
+      end
+    end
+
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
   end
 
   def load_case_related_collections

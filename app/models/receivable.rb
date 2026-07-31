@@ -31,6 +31,7 @@ class Receivable < ApplicationRecord
   scope :for_period, ->(period) { where(due_date: period) }
   scope :by_status, ->(status) { where(status: status) }
   scope :by_unit, ->(unit) { where(unit: unit) }
+  scope :awaiting_case_won_trigger, -> { where(trigger: "case_won", status: "awaiting_trigger") }
 
   def balance
     amount - amount_paid
