@@ -32,7 +32,7 @@ class Receivable < ApplicationRecord
   validate :legal_case_belongs_to_same_office, if: -> { legal_case.present? && office.present? }
   validate :legal_case_links_match
 
-  before_validation :apply_trigger_state, on: :create
+  before_validation :apply_trigger_state
   validate :received_status_requires_full_payment
 
   scope :for_period, ->(period) { where(due_date: period).or(where(due_date: nil)) }
@@ -106,8 +106,13 @@ class Receivable < ApplicationRecord
 
   def apply_trigger_state
     if trigger_case_won?
-      self.status = "awaiting_trigger"
-      self.triggered_at = nil
+      if legal_case&.outcome_won? && (new_record? || status_awaiting_trigger?)
+        self.status = "pending"
+        self.triggered_at ||= Time.current
+      elsif new_record?
+        self.status = "awaiting_trigger"
+        self.triggered_at = nil
+      end
     elsif trigger_case_started?
       self.status = "pending"
       self.triggered_at ||= Time.current
