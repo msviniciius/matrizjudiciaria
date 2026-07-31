@@ -1922,6 +1922,9 @@ td.table-actions { width: 1%; }
 .aurora-settings-form .office-settings-nav__item:hover { background: rgba(120, 239, 208, .1); color: #eaf4ff; }
 .aurora-settings-form .office-settings-nav__item.is-active { background: linear-gradient(120deg, rgba(91, 140, 255, .72), rgba(120, 239, 208, .34)); border-color: rgba(120, 239, 208, .48); color: #fff; }
 .aurora-settings-form .office-tab-panel { background: linear-gradient(145deg, rgba(25, 52, 91, .78), rgba(15, 32, 60, .72)); border-color: rgba(151, 196, 255, .26); }
+.aurora-settings-form .section-head-actions { align-items: center; margin-bottom: 14px; }
+.aurora-settings-form .section-head-actions h3 { color: #eaf4ff; }
+.aurora-settings-form .section-head-actions .btn-primary { background: #78efd0; color: #102747; white-space: nowrap; }
 .aurora-settings-form .office-tab-panel input,
 .aurora-settings-form .office-tab-panel select,
 .aurora-settings-form .office-tab-panel textarea { background: rgba(4, 19, 43, .68); border-color: #3e5c83; color: #eaf4ff; }
