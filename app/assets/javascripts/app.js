@@ -71,10 +71,17 @@
 
       select.addEventListener("change", async () => {
         const processId = select.value;
-        if (!processId) return;
-
         const clientSelect = select.form?.querySelector("[data-receivable-linked-client]");
         const unitSelect = select.form?.querySelector("[data-receivable-linked-unit]");
+        if (!processId) {
+          [clientSelect, unitSelect].forEach((linkedSelect) => {
+            if (!linkedSelect) return;
+            linkedSelect.value = "";
+            linkedSelect.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+          return;
+        }
+
         const template = select.dataset.contextUrlTemplate;
         if (!template || !clientSelect || !unitSelect) return;
 
@@ -2080,6 +2087,11 @@
       const text = selected ? (selected.textContent || "").trim() : "Selecione";
       label.textContent = text || "Selecione";
     };
+
+    select.addEventListener("change", () => {
+      updateLabel();
+      render(search.value);
+    });
 
     trigger.addEventListener("click", () => {
       const open = wrapper.classList.contains("is-open");
