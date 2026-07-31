@@ -7,6 +7,7 @@ class Receivable < ApplicationRecord
   belongs_to :legal_case, optional: true
   belongs_to :payment_recorded_by, class_name: "User", optional: true
   belongs_to :canceled_by, class_name: "User", optional: true
+  has_many :receivable_payments, dependent: :destroy
 
   enum :status, {
     awaiting_trigger: "awaiting_trigger",
@@ -55,14 +56,18 @@ class Receivable < ApplicationRecord
 
   def register_payment!(value:, paid_at: Date.current, payment_method: nil, recorded_by: nil)
     raise ArgumentError, "payment value must be greater than zero" unless value > 0
+    raise ArgumentError, "canceled receivables cannot receive payments" if status_canceled?
 
-    self.amount_paid = amount_paid + value
-    self.paid_at = paid_at if amount_paid >= amount
-    self.status = amount_paid.zero? ? "pending" : (amount_paid >= amount ? "received" : "partial")
-    self.payment_method = payment_method if payment_method.present?
-    self.payment_recorded_by = recorded_by if recorded_by.present?
-    self.payment_recorded_at = Time.current
-    save!
+    transaction do
+      self.amount_paid = amount_paid + value
+      self.paid_at = paid_at if amount_paid >= amount
+      self.status = amount_paid.zero? ? "pending" : (amount_paid >= amount ? "received" : "partial")
+      self.payment_method = payment_method if payment_method.present?
+      self.payment_recorded_by = recorded_by if recorded_by.present?
+      self.payment_recorded_at = Time.current
+      save!
+      receivable_payments.create!(amount: value, paid_at: paid_at, payment_method: payment_method, recorded_by: recorded_by)
+    end
   end
 
   private
@@ -95,8 +100,8 @@ class Receivable < ApplicationRecord
   def legal_case_links_match
     return unless legal_case.present?
 
-    errors.add(:client_id, "deve corresponder ao cliente do processo") if client_id.present? && client_id != legal_case.client_id
-    errors.add(:unit_id, "deve corresponder à unidade do processo") if unit_id.present? && unit_id != legal_case.unit_id
+    errors.add(:client_id, "deve corresponder ao cliente do processo") if client_id != legal_case.client_id
+    errors.add(:unit_id, "deve corresponder à unidade do processo") if unit_id != legal_case.unit_id
   end
 
   def apply_trigger_state
