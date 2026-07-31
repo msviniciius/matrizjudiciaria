@@ -127,6 +127,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: |
           bin/vite build --clear --mode=test
+          bin/rails db:migrate
           bin/rails db:test:prepare test
 
   system-test:
@@ -170,6 +171,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: |
           bin/vite build --clear --mode=test
+          bin/rails db:migrate
           if ls test/system/*_test.rb >/dev/null 2>&1; then
             bin/rails db:test:prepare test:system
           else
