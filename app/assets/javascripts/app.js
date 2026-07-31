@@ -1088,6 +1088,11 @@
   };
 
   document.addEventListener("input", handleInput);
+  document.addEventListener("submit", (event) => {
+    event.target.querySelectorAll?.('[data-mask="currency-br"]').forEach((element) => {
+      element.value = element.value.replace(/\./g, "").replace(",", ".");
+    });
+  });
   document.addEventListener("turbo:load", () => {
     document.querySelectorAll("[data-mask]").forEach((el) => formatByMask(el));
   });

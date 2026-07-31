@@ -15,7 +15,7 @@
       </div>
       <div>
         <%= form.label :amount, "Valor total" %>
-        <%= form.number_field :amount, min: 0.01, step: 0.01, required: true %>
+        <%= form.text_field :amount, data: { mask: "currency-br" }, inputmode: "decimal", required: true %>
       </div>
       <div>
         <%= form.label :due_date, "Data de vencimento" %>
