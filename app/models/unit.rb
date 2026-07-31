@@ -5,6 +5,7 @@ class Unit < ApplicationRecord
   has_many :users, through: :user_units
   has_many :clients, dependent: :nullify
   has_many :legal_cases, dependent: :nullify
+  has_many :receivables, dependent: :nullify
 
   validates :name, :slug, presence: true
   validates :name, uniqueness: { scope: :office_id }

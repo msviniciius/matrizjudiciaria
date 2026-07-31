@@ -55,6 +55,7 @@ class LegalCase < ApplicationRecord
   has_many :deadlines, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :process_exams, dependent: :destroy
+  has_many :receivables, dependent: :nullify
   accepts_nested_attributes_for :process_exams,
     reject_if: :process_exam_attributes_blank?,
     allow_destroy: true
