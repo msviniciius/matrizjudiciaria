@@ -1846,6 +1846,7 @@ td.table-actions { width: 1%; }
 
 /* ===== Auth Pages ===== */
 .auth-page {
+  background: radial-gradient(circle at 8% 8%, rgba(39, 91, 104, .22), transparent 32%), linear-gradient(145deg, #071328 0%, #0b203b 62%, #0b2933 100%);
   min-height: 100vh;
   margin: 0;
   display: grid;
@@ -1861,10 +1862,10 @@ td.table-actions { width: 1%; }
   min-height: 560px;
   border-radius: 22px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(10, 22, 42, 0.95) 0%, rgba(8, 16, 31, 0.95) 100%);
-  border: 1px solid var(--line-strong);
-  box-shadow: var(--shadow-lg);
-  width: min(560px, 100%);
+  background: linear-gradient(145deg, rgba(25, 52, 91, .96), rgba(8, 21, 45, .98));
+  border: 1px solid rgba(151, 196, 255, .3);
+  box-shadow: 0 24px 60px rgba(4, 12, 31, .38);
+  width: min(920px, 100%);
   margin: 0 auto;
 }
 
@@ -1877,7 +1878,7 @@ td.table-actions { width: 1%; }
 
 .auth-kicker {
   margin: 0;
-  color: var(--brand);
+  color: var(--aurora-mint, #78efd0);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.72rem;
@@ -1889,7 +1890,8 @@ td.table-actions { width: 1%; }
 .auth-form { display: grid; gap: 14px; margin-top: 8px; }
 
 .auth-card__brand {
-  background: linear-gradient(150deg, #1a4fc7 0%, #2568e8 58%, #3a82f5 100%);
+  background: radial-gradient(circle at 15% 12%, rgba(120, 239, 208, .18), transparent 34%), linear-gradient(145deg, #08152d 0%, #0b203b 58%, #0b2933 100%);
+  border-left: 1px solid rgba(151, 196, 255, .2);
   color: #f4f9ff;
   display: grid;
   place-items: center;
@@ -1915,8 +1917,16 @@ td.table-actions { width: 1%; }
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(7, 23, 51, .54);
+  border: 1px solid rgba(212, 169, 78, .58);
+  color: #d4a94e;
 }
+
+.auth-card__brand-box h2 { color: #eaf4ff; font-family: "IBM Plex Serif", Georgia, serif; margin: 0; }
+.auth-card__brand-box p { color: #b7c9e6; margin: 0; }
+.auth-card__form input { background: rgba(4, 19, 43, .68); border-color: #3e5c83; color: #eaf4ff; }
+.auth-card__form input:focus { border-color: #78efd0; box-shadow: 0 0 0 3px rgba(120, 239, 208, .14); }
+.auth-card__form .btn-primary { background: #78efd0; color: #102747; }
 
 /* ===== Office Settings ===== */
 .office-settings-shell {
