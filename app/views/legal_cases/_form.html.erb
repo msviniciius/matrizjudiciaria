@@ -305,7 +305,7 @@
   </dialog>
 <% end %>
 
-<dialog class="quick-client-modal" data-quick-client-modal data-endpoint="<%= quick_create_clients_path %>">
+<dialog class="quick-client-modal aurora-form__modal" data-quick-client-modal data-endpoint="<%= quick_create_clients_path %>">
   <div class="quick-client-modal__header">
     <h3>Novo cliente (cadastro rápido)</h3>
     <button
@@ -321,7 +321,7 @@
 
   <p class="form-hint">Preencha os dados mínimos obrigatórios. O cliente será criado com cadastro pendente.</p>
 
-  <div class="form-errors" data-quick-client-errors hidden></div>
+  <div class="form-errors aurora-form__errors" data-quick-client-errors hidden></div>
 
   <div class="form-grid">
     <div class="field-full">
@@ -355,7 +355,7 @@
     </div>
   </div>
 
-  <div class="form-actions">
+  <div class="form-actions aurora-form__actions">
     <button type="button" class="btn btn-primary" data-save-quick-client>Salvar cliente</button>
   </div>
 </dialog>
