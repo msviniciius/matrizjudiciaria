@@ -2,9 +2,9 @@
 <% show_path = local_assigns[:show_path] %>
 <% show_label = local_assigns[:show_label] || "Ver" %>
 
-<%= form_with(model: client, class: "app-form", data: { inline_validation_form: true }) do |form| %>
+<%= form_with(model: client, class: "app-form aurora-form", data: { inline_validation_form: true }) do |form| %>
   <% if client.errors.any? %>
-    <div class="form-errors">
+    <div class="form-errors aurora-form__errors">
       <h2>Foram encontrados <%= pluralize(client.errors.count, "erro", "erros") %> neste cadastro:</h2>
       <ul>
         <% client.errors.each do |error| %>
@@ -14,7 +14,7 @@
     </div>
   <% end %>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Identificação</h3>
       <p>Informe os dados essenciais para localizar e identificar o cliente.</p>
@@ -62,7 +62,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Contato</h3>
       <p>Mantenha os canais de comunicação atualizados.</p>
@@ -85,7 +85,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Endereço</h3>
       <p>Use o CEP para preencher automaticamente os dados disponíveis.</p>
@@ -116,7 +116,7 @@
     </div>
   </section>
 
-  <section class="form-section">
+  <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Informações adicionais</h3>
       <p>Registre informações complementares e observações importantes.</p>
@@ -151,7 +151,7 @@
     </div>
   </section>
 
-  <div class="form-actions">
+  <div class="form-actions aurora-form__actions">
     <% if back_path.present? %>
       <%= link_to "Voltar", back_path, class: "btn btn-secondary" %>
     <% end %>
