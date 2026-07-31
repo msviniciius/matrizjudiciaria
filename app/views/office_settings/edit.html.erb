@@ -1,8 +1,8 @@
 <% content_for :title, "Configurações do Escritório" %>
 
-<%= form_with model: @office, url: office_setting_path, method: :patch, class: "app-form office-settings-form", data: { office_settings_form: true } do |form| %>
+<%= form_with model: @office, url: office_setting_path, method: :patch, class: "app-form office-settings-form aurora-settings-form", data: { office_settings_form: true } do |form| %>
   <% if @office.errors.any? %>
-    <div class="form-errors">
+    <div class="form-errors aurora-form__errors">
       <h2>Foram encontrados <%= pluralize(@office.errors.count, "erro", "erros") %>:</h2>
       <ul>
         <% @office.errors.each do |error| %>
@@ -12,7 +12,7 @@
     </div>
   <% end %>
 
-  <section class="case-section office-settings-shell">
+  <section class="case-section office-settings-shell aurora-settings-shell">
     <div class="office-settings-top">
       <div>
         <h3>Configurações do Escritório</h3>
