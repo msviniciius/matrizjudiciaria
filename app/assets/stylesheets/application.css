@@ -648,6 +648,14 @@ select {
 .aurora-form input::placeholder,
 .aurora-form textarea::placeholder { color: rgba(183, 201, 230, .52); }
 .aurora-form .field-help { border-color: rgba(120, 239, 208, .5); color: #78efd0; }
+.aurora-form .inline-client-actions { align-items: stretch; }
+.aurora-form .inline-client-actions select {
+  flex: 1 1 auto;
+  min-height: 56px;
+  font-size: .98rem;
+  padding: 12px 42px 12px 14px;
+}
+.aurora-form .inline-client-actions .btn-icon { min-height: 56px; min-width: 56px; }
 .aurora-form .checkbox-field { color: var(--aurora-form-ink); }
 .aurora-form__errors { background: rgba(143, 36, 57, .72); border-color: rgba(255, 152, 174, .48); color: #fff; }
 .aurora-form__actions {
