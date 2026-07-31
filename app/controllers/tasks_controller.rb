@@ -39,6 +39,15 @@ class TasksController < ApplicationController
 
     @tasks = scope
     @advanced_filters_open = false
+
+    return unless request.format.json?
+
+    render json: TasksSnapshot.new(
+      office: current_office,
+      unit: current_unit,
+      tasks: @tasks,
+      filters: @filters
+    ).as_json
   end
 
   # GET /tasks/1 or /tasks/1.json
