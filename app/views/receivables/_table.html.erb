@@ -32,13 +32,6 @@
               <td><%= number_to_currency(receivable.balance) %></td>
               <td><span class="status-pill status-pill--<%= status_class %>"><%= status_label %></span></td>
               <td class="table-actions">
-                <% unless receivable.status_awaiting_trigger? || receivable.status_received? || receivable.status_canceled? %>
-                  <%= form_with url: register_payment_receivable_path(receivable), method: :patch, scope: :payment, class: "receivables-payment-form" do |payment_form| %>
-                    <%= payment_form.number_field :value, min: 0.01, max: receivable.balance, step: 0.01, placeholder: "Valor", aria: { label: "Valor recebido de #{receivable.description}" } %>
-                    <%= payment_form.hidden_field :paid_at, value: Date.current %>
-                    <%= payment_form.submit "Receber", class: "btn btn-secondary btn-xs" %>
-                  <% end %>
-                <% end %>
                 <%= link_to "Editar", edit_receivable_path(receivable), class: "btn btn-secondary btn-xs" %>
                 <% unless receivable.status_canceled? || receivable.status_received? %>
                   <%= button_to "Cancelar", cancel_receivable_path(receivable), method: :patch, class: "btn btn-danger btn-xs", form: { class: "inline-form", data: { turbo_confirm: "Cancelar esta conta a receber?" } } %>
