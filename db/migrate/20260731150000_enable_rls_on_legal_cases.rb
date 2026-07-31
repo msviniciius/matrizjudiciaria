@@ -1,4 +1,4 @@
-class EnableRlsOnPublicTables < ActiveRecord::Migration[8.1]
+class EnableRlsOnLegalCases < ActiveRecord::Migration[8.1]
   PUBLIC_TABLES = %w[
     legal_cases process_statuses active_storage_blobs active_storage_attachments
     active_storage_variant_records case_events movement_types process_exams offices
