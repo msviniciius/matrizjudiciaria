@@ -743,6 +743,9 @@ select {
 }
 .aurora-form .inline-client-actions .btn-icon { min-height: 46px; min-width: 46px; }
 .aurora-form .inline-client-actions .custom-select { flex: 1 1 auto; min-width: 0; }
+.money-input { align-items: center; display: flex; position: relative; }
+.money-input__prefix { color: var(--aurora-form-muted); font-weight: 700; left: 14px; pointer-events: none; position: absolute; z-index: 1; }
+.money-input input { padding-left: 42px; width: 100%; }
 .aurora-form .inline-client-actions .custom-select__trigger {
   height: 46px;
   padding: 0 14px;

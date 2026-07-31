@@ -28,8 +28,8 @@
               <td><strong><%= receivable.description %></strong><small><%= receivable.unit&.name || "Matriz" %></small></td>
               <td><%= receivable.client&.full_name || "—" %></td>
               <td><%= receivable.due_date ? l(receivable.due_date) : "Sem vencimento" %></td>
-              <td><%= number_to_currency(receivable.amount) %></td>
-              <td><%= number_to_currency(receivable.balance) %></td>
+              <td><%= number_to_currency(receivable.amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+              <td><%= number_to_currency(receivable.balance, unit: "R$ ", separator: ",", delimiter: ".") %></td>
               <td><span class="status-pill status-pill--<%= status_class %>"><%= status_label %></span></td>
               <td class="table-actions">
                 <%= link_to "Editar", edit_receivable_path(receivable), class: "btn btn-secondary btn-xs" %>
