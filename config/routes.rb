@@ -26,6 +26,12 @@ Rails.application.routes.draw do
     end
   end
   resources :deadline_settings, except: :show
+  resources :receivables, except: [ :show ] do
+    member do
+      patch :register_payment
+      patch :cancel
+    end
+  end
   resources :case_events
   resources :movement_types
   resources :movement_templates
