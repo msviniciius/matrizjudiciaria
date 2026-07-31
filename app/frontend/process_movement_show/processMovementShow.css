@@ -1,0 +1,35 @@
+.react-process-movement-show { --movement-ink: #eaf4ff; --movement-muted: #b7c9e6; --movement-surface: rgba(15, 32, 60, .82); --movement-surface-raised: rgba(25, 52, 91, .9); --movement-border: rgba(151, 196, 255, .24); --movement-blue: #73b7ff; --movement-mint: #78efd0; --movement-danger: #ff98ae; --movement-warning: #ffd77b; color: var(--movement-ink); display: grid; gap: 1rem; }
+.react-process-movement-show__header { background: linear-gradient(135deg, #08152d, #0b203b 58%, #0b2933); border-color: rgba(151,196,255,.3); position: relative; overflow: hidden; }.react-process-movement-show__header::after { background: linear-gradient(90deg, rgba(212,169,78,.72), transparent); content:""; height:2px; left:1.5rem; position:absolute; right:42%; top:0; }
+.react-process-movement-show__header, .react-process-movement-show__summary, .react-process-movement-show__text-section, .react-process-movement-show__automation, .react-process-movement-show__timeline, .react-process-movement-show__case-data, .react-process-movement-show__shortcuts, .react-process-movement-show__error { border: 1px solid var(--movement-border); border-radius: 16px; box-shadow: 0 18px 42px rgba(4, 12, 31, .24); }
+.react-process-movement-show__header { align-items: center; background: radial-gradient(circle at top right, rgba(120, 239, 208, .3), transparent 34%), linear-gradient(120deg, #15345f, #4d2d58 58%, #19595c); display: flex; gap: 1rem; justify-content: space-between; padding: 1.25rem 1.5rem; }
+.react-process-movement-show__header h1, .react-process-movement-show h2, .react-process-movement-show h3 { margin: 0; }
+.react-process-movement-show__client { color: var(--movement-mint); font-size: .78rem; font-weight: 700; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
+.react-process-movement-show__eyebrow, .react-process-movement-show__identifiers, .react-process-movement-show__refreshing, .react-process-movement-show__timeline-meta { color: var(--movement-muted); margin: .35rem 0 0; }
+.react-process-movement-show__badges { align-items: flex-end; display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
+.react-process-movement-show__badge { background: rgba(115, 183, 255, .16); border: 1px solid rgba(115, 183, 255, .45); border-radius: 999px; display: inline-flex; font-size: .78rem; font-weight: 700; padding: .35rem .65rem; white-space: nowrap; }
+.react-process-movement-show__badge--active { background: rgba(120, 239, 208, .18); border-color: rgba(120, 239, 208, .55); }
+.react-process-movement-show__badge--inactive { background: rgba(255, 152, 174, .18); border-color: rgba(255, 152, 174, .55); }
+.react-process-movement-show__layout { align-items: start; display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem); }
+.react-process-movement-show__main-column, .react-process-movement-show__rail { display: grid; gap: 1rem; min-width: 0; }
+.react-process-movement-show__summary, .react-process-movement-show__text-section, .react-process-movement-show__automation, .react-process-movement-show__timeline, .react-process-movement-show__case-data, .react-process-movement-show__shortcuts { background: linear-gradient(145deg, var(--movement-surface-raised), var(--movement-surface)); display: grid; gap: .85rem; padding: 1rem; }
+.react-process-movement-show__metrics { display: grid; gap: .7rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+.react-process-movement-show__metrics div, .react-process-movement-show__case-data dl div { background: rgba(4, 19, 43, .28); border: 1px solid var(--movement-border); border-radius: 10px; padding: .75rem; }
+.react-process-movement-show dt { color: var(--movement-muted); font-size: .74rem; margin-bottom: .22rem; text-transform: uppercase; }
+.react-process-movement-show dd { margin: 0; overflow-wrap: anywhere; }
+.react-process-movement-show a { color: var(--movement-ink); font-weight: 700; }
+.react-process-movement-show__case-data dl { display: grid; gap: .6rem; margin: 0; }
+.react-process-movement-show__longtext { color: var(--movement-muted); display: grid; gap: .45rem; }
+.react-process-movement-show__longtext p, .react-process-movement-show__timeline p, .react-process-movement-show__text-section p { margin: 0; overflow-wrap: anywhere; }
+.react-process-movement-show__timeline ol { display: grid; gap: .65rem; list-style: none; margin: 0; padding: 0; }
+.react-process-movement-show__timeline-item { background: rgba(4, 19, 43, .28); border: 1px solid var(--movement-border); border-radius: 12px; display: grid; gap: .45rem; padding: .85rem; }
+.react-process-movement-show__timeline-item h3 { font-size: 1rem; }
+.react-process-movement-show__shortcuts a, .react-process-movement-show__shortcuts button, .react-process-movement-show__error button { background: rgba(7, 23, 51, .42); border: 1px solid var(--movement-border); border-radius: 8px; color: var(--movement-ink); cursor: pointer; display: block; font: inherit; padding: .65rem .75rem; text-align: center; text-decoration: none; width: 100%; }
+.react-process-movement-show__shortcuts form { margin: 0; }
+.react-process-movement-show__shortcuts button { background: rgba(255, 152, 174, .18); border-color: rgba(255, 152, 174, .55); }
+.react-process-movement-show__error { align-items: center; background: #8f2439; color: #fff; display: flex; gap: 1rem; justify-content: space-between; padding: 1rem; }
+.react-process-movement-show__error p { margin: 0; }
+.react-process-movement-show__error button { background: #fff; color: #71182a; font-weight: 700; width: auto; }
+.react-process-movement-show--loading { background: var(--movement-surface); border: 1px solid var(--movement-border); border-radius: 16px; padding: 1.25rem; }
+.react-process-movement-show :focus-visible { outline: 3px solid var(--movement-warning); outline-offset: 3px; }
+@media (max-width: 980px) { .react-process-movement-show__layout { grid-template-columns: 1fr; } .react-process-movement-show__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .react-process-movement-show__header, .react-process-movement-show__error { align-items: flex-start; flex-direction: column; } .react-process-movement-show__badges { justify-content: flex-start; } .react-process-movement-show__metrics { grid-template-columns: 1fr; } }
