@@ -705,9 +705,11 @@ select {
 .aurora-admin-listing .listing-head h3 { color: #eaf4ff; margin: 0; }
 .aurora-admin-listing .listing-head p { color: #b7c9e6; margin: 0; }
 .aurora-admin-listing .table-wrap { background: rgba(7, 23, 51, .38); border-color: rgba(151, 196, 255, .24); }
-.aurora-admin-listing table { color: #eaf4ff; }
+.aurora-admin-listing table { color: #eaf4ff; table-layout: auto; }
 .aurora-admin-listing thead th { background: rgba(120, 239, 208, .08); color: #b7c9e6; }
 .aurora-admin-listing tbody tr:hover td { background: rgba(120, 239, 208, .06); }
+.aurora-admin-listing table th:last-child,
+.aurora-admin-listing table td:last-child,
 .aurora-admin-listing td.table-actions { width: max-content; min-width: max-content; white-space: nowrap; }
 .aurora-admin-listing .table-actions .btn { border-color: rgba(151, 196, 255, .28); }
 @media (max-width: 760px) { .aurora-admin-listing .listing-head { align-items: flex-start; flex-direction: column; } }
