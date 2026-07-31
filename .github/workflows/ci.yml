@@ -106,6 +106,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -116,7 +125,9 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
-        run: bin/rails db:test:prepare test
+        run: |
+          bin/vite build --clear --mode=test
+          bin/rails db:test:prepare test
 
   system-test:
     runs-on: ubuntu-latest
@@ -138,6 +149,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -149,6 +169,7 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: |
+          bin/vite build --clear --mode=test
           if ls test/system/*_test.rb >/dev/null 2>&1; then
             bin/rails db:test:prepare test:system
           else
