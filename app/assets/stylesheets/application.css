@@ -693,6 +693,25 @@ select {
 .aurora-form__modal .form-actions { background: rgba(15, 32, 60, .58); border: 1px solid var(--aurora-form-border); border-radius: 14px; padding: 12px; }
 .aurora-form__modal .form-actions .btn-primary { background: #78efd0; color: #102747; }
 
+/* ===== Aurora configuration listings ===== */
+.aurora-admin-listing {
+  background: linear-gradient(145deg, rgba(25, 52, 91, .9), rgba(15, 32, 60, .82));
+  border: 1px solid rgba(151, 196, 255, .28);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(4, 12, 31, .24);
+  padding: 1rem;
+}
+.aurora-admin-listing .listing-head { align-items: center; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+.aurora-admin-listing .listing-head h3 { color: #eaf4ff; margin: 0; }
+.aurora-admin-listing .listing-head p { color: #b7c9e6; margin: 0; }
+.aurora-admin-listing .table-wrap { background: rgba(7, 23, 51, .38); border-color: rgba(151, 196, 255, .24); }
+.aurora-admin-listing table { color: #eaf4ff; }
+.aurora-admin-listing thead th { background: rgba(120, 239, 208, .08); color: #b7c9e6; }
+.aurora-admin-listing tbody tr:hover td { background: rgba(120, 239, 208, .06); }
+.aurora-admin-listing td.table-actions { width: max-content; min-width: max-content; white-space: nowrap; }
+.aurora-admin-listing .table-actions .btn { border-color: rgba(151, 196, 255, .28); }
+@media (max-width: 760px) { .aurora-admin-listing .listing-head { align-items: flex-start; flex-direction: column; } }
+
 .password-field { position: relative; }
 .password-field input { padding-right: 44px; }
 .password-field__toggle {
