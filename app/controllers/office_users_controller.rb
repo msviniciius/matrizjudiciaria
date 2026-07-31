@@ -8,7 +8,7 @@ class OfficeUsersController < ApplicationController
 
   def new
     @user = current_office.users.new(role: "attendant", active: true)
-    @user.unit_ids = [ current_unit.id ].compact
+    @user.unit_ids = [ current_unit&.id ].compact
   end
 
   def create
