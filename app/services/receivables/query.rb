@@ -89,7 +89,7 @@ class Receivables::Query
   end
 
   def overdue_scope(scope)
-    scope.where(status: %w[pending partial]).where("due_date < ?", Date.current)
+    scope.where(status: Receivable::OPEN_STATUSES).where("due_date < ?", Date.current)
   end
 
   def value_for(key)
