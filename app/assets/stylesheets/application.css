@@ -113,6 +113,18 @@ body {
 
 .app-navbar__crumbs strong { color: var(--text); font-weight: 600; }
 
+/* Keep the navbar identity aligned with the Aurora sidebar brand. */
+.app-navbar__crumbs {
+  width: fit-content;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid rgba(151, 196, 255, .24);
+  border-radius: 10px;
+  background: linear-gradient(120deg, rgba(21, 45, 88, .78), rgba(18, 75, 83, .62));
+  box-shadow: 0 8px 20px rgba(4, 12, 31, .16);
+}
+.app-navbar__crumbs strong { color: #eaf4ff; }
+
 .app-navbar__right {
   display: flex;
   align-items: center;
