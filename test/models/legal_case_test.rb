@@ -94,6 +94,8 @@ class LegalCaseTest < ActiveSupport::TestCase
       assert legal_case.valid?, "esperava aceitar o resultado #{outcome.inspect}"
     end
 
+    assert build_case(outcome: "won").outcome_won?
+
     assert_raises(ArgumentError) do
       build_case(outcome: "inconclusive")
     end
