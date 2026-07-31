@@ -164,6 +164,11 @@
 
             <div class="sidebar-section__body" id="sidebar-section-configuracoes">
               <% if current_user&.admin? %>
+                <%= link_to receivables_path, class: "nav-link #{'is-active' if controller_name == 'receivables'}", aria: { label: "Contas a receber" }, title: "Contas a receber" do %>
+                  <span class="nav-link__icon" aria-hidden="true">&#128176;</span>
+                  <span class="nav-link__label">Contas a receber</span>
+                <% end %>
+
                 <%= link_to edit_office_setting_path, class: "nav-link #{'is-active' if %w[office_settings office_users].include?(controller_name)}", aria: { label: "Escritório" }, title: "Escritório" do %>
                   <span class="nav-link__icon" aria-hidden="true">&#9881;</span>
                   <span class="nav-link__label">Escritório</span>

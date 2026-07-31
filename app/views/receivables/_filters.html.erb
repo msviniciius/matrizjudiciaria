@@ -22,7 +22,7 @@
     </div>
     <div>
       <%= form.label :status, "Situação" %>
-      <%= form.select :status, [["Todas", ""], ["Aguardando gatilho", "awaiting_trigger"], ["Pendente", "pending"], ["Parcial", "partial"], ["Recebida", "received"], ["Vencida", "overdue"], ["Cancelada", "canceled"]], selected: params[:status] %>
+      <%= form.select :status, [["Todas", ""]] + enum_options_for(Receivable, :status), selected: params[:status] %>
     </div>
     <div class="receivables-filters__actions">
       <%= form.submit "Aplicar filtros", class: "btn btn-primary" %>

@@ -15,6 +15,16 @@ class ReceivablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Apenas administradores podem acessar esta área.", flash[:alert]
   end
 
+  test "shows the receivables navigation to administrators" do
+    sign_in(@administrator)
+
+    get receivables_url
+
+    assert_response :success
+    assert_includes response.body, "Contas a receber"
+    assert_includes response.body, "Aguardando gatilho"
+  end
+
   test "does not expose accounts from another office to an administrator" do
     sign_in(@administrator)
     other_office = create_other_office

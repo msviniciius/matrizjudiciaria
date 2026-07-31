@@ -23,7 +23,7 @@
           <% @receivables.each do |receivable| %>
             <% display_status = receivable.due_date.present? && receivable.due_date < Date.current && receivable.status.in?(%w[pending partial]) ? "overdue" : receivable.status %>
             <% status_class = { "received" => "success", "partial" => "warning", "overdue" => "danger", "canceled" => "muted", "awaiting_trigger" => "info" }.fetch(display_status, "info") %>
-            <% status_label = { "awaiting_trigger" => "Aguardando gatilho", "pending" => "Pendente", "partial" => "Parcial", "received" => "Recebida", "overdue" => "Vencida", "canceled" => "Cancelada" }.fetch(display_status) %>
+            <% status_label = enum_label(Receivable, :status, display_status) %>
             <tr>
               <td><strong><%= receivable.description %></strong><small><%= receivable.unit&.name || "Matriz" %></small></td>
               <td><%= receivable.client&.full_name || "—" %></td>

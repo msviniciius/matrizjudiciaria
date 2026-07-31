@@ -71,6 +71,7 @@ pt-BR:
       case_event: Andamento
       process_movement: Andamento processual
       process_exam: Perícia
+      receivable: Conta a receber
     attributes:
       client:
         full_name: Nome completo
@@ -147,6 +148,12 @@ pt-BR:
           cumprimento_execucao: Cumprimento/Execução
           acordo: Acordo
           encerrado: Encerrado
+        outcomes:
+          undefined: Não definido
+          won: Ganho
+          lost: Perdido
+          settled: Acordo
+          partially_won: Parcialmente ganho
       process_exam:
         exam_natures:
           medica: Médica
@@ -309,6 +316,36 @@ pt-BR:
           phase_changed: Alteração de fase
           status_changed: Alteração de status
           case_closed: Encerramento
+      receivable:
+        description: Descrição
+        amount: Valor total
+        amount_paid: Valor recebido
+        due_date: Data de vencimento
+        paid_at: Recebido em
+        payment_method: Forma de pagamento
+        notes: Observações
+        status: Situação
+        trigger: Gatilho
+        triggered_at: Ativado em
+        office: Escritório
+        office_id: Escritório
+        unit: Unidade
+        unit_id: Unidade
+        client: Cliente
+        client_id: Cliente
+        legal_case: Processo
+        legal_case_id: Processo
+        statuses:
+          awaiting_trigger: Aguardando gatilho
+          pending: Pendente
+          partial: Parcial
+          received: Recebida
+          overdue: Vencida
+          canceled: Cancelada
+        triggers:
+          manual: Manual
+          case_started: Processo iniciado
+          case_won: Processo ganho
 
   legal_cases:
     warnings:

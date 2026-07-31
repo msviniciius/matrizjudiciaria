@@ -23,7 +23,7 @@
       </div>
       <div>
         <%= form.label :trigger, "Gatilho" %>
-        <%= form.select :trigger, [["Manual", "manual"], ["Processo iniciado", "case_started"], ["Processo ganho", "case_won"]] %>
+        <%= form.select :trigger, enum_options_for(Receivable, :trigger) %>
       </div>
     </div>
   </section>
