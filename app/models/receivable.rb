@@ -29,7 +29,7 @@ class Receivable < ApplicationRecord
   validate :legal_case_belongs_to_same_office, if: -> { legal_case.present? && office.present? }
   validate :received_status_requires_full_payment
 
-  scope :for_period, ->(period) { where(due_date: period) }
+  scope :for_period, ->(period) { where(due_date: period).or(where(due_date: nil)) }
   scope :by_status, ->(status) { where(status: status) }
   scope :by_unit, ->(unit) { where(unit: unit) }
   scope :awaiting_case_won_trigger, -> { where(trigger: "case_won", status: "awaiting_trigger") }

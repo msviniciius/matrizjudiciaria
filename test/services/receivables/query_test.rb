@@ -27,6 +27,27 @@ class Receivables::QueryTest < ActiveSupport::TestCase
     assert_includes receivables, unit_receivable
   end
 
+  test "keeps accounts without a due date in the default dashboard period" do
+    undated = create_receivable(due_date: nil)
+
+    receivables = Receivables::Query.new(office: default_office, params: {}).call
+
+    assert_includes receivables, undated
+  end
+
+  test "filters overdue accounts from their due date instead of their stored status" do
+    overdue_pending = create_receivable(status: "pending", due_date: Date.current - 1.day)
+    overdue_partial = create_receivable(status: "partial", amount_paid: 100, due_date: Date.current - 1.day)
+    current_pending = create_receivable(status: "pending", due_date: Date.current)
+    persisted_overdue = create_receivable(status: "overdue", due_date: Date.current + 1.day)
+
+    receivables = Receivables::Query.new(office: default_office, params: { status: "overdue" }).call
+
+    assert_equal [ overdue_pending, overdue_partial ].sort_by(&:id), receivables.to_a.sort_by(&:id)
+    assert_not_includes receivables, current_pending
+    assert_not_includes receivables, persisted_overdue
+  end
+
   test "filters by a unit that belongs to the office" do
     unit = Unit.create!(office: default_office, name: "Contencioso")
     other_unit = Unit.create!(office: default_office, name: "Consultivo")

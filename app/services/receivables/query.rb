@@ -11,7 +11,7 @@ class Receivables::Query
     scope = filter_unit(scope)
     scope = filter(scope, :client_id)
     scope = filter(scope, :legal_case_id)
-    scope = filter(scope, :status)
+    scope = filter_status(scope)
 
     scope.order(:due_date, :id)
   end
@@ -78,6 +78,18 @@ class Receivables::Query
     return scope if value.blank?
 
     scope.where(key => value)
+  end
+
+  def filter_status(scope)
+    status = value_for(:status)
+    return scope if status.blank?
+    return overdue_scope(scope) if status == "overdue"
+
+    scope.where(status: status)
+  end
+
+  def overdue_scope(scope)
+    scope.where(status: %w[pending partial]).where("due_date < ?", Date.current)
   end
 
   def value_for(key)

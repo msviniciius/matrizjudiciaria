@@ -10,10 +10,10 @@ class Receivables::Summary
   def call
     {
       expected: active_scope.sum(:amount),
-      received: active_scope.sum(:amount_paid),
+      received: payment_scope.sum(:amount_paid),
       open_balance: sum_balance(open_scope),
       overdue: sum_balance(open_scope.where("due_date < ?", reference_date)),
-      partial: active_scope.where(status: "partial").sum(:amount_paid),
+      partial: partial_payment_scope.sum(:amount_paid),
       upcoming: sum_balance(open_scope.where(due_date: upcoming_period)),
       received_by_day: received_scope.group(:paid_at).sum(:amount_paid)
     }
@@ -36,7 +36,15 @@ class Receivables::Summary
   end
 
   def received_scope
-    base_scope.where(status: "received").where.not(paid_at: nil)
+    payment_scope.where.not(paid_at: nil)
+  end
+
+  def payment_scope
+    base_scope.where.not(status: "awaiting_trigger")
+  end
+
+  def partial_payment_scope
+    base_scope.where(status: "partial").or(base_scope.where(status: "canceled").where("amount_paid > 0"))
   end
 
   def upcoming_period

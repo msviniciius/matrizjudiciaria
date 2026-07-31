@@ -47,6 +47,18 @@ class Receivables::SummaryTest < ActiveSupport::TestCase
     assert_equal({ reference_date - 1.day => 1_000.to_d, reference_date => 300.to_d }, received_by_day)
   end
 
+  test "preserves partial payments from canceled accounts in receipt metrics and the daily chart" do
+    reference_date = Date.new(2026, 7, 31)
+    canceled_partial = create_receivable(amount: 500, amount_paid: 200, status: "canceled", paid_at: reference_date)
+    received = create_receivable(amount: 100, amount_paid: 100, status: "received", paid_at: reference_date)
+
+    summary = Receivables::Summary.new(scope: Receivable.where(id: [ canceled_partial, received ]), reference_date: reference_date).call
+
+    assert_equal 300.to_d, summary[:received]
+    assert_equal 200.to_d, summary[:partial]
+    assert_equal({ reference_date => 300.to_d }, summary[:received_by_day])
+  end
+
   private
 
   def create_receivable(**attrs)
