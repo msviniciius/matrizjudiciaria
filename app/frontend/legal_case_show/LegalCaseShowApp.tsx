@@ -1,6 +1,6 @@
 /// <reference path="../vite-env.d.ts" />
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import "./legalCaseShow.css"
 
 type TimelineItem = {
@@ -83,6 +83,13 @@ type Snapshot = {
     claim_value: string | number | null
     opposing_party: string
     tem_pericia: boolean
+    outcome: Outcome
+    outcome_label: string
+    outcome_date: string | null
+    outcome_confirmed_at: string | null
+    outcome_confirmed_at_label: string
+    outcome_notes: string | null
+    outcome_confirmed_by_name: string | null
   }
   alerts: {
     deadline_near: boolean
@@ -114,8 +121,20 @@ type Snapshot = {
     new_task: string
     new_exam: string | null
     sync: { path: string; method: string } | null
+    record_outcome: { path: string; method: string } | null
   }
+  permissions: { can_record_outcome: boolean }
 }
+
+type Outcome = "undefined" | "won" | "lost" | "settled" | "partially_won"
+
+const outcomeOptions: Array<{ value: Outcome; label: string }> = [
+  { value: "undefined", label: "Sem definição" },
+  { value: "won", label: "Ganho" },
+  { value: "lost", label: "Perdido" },
+  { value: "settled", label: "Acordo" },
+  { value: "partially_won", label: "Parcialmente ganho" }
+]
 
 function fetchSnapshot(): Promise<Snapshot> {
   return fetch(`${window.location.pathname}.json`, { headers: { Accept: "application/json" } })
@@ -130,6 +149,11 @@ export function LegalCaseShowApp() {
   const [syncPending, setSyncPending] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  const [outcomeModalOpen, setOutcomeModalOpen] = useState(false)
+  const [outcomePending, setOutcomePending] = useState(false)
+  const [outcomeError, setOutcomeError] = useState<string | null>(null)
+  const [outcomeMessage, setOutcomeMessage] = useState<string | null>(null)
+  const outcomeButtonRef = useRef<HTMLButtonElement>(null)
 
   const loadSnapshot = async () => {
     setError(null)
@@ -149,8 +173,10 @@ export function LegalCaseShowApp() {
     loadSnapshot()
   }, [])
 
+  const interactionLocked = syncPending || outcomeModalOpen
+
   useEffect(() => {
-    if (!syncPending) return
+    if (!interactionLocked) return
 
     const backgroundRegions = Array.from(document.querySelectorAll<HTMLElement>("[data-legal-case-sync-background]"))
       .filter((element) => !element.hasAttribute("inert"))
@@ -160,7 +186,7 @@ export function LegalCaseShowApp() {
     return () => {
       backgroundRegions.forEach((element) => element.removeAttribute("inert"))
     }
-  }, [syncPending])
+  }, [interactionLocked])
 
   if (isLoading && !snapshot) {
     return <section className="react-legal-case-show react-legal-case-show--loading" aria-label="Central de comando"><p role="status">Carregando processo…</p></section>
@@ -198,6 +224,57 @@ export function LegalCaseShowApp() {
     }
   }
 
+  const openOutcomeModal = () => {
+    setOutcomeError(null)
+    setOutcomeMessage(null)
+    setOutcomeModalOpen(true)
+  }
+
+  const closeOutcomeModal = () => {
+    if (outcomePending) return
+
+    setOutcomeModalOpen(false)
+    outcomeButtonRef.current?.focus()
+  }
+
+  const recordOutcome = async (payload: { outcome: Outcome; outcomeDate: string; outcomeNotes: string }) => {
+    const action = snapshot.actions.record_outcome
+    if (!action) return
+
+    setOutcomePending(true)
+    setOutcomeError(null)
+    setOutcomeMessage(null)
+
+    try {
+      const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
+      const response = await fetch(action.path, {
+        method: action.method.toUpperCase(),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {})
+        },
+        body: JSON.stringify({ legal_case: {
+          outcome: payload.outcome,
+          outcome_date: payload.outcomeDate,
+          outcome_notes: payload.outcomeNotes
+        } })
+      })
+      const body = await response.json().catch(() => ({})) as { errors?: Record<string, string[] | string>; error?: string }
+      if (!response.ok) throw new Error(outcomeErrorMessage(body))
+
+      const refreshedSnapshot = await fetchSnapshot()
+      setSnapshot(refreshedSnapshot)
+      setOutcomeModalOpen(false)
+      setOutcomeMessage("Desfecho do processo registrado com sucesso.")
+      outcomeButtonRef.current?.focus()
+    } catch (outcomeFailure) {
+      setOutcomeError(outcomeFailure instanceof Error ? outcomeFailure.message : "Não foi possível registrar o desfecho.")
+    } finally {
+      setOutcomePending(false)
+    }
+  }
+
   const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, 5)
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
@@ -216,7 +293,7 @@ export function LegalCaseShowApp() {
         <p>Buscando andamentos…</p>
       </div>
     </section>}
-    <div data-testid="legal-case-sync-content" inert={syncPending || undefined}>
+    <div data-testid="legal-case-sync-content" inert={interactionLocked || undefined}>
     <header className="react-legal-case-show__header">
       <div>
         <p className="react-legal-case-show__client">Central de comando</p>
@@ -224,10 +301,11 @@ export function LegalCaseShowApp() {
         <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
         <p className="react-legal-case-show__identifiers">{snapshot.case.external_number ? `CNJ: ${snapshot.case.external_number}` : "Sem número CNJ"}</p>
       </div>
-      <div className="react-legal-case-show__header-actions"><div className="react-legal-case-show__actions"><a href={snapshot.actions.edit}>Editar processo</a><a href={snapshot.actions.pdf} target="_blank" rel="noreferrer">Exportar PDF</a><a href={snapshot.actions.index}>Voltar</a></div><div className="react-legal-case-show__badges" aria-label="Situação do processo">
+      <div className="react-legal-case-show__header-actions"><div className="react-legal-case-show__actions">{snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__outcome-action" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}<a href={snapshot.actions.edit}>Editar processo</a><a href={snapshot.actions.pdf} target="_blank" rel="noreferrer">Exportar PDF</a><a href={snapshot.actions.index}>Voltar</a></div><div className="react-legal-case-show__badges" aria-label="Situação do processo">
         <span className="react-legal-case-show__badge">{snapshot.case.phase_label}</span>
         <span className="react-legal-case-show__badge">{snapshot.case.status_label}</span>
         <span className="react-legal-case-show__badge react-legal-case-show__badge--priority">Prioridade {snapshot.case.priority_label}</span>
+        {snapshot.case.outcome !== "undefined" && <span className="react-legal-case-show__badge react-legal-case-show__badge--outcome">Desfecho: {snapshot.case.outcome_label}</span>}
         <AlertSummary alerts={snapshot.alerts} />
       </div></div>
     </header>
@@ -236,6 +314,7 @@ export function LegalCaseShowApp() {
     {isLoading && <p className="react-legal-case-show__refreshing" role="status">Atualizando processo…</p>}
     {syncError && <p className="react-legal-case-show__sync-notice react-legal-case-show__sync-notice--error" role="alert">{syncError}</p>}
     {syncMessage && <p className="react-legal-case-show__sync-notice" role="status">{syncMessage}</p>}
+    {outcomeMessage && <p className="react-legal-case-show__outcome-notice" role="status">{outcomeMessage}</p>}
 
     <div className="react-legal-case-show__layout">
     <div className="react-legal-case-show__main-column">
@@ -315,6 +394,8 @@ export function LegalCaseShowApp() {
       </dl>
     </section>
 
+    {snapshot.case.outcome !== "undefined" && <OutcomeSummary legalCase={snapshot.case} />}
+
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
       <a href={snapshot.actions.calendar}>Adicionar ao calendário</a>
       {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} onSync={syncCase} pending={syncPending} />}
@@ -322,7 +403,105 @@ export function LegalCaseShowApp() {
     </aside>
     </div>
     </div>
+    {outcomeModalOpen && snapshot.actions.record_outcome && <OutcomeModal
+      legalCase={snapshot.case}
+      pending={outcomePending}
+      error={outcomeError}
+      onClose={closeOutcomeModal}
+      onSubmit={recordOutcome}
+    />}
   </section>
+}
+
+function outcomeErrorMessage(body: { errors?: Record<string, string[] | string>; error?: string }) {
+  if (body.error) return body.error
+
+  const messages = Object.values(body.errors || {}).flatMap((value) => Array.isArray(value) ? value : [value])
+  return messages.join(", ") || "Não foi possível registrar o desfecho."
+}
+
+function OutcomeSummary({ legalCase }: { legalCase: Snapshot["case"] }) {
+  return <section className="react-legal-case-show__outcome-summary" aria-labelledby="outcome-summary-heading">
+    <h2 id="outcome-summary-heading">Desfecho do processo</h2>
+    <p><strong>{legalCase.outcome_label}</strong></p>
+    <dl>
+      <div><dt>Data do desfecho</dt><dd>{legalCase.outcome_date || "Não informada"}</dd></div>
+      <div><dt>Registrado em</dt><dd>{legalCase.outcome_confirmed_at_label}</dd></div>
+      <div><dt>Registrado por</dt><dd>{legalCase.outcome_confirmed_by_name || "Não informado"}</dd></div>
+    </dl>
+    {legalCase.outcome_notes && <p className="react-legal-case-show__outcome-notes">{legalCase.outcome_notes}</p>}
+  </section>
+}
+
+function OutcomeModal({
+  legalCase,
+  pending,
+  error,
+  onClose,
+  onSubmit
+}: {
+  legalCase: Snapshot["case"]
+  pending: boolean
+  error: string | null
+  onClose: () => void
+  onSubmit: (payload: { outcome: Outcome; outcomeDate: string; outcomeNotes: string }) => Promise<void>
+}) {
+  const [outcome, setOutcome] = useState<Outcome>(legalCase.outcome)
+  const [outcomeDate, setOutcomeDate] = useState(legalCase.outcome_date || "")
+  const [outcomeNotes, setOutcomeNotes] = useState(legalCase.outcome_notes || "")
+  const selectRef = useRef<HTMLSelectElement>(null)
+
+  useEffect(() => {
+    selectRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+
+    document.addEventListener("keydown", closeOnEscape)
+    return () => document.removeEventListener("keydown", closeOnEscape)
+  }, [onClose])
+
+  return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
+    if (event.target === event.currentTarget) onClose()
+  }}>
+    <section className="react-legal-case-show__outcome-modal" role="dialog" aria-modal="true" aria-labelledby="outcome-modal-heading" aria-describedby="outcome-modal-description">
+      <div className="react-legal-case-show__outcome-modal-header">
+        <div>
+          <p className="react-legal-case-show__eyebrow">Ação administrativa</p>
+          <h2 id="outcome-modal-heading">Registrar desfecho</h2>
+        </div>
+        <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} disabled={pending} aria-label="Fechar registro de desfecho">×</button>
+      </div>
+      <p id="outcome-modal-description">Registre o resultado jurídico. Um resultado ganho ativa apenas as cobranças que aguardam esse gatilho; nenhum pagamento será registrado automaticamente.</p>
+      <form onSubmit={(event) => {
+        event.preventDefault()
+        void onSubmit({ outcome, outcomeDate, outcomeNotes })
+      }}>
+        <label htmlFor="legal-case-outcome">Resultado</label>
+        <select id="legal-case-outcome" ref={selectRef} value={outcome} onChange={(event) => setOutcome(event.target.value as Outcome)} disabled={pending}>
+          {outcomeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+
+        <label htmlFor="legal-case-outcome-date">Data do desfecho</label>
+        <input id="legal-case-outcome-date" type="date" value={outcomeDate} onChange={(event) => setOutcomeDate(event.target.value)} disabled={pending} required />
+
+        <label htmlFor="legal-case-outcome-notes">Observação</label>
+        <textarea id="legal-case-outcome-notes" value={outcomeNotes} onChange={(event) => setOutcomeNotes(event.target.value)} disabled={pending} rows={4} />
+
+        {error && <p className="react-legal-case-show__outcome-error" role="alert">{error}</p>}
+        <div className="react-legal-case-show__outcome-modal-actions">
+          <button type="button" onClick={onClose} disabled={pending}>Cancelar</button>
+          <button type="submit" disabled={pending} aria-busy={pending || undefined}>
+            {pending && <span className="react-legal-case-show__sync-spinner" aria-hidden="true" />}
+            {pending ? "Registrando…" : "Confirmar desfecho"}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 }
 
 function AlertSummary({ alerts }: { alerts: Snapshot["alerts"] }) {

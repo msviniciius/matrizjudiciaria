@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest"
 import { readFileSync } from "node:fs"
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { LegalCaseShowApp } from "./LegalCaseShowApp"
@@ -40,7 +40,13 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     district_name: "São Luís",
     claim_value: "1000.0",
     opposing_party: "Parte contrária",
-    tem_pericia: true
+    tem_pericia: true,
+    outcome: "undefined",
+    outcome_label: "Não definido",
+    outcome_confirmed_at: null,
+    outcome_confirmed_at_label: "Ainda não registrado",
+    outcome_notes: null,
+    outcome_confirmed_by_name: null
   },
   alerts: {
     deadline_near: true,
@@ -112,8 +118,10 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     new_deadline: "/deadlines/new?legal_case_id=1",
     new_task: "/tasks/new?legal_case_id=1",
     new_exam: "/legal_cases/1/process_exams/new",
-    sync: { path: "/legal_cases/1/sync", method: "post" }
-  }
+    sync: { path: "/legal_cases/1/sync", method: "post" },
+    record_outcome: { path: "/legal_cases/1/outcome", method: "patch" }
+  },
+  permissions: { can_record_outcome: true }
 })
 
 const alertedSnapshot = snapshotWith()
@@ -150,7 +158,7 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(screen.getByRole("region", { name: "Central de comando" })).toBeVisible()
   expect(screen.queryByRole("main")).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: /Prazos/ })).toHaveAttribute("aria-expanded", "true")
-  expect(screen.queryByRole("link", { name: "Editar processo" })).not.toBeInTheDocument()
+  expect(screen.getByRole("link", { name: "Editar processo" })).toBeVisible()
 })
 
 test("describes an empty timeline and exposes each operational section through a heading toggle", async () => {
@@ -162,6 +170,76 @@ test("describes an empty timeline and exposes each operational section through a
     expect(screen.getByRole("heading", { name: title })).toBeVisible()
     expect(screen.getByRole("button", { name: title })).toBeVisible()
   })
+})
+
+test("lets an administrator register the outcome from a contextual modal", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    case: {
+      ...alertedSnapshot.case,
+      outcome: "won",
+      outcome_label: "Ganho",
+      outcome_date: "2026-07-30",
+      outcome_notes: "Sentença favorável.",
+      outcome_confirmed_at_label: "30/07/2026"
+    }
+  })))
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+
+  await user.click(await screen.findByRole("button", { name: "Registrar desfecho" }))
+
+  const dialog = screen.getByRole("dialog", { name: "Registrar desfecho" })
+  expect(dialog).toBeVisible()
+  expect(screen.getByLabelText("Resultado")).toHaveValue("won")
+  expect(screen.getByLabelText("Data do desfecho")).toHaveValue("2026-07-30")
+  expect(screen.getByLabelText("Observação")).toHaveValue("Sentença favorável.")
+})
+
+test("saves an outcome and reloads the process snapshot", async () => {
+  const refreshedSnapshot = {
+    ...alertedSnapshot,
+    case: {
+      ...alertedSnapshot.case,
+      outcome: "won",
+      outcome_label: "Ganho",
+      outcome_date: "2026-07-30",
+      outcome_confirmed_at: "2026-07-31T12:00:00Z",
+      outcome_confirmed_at_label: "31/07/2026",
+      outcome_confirmed_by_name: "Marina"
+    }
+  }
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce(okResponse(refreshedSnapshot))
+  vi.stubGlobal("fetch", fetchMock)
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+
+  await user.click(await screen.findByRole("button", { name: "Registrar desfecho" }))
+  await user.selectOptions(screen.getByLabelText("Resultado"), "won")
+  fireEvent.change(screen.getByLabelText("Data do desfecho"), { target: { value: "2026-07-30" } })
+  await user.click(screen.getByRole("button", { name: "Confirmar desfecho" }))
+
+  expect(await screen.findByRole("status")).toHaveTextContent("Desfecho do processo registrado com sucesso.")
+  expect(screen.getByText("Desfecho: Ganho")).toBeVisible()
+  expect(fetchMock).toHaveBeenNthCalledWith(2, "/legal_cases/1/outcome", expect.objectContaining({
+    method: "PATCH",
+    body: JSON.stringify({ legal_case: { outcome: "won", outcome_date: "2026-07-30", outcome_notes: "" } })
+  }))
+})
+
+test("does not expose outcome controls without administrator permission", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    actions: { ...alertedSnapshot.actions, record_outcome: null },
+    permissions: { can_record_outcome: false }
+  })))
+  render(<LegalCaseShowApp />)
+
+  await screen.findByRole("heading", { name: "Cliente Aurora" })
+  expect(screen.queryByRole("button", { name: "Registrar desfecho" })).not.toBeInTheDocument()
 })
 
 test("reveals older timeline items on demand and keeps actions as links", async () => {

@@ -122,21 +122,6 @@
     </div>
   </section>
 
-  <% if current_user&.admin? %>
-    <section class="form-section aurora-form__section">
-      <div class="dashboard-section__head">
-        <h3>Resultado jurídico</h3>
-        <p>Confirme o resultado manualmente para ativar cobranças vinculadas ao processo.</p>
-      </div>
-      <div class="form-grid">
-        <div>
-          <%= form.label :outcome, "Resultado" %>
-          <%= form.select :outcome, enum_options_for(LegalCase, :outcome), {}, { required: true } %>
-        </div>
-      </div>
-    </section>
-  <% end %>
-
   <section class="form-section aurora-form__section">
     <div class="dashboard-section__head">
       <h3>Situação Atual</h3>

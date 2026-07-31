@@ -24,7 +24,7 @@ class LegalCasesController < ApplicationController
 
   def show
     if request.format.json?
-      render json: LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
+      render json: LegalCaseShowSnapshot.new(legal_case: @legal_case, current_user: current_user).as_json
       return
     end
 
@@ -147,7 +147,7 @@ class LegalCasesController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to @legal_case, notice: "Desfecho do processo registrado com sucesso." }
-      format.json { render json: LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json }
+      format.json { render json: LegalCaseShowSnapshot.new(legal_case: @legal_case, current_user: current_user).as_json }
     end
   rescue ActiveRecord::RecordInvalid, ArgumentError => error
     @legal_case.errors.add(:base, error.message) if @legal_case.errors.empty?

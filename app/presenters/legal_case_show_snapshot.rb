@@ -1,8 +1,9 @@
 class LegalCaseShowSnapshot
   include Rails.application.routes.url_helpers
 
-  def initialize(legal_case:)
+  def initialize(legal_case:, current_user: nil)
     @legal_case = legal_case
+    @current_user = current_user
   end
 
   def as_json(*)
@@ -14,7 +15,8 @@ class LegalCaseShowSnapshot
       deadlines: deadlines.map { |deadline| deadline_entry(deadline) },
       tasks: tasks.map { |task| task_entry(task) },
       exams: exams.map { |exam| exam_entry(exam) },
-      actions: actions
+      actions: actions,
+      permissions: permissions
     }
   end
 
@@ -41,7 +43,14 @@ class LegalCaseShowSnapshot
       district_name: legal_case.district&.name || "-",
       claim_value: legal_case.claim_value,
       opposing_party: legal_case.opposing_party.presence || "-",
-      tem_pericia: legal_case.tem_pericia?
+      tem_pericia: legal_case.tem_pericia?,
+      outcome: legal_case.outcome,
+      outcome_label: enum_label(LegalCase, :outcome, legal_case.outcome),
+      outcome_date: legal_case.outcome_date&.iso8601,
+      outcome_confirmed_at: legal_case.outcome_confirmed_at&.iso8601,
+      outcome_confirmed_at_label: date_label(legal_case.outcome_confirmed_at, fallback: "Ainda não registrado"),
+      outcome_notes: legal_case.outcome_notes,
+      outcome_confirmed_by_name: legal_case.outcome_confirmed_by&.name
     }
   end
 
@@ -179,7 +188,8 @@ class LegalCaseShowSnapshot
       new_deadline: new_deadline_path(legal_case_id: legal_case.id),
       new_task: new_task_path(legal_case_id: legal_case.id),
       new_exam: (new_legal_case_process_exam_path(legal_case) if legal_case.tem_pericia?),
-      sync: sync_action
+      sync: sync_action,
+      record_outcome: record_outcome_action
     }
   end
 
@@ -187,6 +197,20 @@ class LegalCaseShowSnapshot
     return unless legal_case.external_number.present?
 
     { path: sync_legal_case_path(legal_case), method: "post" }
+  end
+
+  def record_outcome_action
+    return unless can_record_outcome?
+
+    { path: record_outcome_legal_case_path(legal_case), method: "patch" }
+  end
+
+  def permissions
+    { can_record_outcome: can_record_outcome? }
+  end
+
+  def can_record_outcome?
+    @current_user&.admin? || false
   end
 
   def timeline_item_id(item)
