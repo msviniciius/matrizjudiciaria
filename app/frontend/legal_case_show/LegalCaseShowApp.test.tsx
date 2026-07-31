@@ -242,8 +242,7 @@ test("disables outcome submission controls while the request is pending", async 
   const pendingOutcome = new Promise<unknown>((resolve) => { resolveOutcome = resolve })
   vi.stubGlobal("fetch", vi.fn()
     .mockResolvedValueOnce(okResponse(alertedSnapshot))
-    .mockReturnValueOnce(pendingOutcome)
-    .mockResolvedValueOnce(okResponse(alertedSnapshot)))
+    .mockReturnValueOnce(pendingOutcome))
   render(<LegalCaseShowApp />)
   const user = userEvent.setup()
 
@@ -256,7 +255,7 @@ test("disables outcome submission controls while the request is pending", async 
   expect(screen.getByLabelText("Resultado")).toBeDisabled()
   expect(screen.getByLabelText("Data do desfecho")).toBeDisabled()
 
-  resolveOutcome(okResponse({}))
+  resolveOutcome(okResponse(alertedSnapshot))
   await screen.findByRole("status")
 })
 
@@ -277,7 +276,7 @@ test("restores focus to the outcome action after closing the modal", async () =>
   expect(trigger).toHaveFocus()
 })
 
-test("saves an outcome and reloads the process snapshot", async () => {
+test("saves an outcome with the snapshot returned by the endpoint", async () => {
   const refreshedSnapshot = {
     ...alertedSnapshot,
     case: {
@@ -292,7 +291,6 @@ test("saves an outcome and reloads the process snapshot", async () => {
     }
   }
   const fetchMock = vi.fn()
-    .mockResolvedValueOnce(okResponse(alertedSnapshot))
     .mockResolvedValueOnce(okResponse(alertedSnapshot))
     .mockResolvedValueOnce(okResponse(refreshedSnapshot))
   vi.stubGlobal("fetch", fetchMock)
@@ -310,6 +308,41 @@ test("saves an outcome and reloads the process snapshot", async () => {
     method: "PATCH",
     body: JSON.stringify({ legal_case: { outcome: "won", outcome_date: "2026-07-30", outcome_notes: "" } })
   }))
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+})
+
+test("keeps a recorded outcome successful when a later snapshot request fails", async () => {
+  const recordedSnapshot = {
+    ...alertedSnapshot,
+    case: {
+      ...alertedSnapshot.case,
+      outcome: "won",
+      outcome_label: "Ganho",
+      outcome_date: "2026-07-30",
+      outcome_date_label: "30/07/2026",
+      outcome_confirmed_at: "2026-07-31T12:00:00Z",
+      outcome_confirmed_at_label: "31/07/2026",
+      outcome_confirmed_by_name: "Marina"
+    }
+  }
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce(okResponse(recordedSnapshot))
+    .mockRejectedValueOnce(new Error("snapshot request failed"))
+  vi.stubGlobal("fetch", fetchMock)
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+
+  await user.click(await screen.findByRole("button", { name: "Registrar desfecho" }))
+  await user.selectOptions(screen.getByLabelText("Resultado"), "won")
+  fireEvent.change(screen.getByLabelText("Data do desfecho"), { target: { value: "2026-07-30" } })
+  await user.click(screen.getByRole("button", { name: "Confirmar desfecho" }))
+
+  expect(await screen.findByRole("status")).toHaveTextContent("Desfecho do processo registrado com sucesso.")
+  expect(screen.getByText("Desfecho: Ganho")).toBeVisible()
+  expect(screen.queryByRole("dialog", { name: "Registrar desfecho" })).not.toBeInTheDocument()
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  expect(fetchMock).toHaveBeenCalledTimes(2)
 })
 
 test("does not expose outcome controls without administrator permission", async () => {

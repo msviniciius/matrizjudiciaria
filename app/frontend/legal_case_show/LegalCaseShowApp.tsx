@@ -269,11 +269,10 @@ export function LegalCaseShowApp() {
           outcome_notes: payload.outcomeNotes
         } })
       })
-      const body = await response.json().catch(() => ({})) as { errors?: Record<string, string[] | string>; error?: string }
+      const body = await response.json().catch(() => ({})) as Snapshot & { errors?: Record<string, string[] | string>; error?: string }
       if (!response.ok) throw new Error(outcomeErrorMessage(body))
 
-      const refreshedSnapshot = await fetchSnapshot()
-      setSnapshot(refreshedSnapshot)
+      setSnapshot(body)
       restoreOutcomeButtonFocus.current = true
       setOutcomeModalOpen(false)
       setOutcomeMessage("Desfecho do processo registrado com sucesso.")
