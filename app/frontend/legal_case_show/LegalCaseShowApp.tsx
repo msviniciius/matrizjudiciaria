@@ -66,6 +66,36 @@ type Exam = {
   path: string
 }
 
+type FinancialContract = {
+  id: number
+  fixed_amount: string | number
+  fixed_amount_label: string
+  includes_percentage: boolean
+  percentage: string | number | null
+  percentage_basis: "claim_value" | "client_received" | null
+  percentage_basis_label: string | null
+  percentage_base_amount: string | number | null
+  percentage_base_amount_label: string
+  client_received_amount: string | number | null
+  client_received_amount_label: string
+  installment_count: number
+  total_amount: string | number
+  total_amount_label: string
+  contract_document: { name: string; url: string } | null
+}
+
+type FinancialInstallment = {
+  id: number
+  number: number
+  amount: string | number
+  amount_label: string
+  due_date: string | null
+  due_date_label: string
+  status: "pending" | "paid"
+  status_label: string
+  payment_recorded: boolean
+}
+
 type Snapshot = {
   case: {
     id: number
@@ -112,6 +142,8 @@ type Snapshot = {
   deadlines: Deadline[]
   tasks: Task[]
   exams: Exam[]
+  financial_contract?: FinancialContract | null
+  installments?: FinancialInstallment[]
   actions: {
     index: string
     edit: string
@@ -123,8 +155,9 @@ type Snapshot = {
     new_exam: string | null
     sync: { path: string; method: string } | null
     record_outcome: { path: string; method: string } | null
+    financial_contract?: { path: string; method: string }
   }
-  permissions: { can_record_outcome: boolean }
+  permissions: { can_record_outcome: boolean; can_manage_financial_contract?: boolean }
 }
 
 type Outcome = "undefined" | "won" | "lost" | "settled" | "partially_won"
@@ -154,6 +187,10 @@ export function LegalCaseShowApp() {
   const [outcomePending, setOutcomePending] = useState(false)
   const [outcomeError, setOutcomeError] = useState<string | null>(null)
   const [outcomeMessage, setOutcomeMessage] = useState<string | null>(null)
+  const [financialModalOpen, setFinancialModalOpen] = useState(false)
+  const [financialPending, setFinancialPending] = useState(false)
+  const [financialError, setFinancialError] = useState<string | null>(null)
+  const [financialMessage, setFinancialMessage] = useState<string | null>(null)
   const outcomeButtonRef = useRef<HTMLButtonElement>(null)
   const restoreOutcomeButtonFocus = useRef(false)
 
@@ -175,7 +212,7 @@ export function LegalCaseShowApp() {
     loadSnapshot()
   }, [])
 
-  const interactionLocked = syncPending || outcomeModalOpen
+  const interactionLocked = syncPending || outcomeModalOpen || financialModalOpen
 
   useEffect(() => {
     if (!interactionLocked) return
@@ -283,6 +320,34 @@ export function LegalCaseShowApp() {
     }
   }
 
+  const saveFinancialContract = async (formData: FormData) => {
+    const action = snapshot.actions.financial_contract
+    if (!action) return
+
+    setFinancialPending(true)
+    setFinancialError(null)
+    setFinancialMessage(null)
+
+    try {
+      const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
+      const response = await fetch(action.path, {
+        method: action.method.toUpperCase(),
+        headers: { Accept: "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) },
+        body: formData
+      })
+      const body = await response.json().catch(() => ({})) as Snapshot & { errors?: Record<string, string[] | string>; error?: string }
+      if (!response.ok) throw new Error(outcomeErrorMessage(body))
+
+      setSnapshot(body)
+      setFinancialModalOpen(false)
+      setFinancialMessage("Contrato financeiro salvo com sucesso.")
+    } catch (financialFailure) {
+      setFinancialError(financialFailure instanceof Error ? financialFailure.message : "Não foi possível salvar o contrato financeiro.")
+    } finally {
+      setFinancialPending(false)
+    }
+  }
+
   const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, 5)
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
@@ -323,6 +388,7 @@ export function LegalCaseShowApp() {
     {syncError && <p className="react-legal-case-show__sync-notice react-legal-case-show__sync-notice--error" role="alert">{syncError}</p>}
     {syncMessage && <p className="react-legal-case-show__sync-notice" role="status">{syncMessage}</p>}
     {outcomeMessage && <p className="react-legal-case-show__outcome-notice" role="status">{outcomeMessage}</p>}
+    {financialMessage && <p className="react-legal-case-show__financial-notice" role="status">{financialMessage}</p>}
 
     <div className="react-legal-case-show__layout">
     <div className="react-legal-case-show__main-column">
@@ -340,6 +406,15 @@ export function LegalCaseShowApp() {
         {snapshot.actions.new_exam && <a href={snapshot.actions.new_exam}>Nova perícia</a>}
       </nav>
     </section>
+
+    <FinancialPanel
+      contract={snapshot.financial_contract || null}
+      installments={snapshot.installments || []}
+      onConfigure={() => {
+        setFinancialError(null)
+        setFinancialModalOpen(true)
+      }}
+    />
 
     <section className="react-legal-case-show__timeline" aria-labelledby="timeline-heading">
       <h2 id="timeline-heading">Timeline</h2>
@@ -418,6 +493,14 @@ export function LegalCaseShowApp() {
       onClose={closeOutcomeModal}
       onSubmit={recordOutcome}
     />}
+    {financialModalOpen && snapshot.actions.financial_contract && <FinancialContractModal
+      legalCase={snapshot.case}
+      contract={snapshot.financial_contract || null}
+      pending={financialPending}
+      error={financialError}
+      onClose={() => !financialPending && setFinancialModalOpen(false)}
+      onSubmit={saveFinancialContract}
+    />}
   </section>
 }
 
@@ -426,6 +509,178 @@ function outcomeErrorMessage(body: { errors?: Record<string, string[] | string>;
 
   const messages = Object.values(body.errors || {}).flatMap((value) => Array.isArray(value) ? value : [value])
   return messages.join(", ") || "Não foi possível registrar o desfecho."
+}
+
+function FinancialPanel({
+  contract,
+  installments,
+  onConfigure
+}: {
+  contract: FinancialContract | null
+  installments: FinancialInstallment[]
+  onConfigure: () => void
+}) {
+  return <section className="react-legal-case-show__financial" aria-labelledby="financial-heading">
+    <div className="react-legal-case-show__financial-header">
+      <div>
+        <p className="react-legal-case-show__eyebrow">Honorários e recebimentos</p>
+        <h2 id="financial-heading">Financeiro</h2>
+      </div>
+      <button type="button" className="react-legal-case-show__actions-button" onClick={onConfigure}>
+        {contract ? "Editar contrato financeiro" : "Configurar contrato financeiro"}
+      </button>
+    </div>
+    {!contract && <p>Nenhum contrato financeiro configurado.</p>}
+    {contract && <>
+      <dl className="react-legal-case-show__financial-summary">
+        <div><dt>Honorários fixos</dt><dd>{contract.fixed_amount_label}</dd></div>
+        <div><dt>Total contratado</dt><dd>{contract.total_amount_label}</dd></div>
+        <div><dt>Parcelas</dt><dd>{contract.installment_count}x</dd></div>
+        {contract.includes_percentage && <>
+          <div><dt>Percentual adicional</dt><dd>{contract.percentage}%</dd></div>
+          <div><dt>Base do percentual</dt><dd>{contract.percentage_basis_label}</dd></div>
+          <div><dt>Valor-base</dt><dd>{contract.percentage_base_amount_label}</dd></div>
+        </>}
+      </dl>
+      {contract.contract_document && <p className="react-legal-case-show__financial-document">Contrato: <a href={contract.contract_document.url} target="_blank" rel="noreferrer">{contract.contract_document.name}</a></p>}
+      <div className="react-legal-case-show__financial-installments">
+        <h3>Parcelas</h3>
+        <ol>
+          {installments.map((installment) => <li key={installment.id}>
+            <span>{installment.number}ª parcela</span>
+            <span>{installment.due_date_label}</span>
+            <strong>{installment.amount_label}</strong>
+            <span className={installment.status === "paid" ? "react-legal-case-show__financial-status react-legal-case-show__financial-status--paid" : "react-legal-case-show__financial-status"}>{installment.status_label}</span>
+          </li>)}
+        </ol>
+      </div>
+    </>}
+  </section>
+}
+
+function FinancialContractModal({
+  legalCase,
+  contract,
+  pending,
+  error,
+  onClose,
+  onSubmit
+}: {
+  legalCase: Snapshot["case"]
+  contract: FinancialContract | null
+  pending: boolean
+  error: string | null
+  onClose: () => void
+  onSubmit: (formData: FormData) => Promise<void>
+}) {
+  const [fixedAmount, setFixedAmount] = useState(String(contract?.fixed_amount || ""))
+  const [includesPercentage, setIncludesPercentage] = useState(contract?.includes_percentage || false)
+  const [percentage, setPercentage] = useState(String(contract?.percentage || ""))
+  const [percentageBasis, setPercentageBasis] = useState<"claim_value" | "client_received">(contract?.percentage_basis || "claim_value")
+  const [clientReceivedAmount, setClientReceivedAmount] = useState(String(contract?.client_received_amount || ""))
+  const [installmentCount, setInstallmentCount] = useState(String(contract?.installment_count || 1))
+  const [firstDueDate, setFirstDueDate] = useState(dateInputValue())
+  const fixedNumber = parseFinancialNumber(fixedAmount)
+  const percentageNumber = includesPercentage ? parseFinancialNumber(percentage) : 0
+  const baseAmount = percentageBasis === "claim_value" ? parseFinancialNumber(legalCase.claim_value) : parseFinancialNumber(clientReceivedAmount)
+  const totalAmount = fixedNumber + (includesPercentage ? baseAmount * percentageNumber / 100 : 0)
+  const preview = installmentPreview(totalAmount, Number(installmentCount), firstDueDate)
+
+  return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
+    if (event.target === event.currentTarget) onClose()
+  }}>
+    <section className="react-legal-case-show__outcome-modal react-legal-case-show__financial-modal" role="dialog" aria-modal="true" aria-labelledby="financial-contract-modal-heading">
+      <div className="react-legal-case-show__outcome-modal-header">
+        <div>
+          <p className="react-legal-case-show__eyebrow">Financeiro do processo</p>
+          <h2 id="financial-contract-modal-heading">{contract ? "Editar contrato financeiro" : "Configurar contrato financeiro"}</h2>
+        </div>
+        <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} disabled={pending} aria-label="Fechar contrato financeiro">×</button>
+      </div>
+      <p>Defina os honorários e a distribuição das parcelas. O valor fixo é obrigatório; o percentual é adicional.</p>
+      <form className="app-form" onSubmit={(event) => {
+        event.preventDefault()
+        void onSubmit(new FormData(event.currentTarget))
+      }}>
+        <label htmlFor="financial-contract-fixed-amount">Valor fixo dos honorários</label>
+        <div className="react-legal-case-show__currency-input"><span>R$</span><input id="financial-contract-fixed-amount" name="financial_contract[fixed_amount]" type="number" min="0.01" step="0.01" value={fixedAmount} onChange={(event) => setFixedAmount(event.target.value)} required disabled={pending} /></div>
+
+        <label className="react-legal-case-show__financial-check" htmlFor="financial-contract-includes-percentage"><input id="financial-contract-includes-percentage" name="financial_contract[includes_percentage]" type="checkbox" checked={includesPercentage} onChange={(event) => setIncludesPercentage(event.target.checked)} disabled={pending} /> Adicionar percentual de honorários</label>
+
+        {includesPercentage && <>
+          <label htmlFor="financial-contract-percentage">Percentual adicional</label>
+          <div className="react-legal-case-show__percentage-input"><input id="financial-contract-percentage" name="financial_contract[percentage]" type="number" min="0.01" max="100" step="0.01" value={percentage} onChange={(event) => setPercentage(event.target.value)} required disabled={pending} /><span>%</span></div>
+
+          <label htmlFor="financial-contract-percentage-basis">Base de cálculo</label>
+          <select id="financial-contract-percentage-basis" name="financial_contract[percentage_basis]" value={percentageBasis} onChange={(event) => setPercentageBasis(event.target.value as "claim_value" | "client_received")} disabled={pending}>
+            <option value="claim_value">Valor da causa</option>
+            <option value="client_received">Valor recebido pelo cliente</option>
+          </select>
+
+          {percentageBasis === "client_received" && <>
+            <label htmlFor="financial-contract-client-received">Valor recebido pelo cliente</label>
+            <div className="react-legal-case-show__currency-input"><span>R$</span><input id="financial-contract-client-received" name="financial_contract[client_received_amount]" type="number" min="0" step="0.01" value={clientReceivedAmount} onChange={(event) => setClientReceivedAmount(event.target.value)} required disabled={pending} /></div>
+          </>}
+          {percentageBasis === "claim_value" && <p className="react-legal-case-show__financial-helper">Base atual: {formatCurrency(baseAmount)} (valor da causa).</p>}
+        </>}
+
+        <label htmlFor="financial-contract-installment-count">Quantidade de parcelas</label>
+        <select id="financial-contract-installment-count" name="financial_contract[installment_count]" value={installmentCount} onChange={(event) => setInstallmentCount(event.target.value)} disabled={pending}>
+          {Array.from({ length: 12 }, (_, index) => index + 1).map((count) => <option key={count} value={count}>{count}x</option>)}
+        </select>
+
+        <label htmlFor="financial-contract-first-due-date">Primeiro vencimento</label>
+        <input id="financial-contract-first-due-date" name="financial_contract[first_due_date]" type="date" value={firstDueDate} onChange={(event) => setFirstDueDate(event.target.value)} required disabled={pending} />
+
+        <label htmlFor="financial-contract-document">Contrato assinado</label>
+        <input id="financial-contract-document" name="financial_contract[contract_document]" type="file" accept="application/pdf,image/*" disabled={pending} />
+
+        <section className="react-legal-case-show__financial-preview" aria-live="polite">
+          <h3>Prévia do contrato</h3>
+          <p>Total previsto: <strong>{formatCurrency(totalAmount)}</strong></p>
+          {preview.length > 0 && <ol>{preview.map((installment, index) => <li key={`${installment.dueDate}-${index}`}>{index + 1}ª parcela · {installment.dueDate} · {formatCurrency(installment.amount)}</li>)}</ol>}
+        </section>
+
+        {error && <p className="react-legal-case-show__outcome-error" role="alert">{error}</p>}
+        <div className="react-legal-case-show__outcome-modal-actions">
+          <button type="button" onClick={onClose} disabled={pending}>Cancelar</button>
+          <button type="submit" disabled={pending}>{pending ? "Salvando…" : "Salvar contrato"}</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+
+function parseFinancialNumber(value: string | number | null | undefined) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0)
+}
+
+function dateInputValue() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function installmentPreview(total: number, count: number, firstDueDate: string) {
+  if (!Number.isInteger(count) || count < 1 || count > 12 || !firstDueDate || total <= 0) return []
+
+  const cents = Math.round(total * 100)
+  const baseCents = Math.floor(cents / count)
+  const firstDate = new Date(`${firstDueDate}T12:00:00`)
+  if (Number.isNaN(firstDate.getTime())) return []
+
+  return Array.from({ length: count }, (_, index) => {
+    const dueDate = new Date(firstDate)
+    dueDate.setMonth(firstDate.getMonth() + index)
+    const amountInCents = index === count - 1 ? cents - baseCents * (count - 1) : baseCents
+    return {
+      amount: amountInCents / 100,
+      dueDate: dueDate.toLocaleDateString("pt-BR")
+    }
+  })
 }
 
 function OutcomeSummary({ legalCase }: { legalCase: Snapshot["case"] }) {

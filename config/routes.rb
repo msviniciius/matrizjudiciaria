@@ -54,6 +54,7 @@ Rails.application.routes.draw do
     end
 
     resources :process_exams, only: [ :new, :create ]
+    resource :financial_contract, only: [ :create, :update ]
   end
 
   get "calendar_feeds/legal_case/:token.ics", to: "calendar_feeds#legal_case", as: :legal_case_calendar_feed

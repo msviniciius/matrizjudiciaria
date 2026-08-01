@@ -15,6 +15,8 @@ class LegalCaseShowSnapshot
       deadlines: deadlines.map { |deadline| deadline_entry(deadline) },
       tasks: tasks.map { |task| task_entry(task) },
       exams: exams.map { |exam| exam_entry(exam) },
+      financial_contract: financial_contract_entry,
+      installments: financial_installments.map { |installment| financial_installment_entry(installment) },
       actions: actions,
       permissions: permissions
     }
@@ -108,6 +110,52 @@ class LegalCaseShowSnapshot
     @exams ||= legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC"))
   end
 
+  def financial_contract
+    @financial_contract ||= legal_case.financial_contract
+  end
+
+  def financial_installments
+    return FinancialInstallment.none unless financial_contract
+
+    @financial_installments ||= financial_contract.installments.includes(:payment)
+  end
+
+  def financial_contract_entry
+    return nil unless financial_contract
+
+    {
+      id: financial_contract.id,
+      fixed_amount: financial_contract.fixed_amount,
+      fixed_amount_label: currency_label(financial_contract.fixed_amount),
+      includes_percentage: financial_contract.includes_percentage?,
+      percentage: financial_contract.percentage,
+      percentage_basis: financial_contract.percentage_basis,
+      percentage_basis_label: percentage_basis_label(financial_contract.percentage_basis),
+      percentage_base_amount: percentage_base_amount,
+      percentage_base_amount_label: currency_label(percentage_base_amount),
+      client_received_amount: financial_contract.client_received_amount,
+      client_received_amount_label: currency_label(financial_contract.client_received_amount),
+      installment_count: financial_contract.installment_count,
+      total_amount: financial_contract.total_amount,
+      total_amount_label: currency_label(financial_contract.total_amount),
+      contract_document: contract_document_entry
+    }
+  end
+
+  def financial_installment_entry(installment)
+    {
+      id: installment.id,
+      number: installment.number,
+      amount: installment.amount,
+      amount_label: currency_label(installment.amount),
+      due_date: installment.due_date&.iso8601,
+      due_date_label: date_label(installment.due_date),
+      status: installment.status,
+      status_label: installment.status_paid? ? "Recebida" : "Pendente",
+      payment_recorded: installment.payment.present?
+    }
+  end
+
   def timeline_entry(item)
     {
       id: timeline_item_id(item),
@@ -190,7 +238,8 @@ class LegalCaseShowSnapshot
       new_task: new_task_path(legal_case_id: legal_case.id),
       new_exam: (new_legal_case_process_exam_path(legal_case) if legal_case.tem_pericia?),
       sync: sync_action,
-      record_outcome: record_outcome_action
+      record_outcome: record_outcome_action,
+      financial_contract: financial_contract_action
     }
   end
 
@@ -207,11 +256,40 @@ class LegalCaseShowSnapshot
   end
 
   def permissions
-    { can_record_outcome: can_record_outcome? }
+    { can_record_outcome: can_record_outcome?, can_manage_financial_contract: true }
   end
 
   def can_record_outcome?
     @current_user&.admin? || false
+  end
+
+  def financial_contract_action
+    {
+      path: legal_case_financial_contract_path(legal_case),
+      method: financial_contract ? "patch" : "post"
+    }
+  end
+
+  def percentage_base_amount
+    return nil unless financial_contract&.includes_percentage?
+
+    financial_contract.percentage_basis_claim_value? ? legal_case.claim_value : financial_contract.client_received_amount
+  end
+
+  def percentage_basis_label(value)
+    {
+      "claim_value" => "Valor da causa",
+      "client_received" => "Valor recebido pelo cliente"
+    }[value]
+  end
+
+  def contract_document_entry
+    return nil unless financial_contract.contract_document.attached?
+
+    {
+      name: financial_contract.contract_document.filename.to_s,
+      url: rails_blob_path(financial_contract.contract_document, only_path: true)
+    }
   end
 
   def timeline_item_id(item)
@@ -235,5 +313,17 @@ class LegalCaseShowSnapshot
 
   def date_label(value, fallback: "-")
     value.present? ? I18n.l(value, format: :short) : fallback
+  end
+
+  def currency_label(value)
+    return "-" if value.blank?
+
+    ActionController::Base.helpers.number_to_currency(
+      value,
+      unit: "R$ ",
+      separator: ",",
+      delimiter: ".",
+      format: "%u%n"
+    )
   end
 end

@@ -174,6 +174,24 @@ test("describes an empty timeline and exposes each operational section through a
   })
 })
 
+test("shows an empty financial panel and opens the contract setup action", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    financial_contract: null,
+    installments: [],
+    actions: {
+      ...alertedSnapshot.actions,
+      financial_contract: { path: "/legal_cases/1/financial_contract", method: "post" }
+    }
+  })))
+  render(<LegalCaseShowApp />)
+
+  expect(await screen.findByRole("heading", { name: "Financeiro" })).toBeVisible()
+  expect(screen.getByText("Nenhum contrato financeiro configurado.")).toBeVisible()
+  await userEvent.setup().click(screen.getByRole("button", { name: "Configurar contrato financeiro" }))
+  expect(screen.getByRole("dialog", { name: "Configurar contrato financeiro" })).toBeVisible()
+})
+
 test("lets an administrator register the outcome from a contextual modal", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
     ...alertedSnapshot,
