@@ -95,6 +95,14 @@ type FinancialInstallment = {
   status: "pending" | "paid"
   status_label: string
   payment_recorded: boolean
+  payment: {
+    amount_label: string
+    paid_at_label: string
+    payment_method_label: string
+    recorded_by_name: string | null
+    proof: string | null
+  } | null
+  payment_action: string | null
 }
 
 type Snapshot = {
@@ -192,6 +200,9 @@ export function LegalCaseShowApp() {
   const [financialPending, setFinancialPending] = useState(false)
   const [financialError, setFinancialError] = useState<string | null>(null)
   const [financialMessage, setFinancialMessage] = useState<string | null>(null)
+  const [paymentInstallment, setPaymentInstallment] = useState<FinancialInstallment | null>(null)
+  const [paymentPending, setPaymentPending] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
   const outcomeButtonRef = useRef<HTMLButtonElement>(null)
   const restoreOutcomeButtonFocus = useRef(false)
 
@@ -213,7 +224,7 @@ export function LegalCaseShowApp() {
     loadSnapshot()
   }, [])
 
-  const interactionLocked = syncPending || outcomeModalOpen || financialModalOpen
+  const interactionLocked = syncPending || outcomeModalOpen || financialModalOpen || Boolean(paymentInstallment)
 
   useEffect(() => {
     if (!interactionLocked) return
@@ -349,6 +360,30 @@ export function LegalCaseShowApp() {
     }
   }
 
+  const registerPayment = async (formData: FormData) => {
+    if (!paymentInstallment?.payment_action) return
+
+    setPaymentPending(true)
+    setPaymentError(null)
+    try {
+      const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
+      const response = await fetch(paymentInstallment.payment_action, {
+        method: "POST",
+        headers: { Accept: "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) },
+        body: formData
+      })
+      const body = await response.json().catch(() => ({})) as Snapshot & { error?: string }
+      if (!response.ok) throw new Error(body.error || "Não foi possível registrar o recebimento.")
+
+      setSnapshot(body)
+      setPaymentInstallment(null)
+    } catch (paymentFailure) {
+      setPaymentError(paymentFailure instanceof Error ? paymentFailure.message : "Não foi possível registrar o recebimento.")
+    } finally {
+      setPaymentPending(false)
+    }
+  }
+
   const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, 5)
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
@@ -414,6 +449,10 @@ export function LegalCaseShowApp() {
       onConfigure={() => {
         setFinancialError(null)
         setFinancialModalOpen(true)
+      }}
+      onRegisterPayment={(installment) => {
+        setPaymentError(null)
+        setPaymentInstallment(installment)
       }}
     />
 
@@ -503,6 +542,13 @@ export function LegalCaseShowApp() {
       onClose={() => !financialPending && setFinancialModalOpen(false)}
       onSubmit={saveFinancialContract}
     />}
+    {paymentInstallment && <PaymentModal
+      installment={paymentInstallment}
+      pending={paymentPending}
+      error={paymentError}
+      onClose={() => !paymentPending && setPaymentInstallment(null)}
+      onSubmit={registerPayment}
+    />}
   </section>
 }
 
@@ -516,11 +562,13 @@ function outcomeErrorMessage(body: { errors?: Record<string, string[] | string>;
 function FinancialPanel({
   contract,
   installments,
-  onConfigure
+  onConfigure,
+  onRegisterPayment
 }: {
   contract: FinancialContract | null
   installments: FinancialInstallment[]
   onConfigure: () => void
+  onRegisterPayment: (installment: FinancialInstallment) => void
 }) {
   return <section className="react-legal-case-show__financial" aria-labelledby="financial-heading">
     <div className="react-legal-case-show__financial-header">
@@ -553,6 +601,7 @@ function FinancialPanel({
             <span>{installment.due_date_label}</span>
             <strong>{installment.amount_label}</strong>
             <span className={installment.status === "paid" ? "react-legal-case-show__financial-status react-legal-case-show__financial-status--paid" : "react-legal-case-show__financial-status"}>{installment.status_label}</span>
+            {installment.payment ? <span className="react-legal-case-show__financial-payment">{installment.payment.payment_method_label} · {installment.payment.paid_at_label}{installment.payment.proof && <> · <a href={installment.payment.proof} target="_blank" rel="noreferrer">Comprovante</a></>}</span> : <button type="button" className="react-legal-case-show__financial-payment-button" onClick={() => onRegisterPayment(installment)}>Registrar recebimento</button>}
           </li>)}
         </ol>
       </div>
@@ -698,6 +747,59 @@ function FinancialContractModal({
   </div>
 }
 
+function PaymentModal({
+  installment,
+  pending,
+  error,
+  onClose,
+  onSubmit
+}: {
+  installment: FinancialInstallment
+  pending: boolean
+  error: string | null
+  onClose: () => void
+  onSubmit: (formData: FormData) => Promise<void>
+}) {
+  return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
+    if (event.target === event.currentTarget) onClose()
+  }}>
+    <section className="react-legal-case-show__outcome-modal react-legal-case-show__financial-modal" role="dialog" aria-modal="true" aria-labelledby="financial-payment-modal-heading">
+      <div className="react-legal-case-show__outcome-modal-header">
+        <div>
+          <p className="react-legal-case-show__eyebrow">Recebimento financeiro</p>
+          <h2 id="financial-payment-modal-heading">Registrar recebimento</h2>
+        </div>
+        <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} disabled={pending} aria-label="Fechar recebimento">×</button>
+      </div>
+      <p>Parcela {installment.number} · <strong>{installment.amount_label}</strong>. O recebimento deve ser integral.</p>
+      <form className="app-form" onSubmit={(event) => {
+        event.preventDefault()
+        void onSubmit(new FormData(event.currentTarget))
+      }}>
+        <label htmlFor="financial-payment-paid-at">Data e hora do pagamento</label>
+        <input id="financial-payment-paid-at" name="payment[paid_at]" type="datetime-local" defaultValue={dateTimeInputValue()} required disabled={pending} />
+
+        <label htmlFor="financial-payment-method">Forma de pagamento</label>
+        <select id="financial-payment-method" name="payment[payment_method]" defaultValue="pix" required disabled={pending}>
+          <option value="pix">Pix</option>
+          <option value="cash">Dinheiro</option>
+          <option value="credit_card">Cartão de crédito</option>
+          <option value="debit_card">Cartão de débito</option>
+        </select>
+
+        <label htmlFor="financial-payment-proof">Comprovante de pagamento</label>
+        <input id="financial-payment-proof" name="payment[proof]" type="file" accept="application/pdf,image/*" required disabled={pending} />
+
+        {error && <p className="react-legal-case-show__outcome-error" role="alert">{error}</p>}
+        <div className="react-legal-case-show__outcome-modal-actions">
+          <button type="button" onClick={onClose} disabled={pending}>Cancelar</button>
+          <button type="submit" disabled={pending}>{pending ? "Registrando…" : "Confirmar recebimento"}</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+
 function parseFinancialNumber(value: string | number | null | undefined) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
@@ -709,6 +811,12 @@ function formatCurrency(value: number) {
 
 function dateInputValue() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function dateTimeInputValue() {
+  const now = new Date()
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 16)
 }
 
 type InstallmentInput = { amount: string; dueDate: string }

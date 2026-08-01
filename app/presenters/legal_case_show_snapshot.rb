@@ -117,7 +117,7 @@ class LegalCaseShowSnapshot
   def financial_installments
     return FinancialInstallment.none unless financial_contract
 
-    @financial_installments ||= financial_contract.installments.includes(:payment)
+    @financial_installments ||= financial_contract.installments.includes(payment: :recorded_by)
   end
 
   def financial_contract_entry
@@ -153,7 +153,24 @@ class LegalCaseShowSnapshot
       due_date_label: date_label(installment.due_date),
       status: installment.status,
       status_label: installment.status_paid? ? "Recebida" : "Pendente",
-      payment_recorded: installment.payment.present?
+      payment_recorded: installment.payment.present?,
+      payment: payment_entry(installment.payment),
+      payment_action: (legal_case_financial_installment_payment_path(legal_case, installment) unless installment.payment.present?)
+    }
+  end
+
+  def payment_entry(payment)
+    return nil unless payment
+
+    {
+      amount: payment.amount,
+      amount_label: currency_label(payment.amount),
+      paid_at: payment.paid_at&.iso8601,
+      paid_at_label: date_label(payment.paid_at),
+      payment_method: payment.payment_method,
+      payment_method_label: payment_method_label(payment.payment_method),
+      recorded_by_name: payment.recorded_by&.name,
+      proof: (rails_blob_path(payment.proof, only_path: true) if payment.proof.attached?)
     }
   end
 
@@ -281,6 +298,15 @@ class LegalCaseShowSnapshot
     {
       "claim_value" => "Valor da causa",
       "client_received" => "Valor recebido pelo cliente"
+    }[value]
+  end
+
+  def payment_method_label(value)
+    {
+      "pix" => "Pix",
+      "cash" => "Dinheiro",
+      "credit_card" => "Cartão de crédito",
+      "debit_card" => "Cartão de débito"
     }[value]
   end
 
