@@ -4,8 +4,14 @@ class ReceivablesController < ApplicationController
   before_action :load_form_collections, only: %i[new edit]
 
   def index
-    @receivables = Receivables::Query.new(office: current_office, params: params).call
-    @summary = Receivables::Summary.new(scope: @receivables, reference_date: Date.current).call
+    query = Receivables::Query.new(office: current_office, params: params)
+    @receivables = query.call
+    @financial_installments = query.financial_installments.includes(financial_contract: { legal_case: [ :client, :unit ] }, payment: {})
+    @summary = Receivables::Summary.new(
+      scope: @receivables,
+      financial_scope: @financial_installments,
+      reference_date: Date.current
+    ).call
     load_filter_collections
   end
 

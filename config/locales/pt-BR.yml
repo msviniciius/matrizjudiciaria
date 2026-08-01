@@ -346,6 +346,25 @@ pt-BR:
           manual: Manual
           case_started: Processo iniciado
           case_won: Processo ganho
+      financial_contract:
+        fixed_amount: Honorários fixos
+        total_amount: Valor total
+        percentage: Percentual adicional
+        percentage_basis: Base do percentual
+        installment_count: Número de parcelas
+        percentage_bases:
+          claim_value: Valor da causa
+          client_received: Valor recebido pelo cliente
+      financial_installment:
+        statuses:
+          pending: Pendente
+          paid: Recebida
+      financial_payment:
+        payment_methods:
+          pix: Pix
+          cash: Dinheiro
+          credit_card: Cartão de crédito
+          debit_card: Cartão de débito
 
   legal_cases:
     warnings:

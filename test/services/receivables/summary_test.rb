@@ -59,6 +59,25 @@ class Receivables::SummaryTest < ActiveSupport::TestCase
     assert_equal({ reference_date => 300.to_d }, summary[:received_by_day])
   end
 
+  test "includes financial installment totals without counting replaced legacy accounts" do
+    legal_case = create_full_legal_case
+    contract = FinancialContract.create!(office: default_office, legal_case: legal_case, fixed_amount: 1_200,
+      total_amount: 1_200, installment_count: 2)
+    first = contract.installments.create!(number: 1, due_date: Date.new(2026, 7, 31), amount: 600)
+    second = contract.installments.create!(number: 2, due_date: Date.new(2026, 8, 15), amount: 600)
+
+    summary = Receivables::Summary.new(
+      scope: Receivable.none,
+      financial_scope: FinancialInstallment.where(id: [ first, second ]),
+      reference_date: Date.new(2026, 7, 31)
+    ).call
+
+    assert_equal 1_200.to_d, summary[:expected]
+    assert_equal 600.to_d, summary[:open_balance]
+    assert_equal 0.to_d, summary[:overdue]
+    assert_equal 600.to_d, summary[:upcoming]
+  end
+
   private
 
   def create_receivable(**attrs)

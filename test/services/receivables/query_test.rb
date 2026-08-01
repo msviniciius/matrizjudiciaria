@@ -105,6 +105,19 @@ class Receivables::QueryTest < ActiveSupport::TestCase
     assert_equal [ matching ], receivables.to_a
   end
 
+  test "exposes financial installments and excludes replaced legacy process accounts" do
+    legal_case = create_full_legal_case
+    contract = FinancialContract.create!(office: default_office, legal_case: legal_case, fixed_amount: 1_000,
+      total_amount: 1_000, installment_count: 1)
+    installment = contract.installments.create!(number: 1, due_date: Date.current, amount: 1_000)
+    legacy = create_receivable(legal_case: legal_case)
+
+    query = Receivables::Query.new(office: default_office, params: {})
+
+    assert_equal [ installment ], query.financial_installments.to_a
+    assert_not_includes query.call, legacy
+  end
+
   private
 
   def create_receivable(office: default_office, **attrs)

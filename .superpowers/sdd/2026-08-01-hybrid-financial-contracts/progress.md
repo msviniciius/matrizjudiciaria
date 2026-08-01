@@ -13,3 +13,6 @@ Task 3: fix round 2/5 — reviewer found Important custom due-date loss when API
 Task 3: complete — commits b5e1bae and 866f3ea plus 6d6fe0e; scoped review approved. Rails request tests blocked by local PostgreSQL; React 21/21 and static checks pass.
 Task 4 brief created; implementation pending.
 Task 4 implementation complete — payment endpoint, proof/method/date workflow, snapshot and React UI added; static/React checks clean, Rails tests blocked by local PostgreSQL. Commit pending.
+Task 4: complete — commit 3902ccf; scoped review approved. Rails tests blocked by PostgreSQL; static/React checks pass.
+Task 5 brief pending.
+Task 5 implementation complete — legacy receivables dashboard now includes filtered contract installments, excludes replaced process receivables to prevent double counting, and adds financial translations. Commit pending; targeted Rails tests blocked by local PostgreSQL.

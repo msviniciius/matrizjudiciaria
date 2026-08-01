@@ -7,7 +7,7 @@ class Receivables::Query
   end
 
   def call
-    scope = office.receivables.for_period(period)
+    scope = legacy_scope.for_period(period)
     scope = filter_unit(scope)
     scope = filter(scope, :client_id)
     scope = filter(scope, :legal_case_id)
@@ -16,9 +16,28 @@ class Receivables::Query
     scope.order(:due_date, :id)
   end
 
+  # Parcelas do novo contrato financeiro são expostas separadamente para que
+  # os consumidores legados continuem recebendo uma relação de Receivable.
+  def financial_installments
+    scope = FinancialInstallment
+      .joins(financial_contract: :legal_case)
+      .where(financial_contracts: { office_id: office.id })
+      .where(due_date: period)
+
+    scope = filter_financial_unit(scope)
+    scope = scope.where(financial_contracts: { legal_case_id: value_for(:legal_case_id) }) if value_for(:legal_case_id).present?
+    scope = scope.where(legal_cases: { client_id: value_for(:client_id) }) if value_for(:client_id).present?
+    filter_financial_status(scope)
+  end
+
   private
 
   attr_reader :office, :params
+
+  def legacy_scope
+    replacement_cases = FinancialContract.where(office_id: office.id).select(:legal_case_id)
+    office.receivables.where("legal_case_id IS NULL OR legal_case_id NOT IN (?)", replacement_cases)
+  end
 
   def period
     supplied_period = value_for(:period)
@@ -86,6 +105,34 @@ class Receivables::Query
     return overdue_scope(scope) if status == "overdue"
 
     scope.where(status: status)
+  end
+
+  def filter_financial_unit(scope)
+    unit_id = value_for(:unit_id)
+    return scope if unit_id.blank?
+
+    unit = office.units.find_by(id: unit_id)
+    return scope.none if unit.blank?
+
+    scope.where(legal_cases: { unit_id: unit.id })
+  end
+
+  def filter_financial_status(scope)
+    status = value_for(:status)
+    return scope if status.blank?
+
+    case status
+    when "received"
+      scope.where(status: "paid")
+    when "overdue"
+      scope.where(status: "pending").where("due_date < ?", Date.current)
+    when "pending"
+      scope.where(status: "pending").where("due_date >= ? OR due_date IS NULL", Date.current)
+    when "partial", "canceled", "awaiting_trigger"
+      scope.none
+    else
+      scope.none
+    end
   end
 
   def overdue_scope(scope)

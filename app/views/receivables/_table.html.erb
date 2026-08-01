@@ -2,7 +2,7 @@
   <div class="dashboard-section__head">
     <div>
       <h3>Contas do período</h3>
-      <p><%= pluralize(@receivables.size, "lançamento") %> encontrado(s).</p>
+      <p><%= pluralize(@receivables.size + @financial_installments.size, "lançamento") %> encontrado(s).</p>
     </div>
   </div>
   <div class="table-wrap">
@@ -39,8 +39,41 @@
               </td>
             </tr>
           <% end %>
+          <% @financial_installments.each do |installment| %>
+            <% legal_case = installment.financial_contract.legal_case %>
+            <% display_status = installment.status_paid? ? "received" : (installment.due_date < Date.current ? "overdue" : "pending") %>
+            <% status_class = { "received" => "success", "overdue" => "danger" }.fetch(display_status, "info") %>
+            <tr>
+              <td>
+                <strong>Contrato financeiro · Parcela <%= installment.number %>/<%= installment.financial_contract.installment_count %></strong>
+                <small><%= legal_case.internal_number %> · <%= legal_case.unit&.name || "Matriz" %></small>
+              </td>
+              <td><%= legal_case.client.full_name %></td>
+              <td><%= l(installment.due_date) %></td>
+              <td><%= number_to_currency(installment.amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+              <td><%= number_to_currency(installment.status_paid? ? 0 : installment.amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+              <td><span class="status-pill status-pill--<%= status_class %>"><%= installment.status_paid? ? "Recebida" : (display_status == "overdue" ? "Vencida" : "Pendente") %></span></td>
+              <td class="table-actions"><%= link_to "Ver processo", legal_case_path(legal_case), class: "btn btn-secondary btn-xs" %></td>
+            </tr>
+          <% end %>
         <% else %>
-          <tr><td colspan="7" class="table-empty-state">Nenhuma conta a receber encontrada para estes filtros.</td></tr>
+          <% if @financial_installments.any? %>
+            <% @financial_installments.each do |installment| %>
+              <% legal_case = installment.financial_contract.legal_case %>
+              <% display_status = installment.status_paid? ? "received" : (installment.due_date < Date.current ? "overdue" : "pending") %>
+              <tr>
+                <td><strong>Contrato financeiro · Parcela <%= installment.number %>/<%= installment.financial_contract.installment_count %></strong><small><%= legal_case.internal_number %> · <%= legal_case.unit&.name || "Matriz" %></small></td>
+                <td><%= legal_case.client.full_name %></td>
+                <td><%= l(installment.due_date) %></td>
+                <td><%= number_to_currency(installment.amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                <td><%= number_to_currency(installment.status_paid? ? 0 : installment.amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                <td><span class="status-pill status-pill--<%= display_status == "received" ? "success" : (display_status == "overdue" ? "danger" : "info") %>"><%= display_status == "received" ? "Recebida" : (display_status == "overdue" ? "Vencida" : "Pendente") %></span></td>
+                <td class="table-actions"><%= link_to "Ver processo", legal_case_path(legal_case), class: "btn btn-secondary btn-xs" %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr><td colspan="7" class="table-empty-state">Nenhuma conta a receber encontrada para estes filtros.</td></tr>
+          <% end %>
         <% end %>
       </tbody>
     </table>
