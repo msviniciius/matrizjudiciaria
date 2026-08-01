@@ -79,6 +79,7 @@ type FinancialContract = {
   client_received_amount: string | number | null
   client_received_amount_label: string
   installment_count: number
+  first_due_date: string | null
   total_amount: string | number
   total_amount_label: string
   contract_document: { name: string; url: string } | null
@@ -496,6 +497,7 @@ export function LegalCaseShowApp() {
     {financialModalOpen && snapshot.actions.financial_contract && <FinancialContractModal
       legalCase={snapshot.case}
       contract={snapshot.financial_contract || null}
+      installments={snapshot.installments || []}
       pending={financialPending}
       error={financialError}
       onClose={() => !financialPending && setFinancialModalOpen(false)}
@@ -561,6 +563,7 @@ function FinancialPanel({
 function FinancialContractModal({
   legalCase,
   contract,
+  installments,
   pending,
   error,
   onClose,
@@ -568,6 +571,7 @@ function FinancialContractModal({
 }: {
   legalCase: Snapshot["case"]
   contract: FinancialContract | null
+  installments: FinancialInstallment[]
   pending: boolean
   error: string | null
   onClose: () => void
@@ -579,12 +583,31 @@ function FinancialContractModal({
   const [percentageBasis, setPercentageBasis] = useState<"claim_value" | "client_received">(contract?.percentage_basis || "claim_value")
   const [clientReceivedAmount, setClientReceivedAmount] = useState(String(contract?.client_received_amount || ""))
   const [installmentCount, setInstallmentCount] = useState(String(contract?.installment_count || 1))
-  const [firstDueDate, setFirstDueDate] = useState(dateInputValue())
+  const [firstDueDate, setFirstDueDate] = useState(contract?.first_due_date || installments[0]?.due_date || dateInputValue())
   const fixedNumber = parseFinancialNumber(fixedAmount)
   const percentageNumber = includesPercentage ? parseFinancialNumber(percentage) : 0
   const baseAmount = percentageBasis === "claim_value" ? parseFinancialNumber(legalCase.claim_value) : parseFinancialNumber(clientReceivedAmount)
   const totalAmount = fixedNumber + (includesPercentage ? baseAmount * percentageNumber / 100 : 0)
-  const preview = installmentPreview(totalAmount, Number(installmentCount), firstDueDate)
+  const preserveInitialSchedule = useRef(installments.length > 0)
+  const [installmentSchedule, setInstallmentSchedule] = useState<InstallmentInput[]>(() => {
+    if (installments.length > 0) {
+      return installments.map((installment) => ({
+        amount: String(installment.amount),
+        dueDate: installment.due_date || ""
+      }))
+    }
+
+    return installmentPreview(totalAmount, Number(installmentCount), firstDueDate)
+  })
+
+  useEffect(() => {
+    if (preserveInitialSchedule.current) {
+      preserveInitialSchedule.current = false
+      return
+    }
+
+    setInstallmentSchedule(installmentPreview(totalAmount, Number(installmentCount), firstDueDate))
+  }, [totalAmount, installmentCount, firstDueDate])
 
   return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
     if (event.target === event.currentTarget) onClose()
@@ -638,7 +661,31 @@ function FinancialContractModal({
         <section className="react-legal-case-show__financial-preview" aria-live="polite">
           <h3>Prévia do contrato</h3>
           <p>Total previsto: <strong>{formatCurrency(totalAmount)}</strong></p>
-          {preview.length > 0 && <ol>{preview.map((installment, index) => <li key={`${installment.dueDate}-${index}`}>{index + 1}ª parcela · {installment.dueDate} · {formatCurrency(installment.amount)}</li>)}</ol>}
+          {installmentSchedule.length > 0 && <ol>{installmentSchedule.map((installment, index) => <li key={index}>
+            <input type="hidden" name="financial_contract[installments][][number]" value={index + 1} />
+            <label htmlFor={`financial-contract-installment-${index}-amount`}>Valor da {index + 1}ª parcela</label>
+            <div className="react-legal-case-show__currency-input"><span>R$</span><input
+              id={`financial-contract-installment-${index}-amount`}
+              name="financial_contract[installments][][amount]"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={installment.amount}
+              onChange={(event) => setInstallmentSchedule((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, amount: event.target.value } : item))}
+              required
+              disabled={pending}
+            /></div>
+            <label htmlFor={`financial-contract-installment-${index}-due-date`}>Vencimento da {index + 1}ª parcela</label>
+            <input
+              id={`financial-contract-installment-${index}-due-date`}
+              name="financial_contract[installments][][due_date]"
+              type="date"
+              value={installment.dueDate}
+              onChange={(event) => setInstallmentSchedule((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, dueDate: event.target.value } : item))}
+              required
+              disabled={pending}
+            />
+          </li>)}</ol>}
         </section>
 
         {error && <p className="react-legal-case-show__outcome-error" role="alert">{error}</p>}
@@ -664,6 +711,8 @@ function dateInputValue() {
   return new Date().toISOString().slice(0, 10)
 }
 
+type InstallmentInput = { amount: string; dueDate: string }
+
 function installmentPreview(total: number, count: number, firstDueDate: string) {
   if (!Number.isInteger(count) || count < 1 || count > 12 || !firstDueDate || total <= 0) return []
 
@@ -677,8 +726,8 @@ function installmentPreview(total: number, count: number, firstDueDate: string) 
     dueDate.setMonth(firstDate.getMonth() + index)
     const amountInCents = index === count - 1 ? cents - baseCents * (count - 1) : baseCents
     return {
-      amount: amountInCents / 100,
-      dueDate: dueDate.toLocaleDateString("pt-BR")
+      amount: (amountInCents / 100).toFixed(2),
+      dueDate: dueDate.toISOString().slice(0, 10)
     }
   })
 }

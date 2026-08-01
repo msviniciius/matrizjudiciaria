@@ -192,6 +192,75 @@ test("shows an empty financial panel and opens the contract setup action", async
   expect(screen.getByRole("dialog", { name: "Configurar contrato financeiro" })).toBeVisible()
 })
 
+test("opens a populated financial contract with its existing editable installment schedule", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    financial_contract: {
+      id: 1,
+      fixed_amount: "1200.0",
+      fixed_amount_label: "R$ 1.200,00",
+      includes_percentage: false,
+      percentage: null,
+      percentage_basis: null,
+      percentage_basis_label: null,
+      percentage_base_amount: null,
+      percentage_base_amount_label: "R$ 0,00",
+      client_received_amount: null,
+      client_received_amount_label: "R$ 0,00",
+      installment_count: 2,
+      first_due_date: "2026-11-12",
+      total_amount: "1200.0",
+      total_amount_label: "R$ 1.200,00",
+      contract_document: null
+    },
+    installments: [
+      { id: 11, number: 1, amount: "500.0", amount_label: "R$ 500,00", due_date: "2026-11-12", due_date_label: "12/11/2026", status: "pending", status_label: "Pendente", payment_recorded: false },
+      { id: 12, number: 2, amount: "700.0", amount_label: "R$ 700,00", due_date: "2026-12-18", due_date_label: "18/12/2026", status: "pending", status_label: "Pendente", payment_recorded: false }
+    ],
+    actions: {
+      ...alertedSnapshot.actions,
+      financial_contract: { path: "/legal_cases/1/financial_contract", method: "patch" }
+    }
+  })))
+  render(<LegalCaseShowApp />)
+
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Editar contrato financeiro" }))
+
+  expect(screen.getByLabelText("Primeiro vencimento")).toHaveValue("2026-11-12")
+  expect(screen.getByLabelText("Valor da 1ª parcela")).toHaveValue(500)
+  expect(screen.getByLabelText("Vencimento da 2ª parcela")).toHaveValue("2026-12-18")
+})
+
+test("submits manually edited installment values and due dates", async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(okResponse({
+      ...alertedSnapshot,
+      financial_contract: null,
+      installments: [],
+      actions: {
+        ...alertedSnapshot.actions,
+        financial_contract: { path: "/legal_cases/1/financial_contract", method: "post" }
+      }
+    }))
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+  vi.stubGlobal("fetch", fetchMock)
+  const user = userEvent.setup()
+  render(<LegalCaseShowApp />)
+
+  await user.click(await screen.findByRole("button", { name: "Configurar contrato financeiro" }))
+  await user.type(screen.getByLabelText("Valor fixo dos honorários"), "1200")
+  await user.selectOptions(screen.getByLabelText("Quantidade de parcelas"), "2")
+  fireEvent.change(screen.getByLabelText("Primeiro vencimento"), { target: { value: "2026-08-10" } })
+  fireEvent.change(screen.getByLabelText("Valor da 1ª parcela"), { target: { value: "500.00" } })
+  fireEvent.change(screen.getByLabelText("Valor da 2ª parcela"), { target: { value: "700.00" } })
+  fireEvent.change(screen.getByLabelText("Vencimento da 2ª parcela"), { target: { value: "2026-10-20" } })
+  await user.click(screen.getByRole("button", { name: "Salvar contrato" }))
+
+  const submitted = fetchMock.mock.calls[1][1]?.body as FormData
+  expect(submitted.getAll("financial_contract[installments][][amount]")).toEqual([ "500.00", "700.00" ])
+  expect(submitted.getAll("financial_contract[installments][][due_date]")).toEqual([ "2026-08-10", "2026-10-20" ])
+})
+
 test("lets an administrator register the outcome from a contextual modal", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
     ...alertedSnapshot,

@@ -23,8 +23,9 @@ class FinancialContractsController < ApplicationController
 
   def persist_contract!
     attributes = normalized_contract_attributes
-    first_due_date = parse_first_due_date(attributes.delete(:first_due_date))
+    first_due_date = resolve_first_due_date(attributes.delete(:first_due_date))
     installment_count = attributes.fetch(:installment_count)
+    installments = attributes.delete(:installments)
     document = attributes.delete(:contract_document)
     total_amount = FinancialContracts::Calculator.call(
       fixed_amount: attributes[:fixed_amount],
@@ -44,7 +45,8 @@ class FinancialContractsController < ApplicationController
       FinancialContracts::InstallmentBuilder.call(
         contract: @financial_contract,
         count: installment_count,
-        first_due_date: first_due_date
+        first_due_date: first_due_date,
+        installments: installments
       )
     end
 
@@ -64,7 +66,8 @@ class FinancialContractsController < ApplicationController
       :client_received_amount,
       :installment_count,
       :first_due_date,
-      :contract_document
+      :contract_document,
+      installments: [ [ :number, :amount, :due_date ] ]
     ])
   end
 
@@ -75,6 +78,15 @@ class FinancialContractsController < ApplicationController
     attributes[:percentage_basis] = nil unless attributes[:includes_percentage]
     attributes[:client_received_amount] = nil unless attributes[:percentage_basis] == "client_received"
     attributes
+  end
+
+  def resolve_first_due_date(value)
+    return parse_first_due_date(value) if value.present?
+
+    existing_due_date = @financial_contract.installments.first&.due_date if @financial_contract.persisted?
+    return existing_due_date if existing_due_date.present?
+
+    raise ArgumentError, "first due date is required"
   end
 
   def parse_first_due_date(value)

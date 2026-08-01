@@ -32,6 +32,26 @@ class LegalCaseShowSnapshotTest < ActiveSupport::TestCase
     assert_equal "30/07/2026", snapshot.fetch(:case).fetch(:outcome_date_label)
   end
 
+  test "serializes the populated financial contract with its existing first due date" do
+    contract = FinancialContract.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      fixed_amount: 1_200,
+      installment_count: 2,
+      total_amount: 1_200
+    )
+    FinancialContracts::InstallmentBuilder.call(
+      contract: contract,
+      count: 2,
+      first_due_date: Date.new(2026, 11, 12)
+    )
+
+    snapshot = LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
+
+    assert_equal "2026-11-12", snapshot.dig(:financial_contract, :first_due_date)
+    assert_equal [ "2026-11-12", "2026-12-12" ], snapshot.fetch(:installments).pluck(:due_date)
+  end
+
   test "serializes the recorded outcome metadata and administrator outcome action" do
     administrator = User.create!(
       office: default_office,

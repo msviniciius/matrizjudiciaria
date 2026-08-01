@@ -4,14 +4,15 @@ module FinancialContracts
     MAXIMUM_COUNT = 12
     MINIMUM_INSTALLMENT_AMOUNT = 0.01.to_d
 
-    def self.call(contract:, count:, first_due_date:)
-      new(contract: contract, count: count, first_due_date: first_due_date).call
+    def self.call(contract:, count:, first_due_date:, installments: nil)
+      new(contract: contract, count: count, first_due_date: first_due_date, installments: installments).call
     end
 
-    def initialize(contract:, count:, first_due_date:)
+    def initialize(contract:, count:, first_due_date:, installments: nil)
       @contract = contract
       @count = normalize_count(count)
       @first_due_date = first_due_date.to_date
+      @installments = normalize_installments(installments)
     end
 
     def call
@@ -21,11 +22,11 @@ module FinancialContracts
 
       @contract.transaction do
         @contract.update!(installment_count: @count)
-        amounts(total).each_with_index.map do |amount, index|
+        installment_attributes(total).map do |attributes|
           @contract.installments.create!(
-            number: index + 1,
-            amount: amount,
-            due_date: @first_due_date >> index
+            number: attributes.fetch(:number),
+            amount: attributes.fetch(:amount),
+            due_date: attributes.fetch(:due_date)
           )
         end
       end
@@ -61,6 +62,65 @@ module FinancialContracts
       return if total >= (@count * MINIMUM_INSTALLMENT_AMOUNT)
 
       raise ArgumentError, "total amount must allow at least R$0.01 per installment"
+    end
+
+    def installment_attributes(total)
+      return generated_installments(total) if @installments.nil?
+
+      validate_manual_installments!(total)
+      @installments
+    end
+
+    def generated_installments(total)
+      amounts(total).each_with_index.map do |amount, index|
+        { number: index + 1, amount: amount, due_date: @first_due_date >> index }
+      end
+    end
+
+    def normalize_installments(installments)
+      return nil if installments.blank?
+
+      Array(installments).map do |installment|
+        attributes = installment.to_h.symbolize_keys
+        {
+          number: normalize_manual_number(attributes[:number]),
+          amount: normalize_manual_amount(attributes[:amount]),
+          due_date: normalize_manual_due_date(attributes[:due_date])
+        }
+      end
+    end
+
+    def normalize_manual_number(value)
+      Integer(value)
+    rescue ArgumentError, TypeError
+      raise ArgumentError, "installment numbers must be whole numbers"
+    end
+
+    def normalize_manual_amount(value)
+      amount = BigDecimal(value.to_s, exception: false)
+      if amount.nil? || !amount.finite? || amount < MINIMUM_INSTALLMENT_AMOUNT || amount != amount.round(2)
+        raise ArgumentError, "installment amounts must be positive values with at most two decimal places"
+      end
+
+      amount
+    end
+
+    def normalize_manual_due_date(value)
+      Date.iso8601(value.to_s)
+    rescue ArgumentError
+      raise ArgumentError, "installment due dates must be valid dates"
+    end
+
+    def validate_manual_installments!(total)
+      unless @installments.size == @count
+        raise ArgumentError, "installment schedule must contain exactly the selected installment count"
+      end
+      unless @installments.pluck(:number) == (1..@count).to_a
+        raise ArgumentError, "installment numbers must be sequential from 1"
+      end
+      unless @installments.sum { |installment| installment.fetch(:amount) } == total
+        raise ArgumentError, "installment amount sum must equal the contract total"
+      end
     end
 
     def amounts(total)

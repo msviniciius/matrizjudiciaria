@@ -136,6 +136,7 @@ class LegalCaseShowSnapshot
       client_received_amount: financial_contract.client_received_amount,
       client_received_amount_label: currency_label(financial_contract.client_received_amount),
       installment_count: financial_contract.installment_count,
+      first_due_date: financial_installments.first&.due_date&.iso8601,
       total_amount: financial_contract.total_amount,
       total_amount_label: currency_label(financial_contract.total_amount),
       contract_document: contract_document_entry
