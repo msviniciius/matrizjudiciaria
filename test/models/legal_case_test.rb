@@ -121,6 +121,27 @@ class LegalCaseTest < ActiveSupport::TestCase
     assert_equal confirmed_at, legal_case.outcome_confirmed_at
   end
 
+  test "exposes one financial contract while preserving legacy receivables" do
+    legal_case = build_case
+    legal_case.save!
+    contract = FinancialContract.create!(
+      office: default_office,
+      legal_case: legal_case,
+      fixed_amount: 2_000,
+      installment_count: 1,
+      total_amount: 2_000
+    )
+    legacy_receivable = legal_case.receivables.create!(
+      office: default_office,
+      client: legal_case.client,
+      description: "Cobrança anterior",
+      amount: 500
+    )
+
+    assert_equal contract, legal_case.reload.financial_contract
+    assert_includes legal_case.receivables, legacy_receivable
+  end
+
   test "rejeita confirmacao por usuario de outro escritorio" do
     other_office = Office.create!(name: "Outro Escritorio", slug: "outro-escritorio")
     confirming_user = create_user(office: other_office)
