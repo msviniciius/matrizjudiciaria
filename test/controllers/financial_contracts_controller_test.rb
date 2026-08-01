@@ -121,6 +121,22 @@ class FinancialContractsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "2026-11-12", response.parsed_body.dig("financial_contract", "first_due_date")
   end
 
+  test "preserves custom installment due dates when an update omits the schedule" do
+    contract = create_contract(first_due_date: Date.new(2026, 11, 12), count: 2)
+    contract.installments.order(:number).last.update!(due_date: Date.new(2027, 2, 28))
+
+    patch legal_case_financial_contract_url(@legal_case, format: :json), params: {
+      financial_contract: {
+        fixed_amount: "1500.00",
+        includes_percentage: false,
+        installment_count: 2
+      }
+    }
+
+    assert_response :success
+    assert_equal [ Date.new(2026, 11, 12), Date.new(2027, 2, 28) ], contract.reload.installments.order(:number).map(&:due_date)
+  end
+
   test "does not change a contract that already has a paid installment" do
     contract = create_contract(first_due_date: Date.new(2026, 11, 12), count: 1)
     contract.installments.first.update!(status: "paid")

@@ -4,15 +4,16 @@ module FinancialContracts
     MAXIMUM_COUNT = 12
     MINIMUM_INSTALLMENT_AMOUNT = 0.01.to_d
 
-    def self.call(contract:, count:, first_due_date:, installments: nil)
-      new(contract: contract, count: count, first_due_date: first_due_date, installments: installments).call
+    def self.call(contract:, count:, first_due_date:, installments: nil, due_dates: nil)
+      new(contract: contract, count: count, first_due_date: first_due_date, installments: installments, due_dates: due_dates).call
     end
 
-    def initialize(contract:, count:, first_due_date:, installments: nil)
+    def initialize(contract:, count:, first_due_date:, installments: nil, due_dates: nil)
       @contract = contract
       @count = normalize_count(count)
       @first_due_date = first_due_date.to_date
       @installments = normalize_installments(installments)
+      @due_dates = Array(due_dates).map(&:to_date)
     end
 
     def call
@@ -73,7 +74,7 @@ module FinancialContracts
 
     def generated_installments(total)
       amounts(total).each_with_index.map do |amount, index|
-        { number: index + 1, amount: amount, due_date: @first_due_date >> index }
+        { number: index + 1, amount: amount, due_date: @due_dates[index] || (@first_due_date >> index) }
       end
     end
 

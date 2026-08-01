@@ -26,6 +26,9 @@ class FinancialContractsController < ApplicationController
     first_due_date = resolve_first_due_date(attributes.delete(:first_due_date))
     installment_count = attributes.fetch(:installment_count)
     installments = attributes.delete(:installments)
+    existing_due_dates = if installments.blank? && @financial_contract.persisted?
+      @financial_contract.installments.order(:number).pluck(:due_date)
+    end
     document = attributes.delete(:contract_document)
     total_amount = FinancialContracts::Calculator.call(
       fixed_amount: attributes[:fixed_amount],
@@ -46,7 +49,8 @@ class FinancialContractsController < ApplicationController
         contract: @financial_contract,
         count: installment_count,
         first_due_date: first_due_date,
-        installments: installments
+        installments: installments,
+        due_dates: existing_due_dates
       )
     end
 
