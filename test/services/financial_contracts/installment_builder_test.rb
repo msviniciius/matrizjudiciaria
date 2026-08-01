@@ -53,4 +53,32 @@ class FinancialContracts::InstallmentBuilderTest < ActiveSupport::TestCase
     assert_equal "installment count must be between 1 and 12", error.message
     assert_empty @contract.installments
   end
+
+  test "rejects non-integral installment counts" do
+    error = assert_raises(ArgumentError) do
+      FinancialContracts::InstallmentBuilder.call(
+        contract: @contract,
+        count: 1.5,
+        first_due_date: Date.new(2026, 8, 5)
+      )
+    end
+
+    assert_equal "installment count must be a whole number between 1 and 12", error.message
+    assert_empty @contract.installments
+  end
+
+  test "rejects totals smaller than one cent per installment" do
+    @contract.update!(fixed_amount: 0.01, total_amount: 0.01)
+
+    error = assert_raises(ArgumentError) do
+      FinancialContracts::InstallmentBuilder.call(
+        contract: @contract,
+        count: 12,
+        first_due_date: Date.new(2026, 8, 5)
+      )
+    end
+
+    assert_equal "total amount must allow at least R$0.01 per installment", error.message
+    assert_empty @contract.installments
+  end
 end
