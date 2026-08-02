@@ -7,7 +7,7 @@ class Receivables::Query
   end
 
   def call
-    scope = legacy_scope.for_period(period)
+    scope = office.receivables.for_period(period)
     scope = filter_unit(scope)
     scope = filter(scope, :client_id)
     scope = filter(scope, :legal_case_id)
@@ -33,11 +33,6 @@ class Receivables::Query
   private
 
   attr_reader :office, :params
-
-  def legacy_scope
-    replacement_cases = FinancialContract.where(office_id: office.id).select(:legal_case_id)
-    office.receivables.where("legal_case_id IS NULL OR legal_case_id NOT IN (?)", replacement_cases)
-  end
 
   def period
     supplied_period = value_for(:period)
