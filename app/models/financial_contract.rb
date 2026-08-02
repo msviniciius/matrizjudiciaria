@@ -1,4 +1,6 @@
 class FinancialContract < ApplicationRecord
+  before_validation :default_includes_percentage
+
   belongs_to :office
   belongs_to :legal_case
 
@@ -28,6 +30,10 @@ class FinancialContract < ApplicationRecord
   validate :percentage_configuration
 
   private
+
+  def default_includes_percentage
+    self.includes_percentage = false if includes_percentage.nil?
+  end
 
   def legal_case_belongs_to_same_office
     return if legal_case.blank? || office.blank? || legal_case.office_id == office_id

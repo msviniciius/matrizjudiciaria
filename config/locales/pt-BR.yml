@@ -59,7 +59,7 @@ pt-BR:
         record_invalid: Registro inválido
         blank: não pode ficar em branco
         required: deve existir
-        inclusion: não está incluído nas opções disponíveis
+        inclusion: deve ser informado corretamente
     models:
       client: Cliente
       court: Órgão/Vara/Tribunal

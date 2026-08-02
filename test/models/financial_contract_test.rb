@@ -50,6 +50,13 @@ class FinancialContractTest < ActiveSupport::TestCase
     assert_includes fixed_only_with_percentage.errors[:percentage_basis], "deve ficar em branco para honorários somente fixos"
   end
 
+  test "defaults the optional percentage flag to false" do
+    contract = build_contract(includes_percentage: nil)
+
+    assert contract.valid?, contract.errors.full_messages.join(", ")
+    assert_equal false, contract.includes_percentage
+  end
+
   test "accepts supported percentage bases" do
     claim_value_contract = build_contract(
       includes_percentage: true,
