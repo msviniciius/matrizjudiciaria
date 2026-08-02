@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -147,6 +147,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
     t.index ["name"], name: "index_districts_on_name", unique: true
   end
 
+  create_table "financial_contracts", force: :cascade do |t|
+    t.decimal "client_received_amount", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.decimal "fixed_amount", precision: 12, scale: 2, null: false
+    t.boolean "includes_percentage", default: false, null: false
+    t.integer "installment_count", default: 1, null: false
+    t.bigint "legal_case_id", null: false
+    t.bigint "office_id", null: false
+    t.decimal "percentage", precision: 5, scale: 2
+    t.string "percentage_basis"
+    t.decimal "total_amount", precision: 12, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["legal_case_id"], name: "index_financial_contracts_on_legal_case_id", unique: true
+    t.index ["office_id"], name: "index_financial_contracts_on_office_id"
+    t.check_constraint "client_received_amount IS NULL OR client_received_amount >= 0::numeric", name: "financial_contracts_client_received_amount_nonnegative"
+    t.check_constraint "fixed_amount > 0::numeric", name: "financial_contracts_fixed_amount_positive"
+    t.check_constraint "includes_percentage AND percentage > 0::numeric AND percentage <= 100::numeric AND (percentage_basis::text = ANY (ARRAY['claim_value'::character varying, 'client_received'::character varying]::text[])) OR NOT includes_percentage AND percentage IS NULL AND percentage_basis IS NULL", name: "financial_contracts_percentage_configuration"
+    t.check_constraint "installment_count >= 1 AND installment_count <= 12", name: "financial_contracts_installment_count_range"
+    t.check_constraint "total_amount > 0::numeric", name: "financial_contracts_total_amount_positive"
+  end
+
+  create_table "financial_installments", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.date "due_date", null: false
+    t.bigint "financial_contract_id", null: false
+    t.integer "number", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["due_date"], name: "index_financial_installments_on_due_date"
+    t.index ["financial_contract_id", "number"], name: "index_financial_installments_on_contract_and_number", unique: true
+    t.index ["financial_contract_id"], name: "index_financial_installments_on_financial_contract_id"
+    t.index ["status"], name: "index_financial_installments_on_status"
+    t.check_constraint "amount > 0::numeric", name: "financial_installments_amount_positive"
+    t.check_constraint "number >= 1 AND number <= 12", name: "financial_installments_number_range"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'paid'::character varying]::text[])", name: "financial_installments_status_allowed"
+  end
+
+  create_table "financial_payments", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.bigint "financial_installment_id", null: false
+    t.datetime "paid_at", null: false
+    t.string "payment_method", null: false
+    t.bigint "recorded_by_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["financial_installment_id"], name: "index_financial_payments_on_financial_installment_id", unique: true
+    t.index ["recorded_by_id"], name: "index_financial_payments_on_recorded_by_id"
+    t.check_constraint "amount > 0::numeric", name: "financial_payments_amount_positive"
+    t.check_constraint "payment_method::text = ANY (ARRAY['pix'::character varying, 'cash'::character varying, 'credit_card'::character varying, 'debit_card'::character varying]::text[])", name: "financial_payments_method_allowed"
+  end
+
   create_table "legal_areas", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "justice_branch", null: false
@@ -175,6 +227,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
     t.text "observacao_geral_pericia"
     t.bigint "office_id", null: false
     t.string "opposing_party"
+    t.string "outcome", default: "undefined", null: false
+    t.datetime "outcome_confirmed_at"
+    t.bigint "outcome_confirmed_by_id"
+    t.date "outcome_date"
+    t.text "outcome_notes"
     t.string "phase"
     t.string "pje_case_id"
     t.string "priority"
@@ -194,6 +251,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
     t.index ["last_synced_at"], name: "index_legal_cases_on_last_synced_at"
     t.index ["legal_area_id"], name: "index_legal_cases_on_legal_area_id"
     t.index ["office_id"], name: "index_legal_cases_on_office_id"
+    t.index ["outcome"], name: "index_legal_cases_on_outcome"
+    t.index ["outcome_confirmed_by_id"], name: "index_legal_cases_on_outcome_confirmed_by_id"
     t.index ["pje_case_id"], name: "index_legal_cases_on_pje_case_id"
     t.index ["process_type_id"], name: "index_legal_cases_on_process_type_id"
     t.index ["unit_id"], name: "index_legal_cases_on_unit_id"
@@ -368,6 +427,51 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
     t.index ["legal_area_id"], name: "index_process_types_on_legal_area_id"
   end
 
+  create_table "receivable_payments", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.date "paid_at", null: false
+    t.string "payment_method"
+    t.bigint "receivable_id", null: false
+    t.bigint "recorded_by_id"
+    t.datetime "updated_at", null: false
+    t.index ["receivable_id"], name: "index_receivable_payments_on_receivable_id"
+    t.index ["recorded_by_id"], name: "index_receivable_payments_on_recorded_by_id"
+  end
+
+  create_table "receivables", force: :cascade do |t|
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.decimal "amount_paid", precision: 12, scale: 2, default: "0.0", null: false
+    t.datetime "canceled_at"
+    t.bigint "canceled_by_id"
+    t.bigint "client_id"
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.date "due_date"
+    t.bigint "legal_case_id"
+    t.boolean "migrated_to_financial_contract", default: false, null: false
+    t.text "notes"
+    t.bigint "office_id", null: false
+    t.date "paid_at"
+    t.string "payment_method"
+    t.datetime "payment_recorded_at"
+    t.bigint "payment_recorded_by_id"
+    t.string "status", default: "pending", null: false
+    t.string "trigger", default: "manual", null: false
+    t.datetime "triggered_at"
+    t.bigint "unit_id"
+    t.datetime "updated_at", null: false
+    t.index ["canceled_by_id"], name: "index_receivables_on_canceled_by_id"
+    t.index ["client_id"], name: "index_receivables_on_client_id"
+    t.index ["due_date"], name: "index_receivables_on_due_date"
+    t.index ["legal_case_id"], name: "index_receivables_on_legal_case_id"
+    t.index ["migrated_to_financial_contract"], name: "index_receivables_on_migrated_to_financial_contract"
+    t.index ["office_id"], name: "index_receivables_on_office_id"
+    t.index ["payment_recorded_by_id"], name: "index_receivables_on_payment_recorded_by_id"
+    t.index ["status"], name: "index_receivables_on_status"
+    t.index ["unit_id"], name: "index_receivables_on_unit_id"
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -440,6 +544,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
   add_foreign_key "courts", "districts"
   add_foreign_key "deadline_settings", "offices"
   add_foreign_key "deadlines", "legal_cases"
+  add_foreign_key "financial_contracts", "legal_cases"
+  add_foreign_key "financial_contracts", "offices"
+  add_foreign_key "financial_installments", "financial_contracts"
+  add_foreign_key "financial_payments", "financial_installments"
+  add_foreign_key "financial_payments", "users", column: "recorded_by_id"
   add_foreign_key "legal_cases", "clients"
   add_foreign_key "legal_cases", "courts"
   add_foreign_key "legal_cases", "districts"
@@ -447,6 +556,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
   add_foreign_key "legal_cases", "offices"
   add_foreign_key "legal_cases", "process_types"
   add_foreign_key "legal_cases", "units"
+  add_foreign_key "legal_cases", "users", column: "outcome_confirmed_by_id"
   add_foreign_key "movement_templates", "movement_types"
   add_foreign_key "movement_templates", "process_phases", column: "next_phase_id"
   add_foreign_key "movement_templates", "process_phases", column: "phase_id"
@@ -459,6 +569,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_153000) do
   add_foreign_key "process_movements", "process_phases", column: "next_phase_id"
   add_foreign_key "process_movements", "process_phases", column: "phase_id"
   add_foreign_key "process_types", "legal_areas"
+  add_foreign_key "receivable_payments", "receivables"
+  add_foreign_key "receivable_payments", "users", column: "recorded_by_id"
+  add_foreign_key "receivables", "clients"
+  add_foreign_key "receivables", "legal_cases"
+  add_foreign_key "receivables", "offices"
+  add_foreign_key "receivables", "units"
+  add_foreign_key "receivables", "users", column: "canceled_by_id"
+  add_foreign_key "receivables", "users", column: "payment_recorded_by_id"
   add_foreign_key "tasks", "legal_cases"
   add_foreign_key "units", "offices"
   add_foreign_key "user_units", "units"
