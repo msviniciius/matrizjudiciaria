@@ -39,6 +39,7 @@ class Receivable < ApplicationRecord
   scope :by_status, ->(status) { where(status: status) }
   scope :by_unit, ->(unit) { where(unit: unit) }
   scope :awaiting_case_won_trigger, -> { where(trigger: "case_won", status: "awaiting_trigger") }
+  scope :not_migrated_to_financial_contract, -> { where(migrated_to_financial_contract: false) }
 
   def balance
     amount - amount_paid

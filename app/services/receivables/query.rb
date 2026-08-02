@@ -7,7 +7,7 @@ class Receivables::Query
   end
 
   def call
-    scope = office.receivables.for_period(period)
+    scope = office.receivables.not_migrated_to_financial_contract.for_period(period)
     scope = filter_unit(scope)
     scope = filter(scope, :client_id)
     scope = filter(scope, :legal_case_id)

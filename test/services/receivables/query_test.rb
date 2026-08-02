@@ -118,6 +118,13 @@ class Receivables::QueryTest < ActiveSupport::TestCase
     assert_includes query.call, legacy
   end
 
+  test "excludes only legacy accounts explicitly marked as migrated" do
+    migrated = create_receivable(migrated_to_financial_contract: true)
+    query = Receivables::Query.new(office: default_office, params: {})
+
+    assert_not_includes query.call, migrated
+  end
+
   private
 
   def create_receivable(office: default_office, **attrs)
