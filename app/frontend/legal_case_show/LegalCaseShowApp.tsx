@@ -384,7 +384,8 @@ export function LegalCaseShowApp() {
     }
   }
 
-  const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, 5)
+  const timelineLimit = 5
+  const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, timelineLimit)
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
 
@@ -457,7 +458,9 @@ export function LegalCaseShowApp() {
     />
 
     <section className="react-legal-case-show__timeline" aria-labelledby="timeline-heading">
-      <h2 id="timeline-heading">Timeline</h2>
+      <h2 id="timeline-heading">
+        {snapshot.timeline.length > timelineLimit ? <button type="button" data-testid="legal-case-show-timeline-more" aria-expanded={showAllTimeline} onClick={() => setShowAllTimeline((current) => !current)}><span>Timeline</span><span aria-hidden="true">{showAllTimeline ? "−" : "+"}</span></button> : "Timeline"}
+      </h2>
       {visibleTimeline.length ? <ol>
         {visibleTimeline.map((item) => <li className={item.highlight ? "react-legal-case-show__timeline-item react-legal-case-show__timeline-item--highlight" : "react-legal-case-show__timeline-item"} key={`${item.source}-${item.id}`}>
           <p className="react-legal-case-show__timeline-meta">{item.source_label || item.source} · {item.occurred_at_label}</p>
@@ -467,7 +470,6 @@ export function LegalCaseShowApp() {
           {item.exam_summary && <p>Perícia: {item.exam_summary}</p>}
         </li>)}
       </ol> : <p>Nenhum andamento cadastrado.</p>}
-      {remainingTimelineItems > 0 && <button className="react-legal-case-show__timeline-more" type="button" onClick={() => setShowAllTimeline(true)}>Mostrar mais {remainingTimelineItems} andamento(s) anterior(es)</button>}
     </section>
 
     <OperationalSection title="Prazos" hasAlert={deadlineAlert}>
@@ -512,7 +514,7 @@ export function LegalCaseShowApp() {
         <div><dt>Tipo de processo</dt><dd>{snapshot.case.process_type_name}</dd></div>
         <div><dt>Órgão / Vara</dt><dd>{snapshot.case.court_name}</dd></div>
         <div><dt>Comarca</dt><dd>{snapshot.case.district_name}</dd></div>
-        <div><dt>Valor da causa</dt><dd>{snapshot.case.claim_value || "-"}</dd></div>
+        <div><dt>Valor da causa</dt><dd>{formatOptionalCurrency(snapshot.case.claim_value)}</dd></div>
         <div><dt>Parte contrária</dt><dd>{snapshot.case.opposing_party}</dd></div>
       </dl>
     </section>
@@ -633,7 +635,7 @@ function FinancialContractModal({
   onClose: () => void
   onSubmit: (formData: FormData) => Promise<void>
 }) {
-  const [fixedAmount, setFixedAmount] = useState(String(contract?.fixed_amount || ""))
+  const [fixedAmount, setFixedAmount] = useState(decimalString(contract?.fixed_amount))
   const [includesPercentage, setIncludesPercentage] = useState(contract?.includes_percentage || false)
   const [percentage, setPercentage] = useState(String(contract?.percentage || ""))
   const [percentageBasis, setPercentageBasis] = useState<"claim_value" | "client_received">(contract?.percentage_basis || "claim_value")
@@ -665,6 +667,10 @@ function FinancialContractModal({
     setInstallmentSchedule(installmentPreview(totalAmount, Number(installmentCount), firstDueDate))
   }, [totalAmount, installmentCount, firstDueDate])
 
+  useEffect(() => {
+    document.dispatchEvent(new Event("custom-select:refresh"))
+  }, [includesPercentage])
+
   return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
     if (event.target === event.currentTarget) onClose()
   }}>
@@ -682,7 +688,7 @@ function FinancialContractModal({
         void onSubmit(new FormData(event.currentTarget))
       }}>
         <label htmlFor="financial-contract-fixed-amount">Valor fixo dos honorários</label>
-        <div className="react-legal-case-show__currency-input"><span>R$</span><input id="financial-contract-fixed-amount" name="financial_contract[fixed_amount]" type="number" min="0.01" step="0.01" value={fixedAmount} onChange={(event) => setFixedAmount(event.target.value)} required disabled={pending} /></div>
+        <CurrencyInput id="financial-contract-fixed-amount" name="financial_contract[fixed_amount]" value={fixedAmount} onChange={setFixedAmount} required disabled={pending} />
 
         <label className="react-legal-case-show__financial-check" htmlFor="financial-contract-includes-percentage"><input id="financial-contract-includes-percentage" name="financial_contract[includes_percentage]" type="checkbox" checked={includesPercentage} onChange={(event) => setIncludesPercentage(event.target.checked)} disabled={pending} /> Adicionar percentual de honorários</label>
 
@@ -712,7 +718,7 @@ function FinancialContractModal({
         <input id="financial-contract-first-due-date" name="financial_contract[first_due_date]" type="date" value={firstDueDate} onChange={(event) => setFirstDueDate(event.target.value)} required disabled={pending} />
 
         <label htmlFor="financial-contract-document">Contrato assinado</label>
-        <input id="financial-contract-document" name="financial_contract[contract_document]" type="file" accept="application/pdf,image/*" disabled={pending} />
+        <FilePicker id="financial-contract-document" name="financial_contract[contract_document]" accept="application/pdf,image/*" disabled={pending} />
 
         <section className="react-legal-case-show__financial-preview" aria-live="polite">
           <h3>Prévia do contrato</h3>
@@ -795,7 +801,7 @@ function PaymentModal({
         </select>
 
         <label htmlFor="financial-payment-proof">Comprovante de pagamento</label>
-        <input id="financial-payment-proof" name="payment[proof]" type="file" accept="application/pdf,image/*" required disabled={pending} />
+        <FilePicker id="financial-payment-proof" name="payment[proof]" accept="application/pdf,image/*" required disabled={pending} />
 
         {error && <p className="react-legal-case-show__outcome-error" role="alert">{error}</p>}
         <div className="react-legal-case-show__outcome-modal-actions">
@@ -812,8 +818,96 @@ function parseFinancialNumber(value: string | number | null | undefined) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+function decimalString(value: string | number | null | undefined) {
+  const parsed = parseFinancialNumber(value)
+  return parsed > 0 ? parsed.toFixed(2) : ""
+}
+
+function formatCurrencyInput(value: string | number | null | undefined) {
+  const decimal = decimalString(value)
+  if (!decimal) return ""
+
+  const [whole, cents = "00"] = decimal.split(".")
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${cents.padEnd(2, "0").slice(0, 2)}`
+}
+
+function currencyInputToDecimal(value: string) {
+  let digits = value.replace(/\D/g, "").replace(/^0+/, "")
+  if (!digits) return ""
+  if (digits.length === 1) digits = `0${digits}`
+  if (digits.length === 2) digits = `0${digits}`
+
+  return `${Number(digits.slice(0, -2))}.${digits.slice(-2)}`
+}
+
+function CurrencyInput({
+  id,
+  name,
+  value,
+  onChange,
+  required = false,
+  disabled = false
+}: {
+  id: string
+  name: string
+  value: string
+  onChange: (value: string) => void
+  required?: boolean
+  disabled?: boolean
+}) {
+  return <div className="react-legal-case-show__currency-input">
+    <span>R$</span>
+    <input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      value={formatCurrencyInput(value)}
+      onChange={(event) => onChange(currencyInputToDecimal(event.target.value))}
+      required={required}
+      disabled={disabled}
+    />
+    <input type="hidden" name={name} value={value} />
+  </div>
+}
+
+function FilePicker({
+  id,
+  name,
+  accept,
+  required = false,
+  disabled = false
+}: {
+  id: string
+  name: string
+  accept: string
+  required?: boolean
+  disabled?: boolean
+}) {
+  const [fileName, setFileName] = useState("")
+
+  return <div className="react-legal-case-show__file-picker">
+    <input
+      id={id}
+      className="react-legal-case-show__file-picker-input"
+      name={name}
+      type="file"
+      accept={accept}
+      required={required}
+      disabled={disabled}
+      onChange={(event) => setFileName(event.target.files?.[0]?.name || "")}
+    />
+    <label className="react-legal-case-show__file-picker-button" htmlFor={id}>Selecionar arquivo</label>
+    <span className="react-legal-case-show__file-picker-name">{fileName || "Nenhum arquivo selecionado"}</span>
+  </div>
+}
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0)
+}
+
+function formatOptionalCurrency(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") return "-"
+  return formatCurrency(parseFinancialNumber(value))
 }
 
 function dateInputValue() {
@@ -953,7 +1047,7 @@ function OperationalSection({ title, hasAlert, children }: { title: string; hasA
   const contentId = `legal-case-show-${title.toLocaleLowerCase("pt-BR")}`
 
   return <section className="react-legal-case-show__operational-section">
-    <h2><button type="button" aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
+    <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
     <div className="react-legal-case-show__operational-content" id={contentId} hidden={!isOpen}>{children}</div>
   </section>
 }

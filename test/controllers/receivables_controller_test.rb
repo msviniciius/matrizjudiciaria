@@ -25,6 +25,40 @@ class ReceivablesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Aguardando gatilho"
   end
 
+  test "opens only the receivables sidebar section" do
+    sign_in(@administrator)
+
+    get receivables_url
+
+    assert_response :success
+    assert_select ".sidebar-section.is-open", count: 1
+    assert_select ".sidebar-section.is-open[data-sidebar-section='financeiro']" do
+      assert_select ".nav-link.is-active", text: /Contas a receber/
+    end
+  end
+
+  test "renders receivable filters in the main listing filter pattern" do
+    sign_in(@administrator)
+
+    get receivables_url
+
+    assert_response :success
+    assert_select "form.main-filters.main-filters--clients-pattern[data-main-filters]"
+    assert_select ".main-filters__bar" do
+      assert_select "> input.main-filters__q[name='q']:nth-child(1)"
+      assert_select "> input.main-filters__submit[type='submit'][value='Buscar']:nth-child(2)"
+      assert_select "> button.main-filters__toggle[data-main-filters-toggle]:nth-child(3)", text: /Filtros avançados/
+      assert_select "> button.main-filters__toggle[data-main-filters-toggle] span[aria-hidden='true']", false
+      assert_select "> a.main-filters__clear:nth-child(4)", text: /Limpar filtros/
+    end
+    assert_select ".main-filters__advanced[data-main-filters-advanced]" do
+      assert_select ".main-filters__advanced-fields"
+      assert_select "input[name='period[start]']"
+      assert_select "select[name='unit_id']"
+      assert_select ".form-actions", false
+    end
+  end
+
   test "does not expose accounts from another office to an administrator" do
     sign_in(@administrator)
     other_office = create_other_office

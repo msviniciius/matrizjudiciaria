@@ -282,6 +282,15 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "edit shows the claim value with the Brazilian currency mask" do
+    @legal_case.update!(claim_value: 1000)
+
+    get edit_legal_case_url(@legal_case)
+
+    assert_response :success
+    assert_select "input[name='legal_case[claim_value]'][value='1.000,00']"
+  end
+
   test "should update legal_case" do
     patch legal_case_url(@legal_case), params: { legal_case: {
       subarea: "Atualizada",

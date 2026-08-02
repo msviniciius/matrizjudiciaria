@@ -7,6 +7,14 @@ class DashboardSnapshotTest < ActiveSupport::TestCase
     @office = default_office
     @unit = Unit.create!(office: @office, name: "Contencioso")
     @other_unit = Unit.create!(office: @office, name: "Consultivo")
+    @administrator = User.create!(
+      office: @office,
+      name: "Admin Snapshot",
+      email: "admin-snapshot-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
   end
 
   test "serializes unassigned cases and their unit-scoped action URLs" do
@@ -168,6 +176,45 @@ class DashboardSnapshotTest < ActiveSupport::TestCase
     assert_context_path_matches(snapshot.dig(:risk_queue, :due_in_48_hours), [ due_in_48_hours.id ])
     assert_context_path_matches(snapshot.dig(:risk_queue, :due_today), [ due_today.id ])
     assert_context_path_matches(snapshot.dig(:risk_queue, :overdue), [ overdue.id, at_risk.id ])
+  end
+
+  test "serializes financial summary only for administrators" do
+    receivable = Receivable.create!(
+      office: @office,
+      unit: @unit,
+      description: "Honorários iniciais",
+      amount: 1_200,
+      due_date: Date.current,
+      status: "pending",
+      trigger: "manual"
+    )
+    associate = User.create!(
+      office: @office,
+      name: "Associate Snapshot",
+      email: "associate-snapshot-#{SecureRandom.hex(4)}@example.com",
+      role: "associate",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+
+    admin_snapshot = DashboardSnapshot.new(
+      office: @office,
+      unit: @unit,
+      all_units_mode: false,
+      current_user: @administrator
+    ).as_json
+    associate_snapshot = DashboardSnapshot.new(
+      office: @office,
+      unit: @unit,
+      all_units_mode: false,
+      current_user: associate
+    ).as_json
+
+    assert_equal 1_200.to_d, admin_snapshot.dig(:financial_summary, :expected)
+    assert_equal 1_200.to_d, admin_snapshot.dig(:financial_summary, :open_balance)
+    assert_equal "/receivables", admin_snapshot.dig(:financial_summary, :path)
+    assert_nil associate_snapshot[:financial_summary]
+    assert_equal receivable.id, receivable.reload.id
   end
 
   private

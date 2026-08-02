@@ -9,6 +9,7 @@ class Receivables::Query
   def call
     scope = office.receivables.not_migrated_to_financial_contract.for_period(period)
     scope = filter_unit(scope)
+    scope = filter_search(scope)
     scope = filter(scope, :client_id)
     scope = filter(scope, :legal_case_id)
     scope = filter_status(scope)
@@ -23,8 +24,10 @@ class Receivables::Query
       .joins(financial_contract: :legal_case)
       .where(financial_contracts: { office_id: office.id })
       .where(due_date: period)
+      .joins(financial_contract: { legal_case: :client })
 
     scope = filter_financial_unit(scope)
+    scope = filter_financial_search(scope)
     scope = scope.where(financial_contracts: { legal_case_id: value_for(:legal_case_id) }) if value_for(:legal_case_id).present?
     scope = scope.where(legal_cases: { client_id: value_for(:client_id) }) if value_for(:client_id).present?
     filter_financial_status(scope)
@@ -94,6 +97,18 @@ class Receivables::Query
     scope.where(key => value)
   end
 
+  def filter_search(scope)
+    query = search_query
+    return scope if query.blank?
+
+    scope
+      .left_joins(:client, :legal_case)
+      .where(
+        "receivables.description ILIKE :query OR clients.full_name ILIKE :query OR legal_cases.internal_number ILIKE :query",
+        query: query
+      )
+  end
+
   def filter_status(scope)
     status = value_for(:status)
     return scope if status.blank?
@@ -130,11 +145,25 @@ class Receivables::Query
     end
   end
 
+  def filter_financial_search(scope)
+    query = search_query
+    return scope if query.blank?
+
+    scope.where("legal_cases.internal_number ILIKE :query OR clients.full_name ILIKE :query", query: query)
+  end
+
   def overdue_scope(scope)
     scope.where(status: Receivable::OPEN_STATUSES).where("due_date < ?", Date.current)
   end
 
   def value_for(key)
     params[key] || params[key.to_s]
+  end
+
+  def search_query
+    value = value_for(:q).to_s.strip
+    return if value.blank?
+
+    "%#{ActiveRecord::Base.sanitize_sql_like(value)}%"
   end
 end

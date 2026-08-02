@@ -163,6 +163,17 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(screen.getByRole("link", { name: "Editar processo" })).toBeVisible()
 })
 
+test("formats the claim value as Brazilian currency in the case data panel", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    case: { ...alertedSnapshot.case, claim_value: "1000.0" }
+  })))
+  render(<LegalCaseShowApp />)
+
+  expect(await screen.findByText("Valor da causa")).toBeVisible()
+  expect(screen.getByText("Valor da causa").nextElementSibling).toHaveTextContent("R$ 1.000,00")
+})
+
 test("describes an empty timeline and exposes each operational section through a heading toggle", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([]))))
   render(<LegalCaseShowApp />)
@@ -172,9 +183,12 @@ test("describes an empty timeline and exposes each operational section through a
     expect(screen.getByRole("heading", { name: title })).toBeVisible()
     expect(screen.getByRole("button", { name: title })).toBeVisible()
   })
+  expect(screen.getByTestId("legal-case-show-prazos")).toHaveAttribute("aria-controls", "legal-case-show-prazos")
 })
 
 test("shows an empty financial panel and opens the contract setup action", async () => {
+  const refreshListener = vi.fn()
+  document.addEventListener("custom-select:refresh", refreshListener)
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
     ...alertedSnapshot,
     financial_contract: null,
@@ -190,6 +204,13 @@ test("shows an empty financial panel and opens the contract setup action", async
   expect(screen.getByText("Nenhum contrato financeiro configurado.")).toBeVisible()
   await userEvent.setup().click(screen.getByRole("button", { name: "Definir honorários" }))
   expect(screen.getByRole("dialog", { name: "Definir honorários e condições de pagamento" })).toBeVisible()
+  expect(refreshListener).toHaveBeenCalledTimes(1)
+
+  await userEvent.setup().click(screen.getByLabelText("Adicionar percentual de honorários"))
+  expect(screen.getByLabelText("Base de cálculo")).toBeVisible()
+  expect(refreshListener).toHaveBeenCalledTimes(2)
+
+  document.removeEventListener("custom-select:refresh", refreshListener)
 })
 
 test("opens a populated financial contract with its existing editable installment schedule", async () => {
@@ -259,6 +280,57 @@ test("submits manually edited installment values and due dates", async () => {
   const submitted = fetchMock.mock.calls[1][1]?.body as FormData
   expect(submitted.getAll("financial_contract[installments][][amount]")).toEqual([ "500.00", "700.00" ])
   expect(submitted.getAll("financial_contract[installments][][due_date]")).toEqual([ "2026-08-10", "2026-10-20" ])
+})
+
+test("masks the fixed fee as Brazilian currency and submits a decimal value", async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(okResponse({
+      ...alertedSnapshot,
+      financial_contract: null,
+      installments: [],
+      actions: {
+        ...alertedSnapshot.actions,
+        financial_contract: { path: "/legal_cases/1/financial_contract", method: "post" }
+      }
+    }))
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+  vi.stubGlobal("fetch", fetchMock)
+  const user = userEvent.setup()
+  render(<LegalCaseShowApp />)
+
+  await user.click(await screen.findByRole("button", { name: "Definir honorários" }))
+  await user.type(screen.getByLabelText("Valor fixo dos honorários"), "120000")
+
+  expect(screen.getByLabelText("Valor fixo dos honorários")).toHaveValue("1.200,00")
+
+  await user.click(screen.getByRole("button", { name: "Salvar contrato" }))
+
+  const submitted = fetchMock.mock.calls[1][1]?.body as FormData
+  expect(submitted.get("financial_contract[fixed_amount]")).toBe("1200.00")
+})
+
+test("shows a styled file picker with the selected contract document name", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+    ...alertedSnapshot,
+    financial_contract: null,
+    installments: [],
+    actions: {
+      ...alertedSnapshot.actions,
+      financial_contract: { path: "/legal_cases/1/financial_contract", method: "post" }
+    }
+  })))
+  const user = userEvent.setup()
+  render(<LegalCaseShowApp />)
+
+  await user.click(await screen.findByRole("button", { name: "Definir honorários" }))
+
+  const picker = screen.getByLabelText("Contrato assinado")
+  expect(screen.getByText("Selecionar arquivo")).toBeVisible()
+  expect(screen.getByText("Nenhum arquivo selecionado")).toBeVisible()
+
+  await user.upload(picker, new File(["contrato"], "contrato-assinado.pdf", { type: "application/pdf" }))
+
+  expect(screen.getByText("contrato-assinado.pdf")).toBeVisible()
 })
 
 test("lets an administrator register the outcome from a contextual modal", async () => {
@@ -444,13 +516,28 @@ test("does not expose outcome controls without administrator permission", async 
   expect(screen.queryByRole("button", { name: "Registrar desfecho" })).not.toBeInTheDocument()
 })
 
-test("reveals older timeline items on demand and keeps actions as links", async () => {
+test("maximizes and minimizes older timeline items on demand while keeping actions as links", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWithSixTimelineItems)))
   render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
 
-  await userEvent.setup().click(await screen.findByRole("button", { name: /Mostrar mais/ }))
+  expect(screen.queryByText("Andamento antigo")).not.toBeInTheDocument()
+  const toggle = await screen.findByTestId("legal-case-show-timeline-more")
+  expect(toggle.closest("h2")).not.toBeNull()
+  expect(toggle).toHaveTextContent("Timeline+")
+  expect(toggle).toHaveAttribute("aria-expanded", "false")
+
+  await user.click(toggle)
 
   expect(screen.getByText("Andamento antigo")).toBeVisible()
+  expect(screen.getByTestId("legal-case-show-timeline-more")).toHaveTextContent("Timeline−")
+  expect(screen.getByTestId("legal-case-show-timeline-more")).toHaveAttribute("aria-expanded", "true")
+
+  await user.click(screen.getByTestId("legal-case-show-timeline-more"))
+
+  expect(screen.queryByText("Andamento antigo")).not.toBeInTheDocument()
+  expect(screen.getByTestId("legal-case-show-timeline-more")).toHaveTextContent("Timeline+")
+  expect(screen.getByTestId("legal-case-show-timeline-more")).toHaveAttribute("aria-expanded", "false")
   expect(screen.getByRole("link", { name: "Novo andamento" })).toHaveAttribute("href", "/process_movements/new?process_id=1")
 })
 

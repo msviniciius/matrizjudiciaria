@@ -90,6 +90,23 @@ class Receivables::QueryTest < ActiveSupport::TestCase
     assert_equal [ matching ], receivables.to_a
   end
 
+  test "filters accounts by description client or process in the main search" do
+    client = create_client(full_name: "Cliente Financeiro")
+    legal_case = create_full_legal_case(client: client, internal_number: "PROC-FIN-001")
+    by_description = create_receivable(description: "Honorários estratégicos")
+    by_client = create_receivable(description: "Mensalidade", client: client)
+    by_process = create_receivable(description: "Parcela processual", client: client, legal_case: legal_case)
+    create_receivable(description: "Consulta avulsa")
+
+    description_result = Receivables::Query.new(office: default_office, params: { q: "estratégicos" }).call
+    client_result = Receivables::Query.new(office: default_office, params: { q: "Financeiro" }).call
+    process_result = Receivables::Query.new(office: default_office, params: { q: "PROC-FIN" }).call
+
+    assert_equal [ by_description.id ], description_result.pluck(:id)
+    assert_includes client_result.pluck(:id), by_client.id
+    assert_includes process_result.pluck(:id), by_process.id
+  end
+
   test "filters by a period received as unpermitted controller parameters" do
     matching = create_receivable(due_date: Date.current - 2.days)
     create_receivable(due_date: Date.current - 4.days)
@@ -110,7 +127,7 @@ class Receivables::QueryTest < ActiveSupport::TestCase
     contract = FinancialContract.create!(office: default_office, legal_case: legal_case, fixed_amount: 1_000,
       total_amount: 1_000, installment_count: 1)
     installment = contract.installments.create!(number: 1, due_date: Date.current, amount: 1_000)
-    legacy = create_receivable(legal_case: legal_case)
+    legacy = create_receivable(legal_case: legal_case, client: legal_case.client, unit: legal_case.unit)
 
     query = Receivables::Query.new(office: default_office, params: {})
 

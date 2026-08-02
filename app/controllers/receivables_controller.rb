@@ -12,6 +12,7 @@ class ReceivablesController < ApplicationController
       financial_scope: @financial_installments,
       reference_date: Date.current
     ).call
+    @advanced_filters_open = advanced_filters_open?
     load_filter_collections
   end
 
@@ -115,6 +116,10 @@ class ReceivablesController < ApplicationController
     @units = current_office.units.order(:name)
     @clients = current_office.clients.order(:full_name)
     @legal_cases = current_office.legal_cases.includes(:client, :unit).order(:internal_number)
+  end
+
+  def advanced_filters_open?
+    params[:period].present? || %i[unit_id client_id legal_case_id status].any? { |key| params[key].present? }
   end
 
   alias_method :load_form_collections, :load_filter_collections

@@ -230,17 +230,20 @@
       toggle.dataset.mainFiltersBound = "true";
 
       const initiallyOpen = container.dataset.filtersOpen === "true";
-      advanced.classList.toggle("is-open", initiallyOpen);
-      toggle.setAttribute("aria-expanded", String(initiallyOpen));
-
+      const fields = Array.from(advanced.querySelectorAll("input, select, textarea, button"));
       const icon = toggle.querySelector("span[aria-hidden='true']");
-      if (icon) icon.textContent = initiallyOpen ? "▾" : "▸";
+      const setOpen = (isOpen) => {
+        advanced.classList.toggle("is-open", isOpen);
+        toggle.setAttribute("aria-expanded", String(isOpen));
+        fields.forEach((field) => { field.disabled = !isOpen; });
+        if (icon) icon.textContent = isOpen ? "▾" : "▸";
+      };
+
+      setOpen(initiallyOpen);
 
       toggle.addEventListener("click", () => {
         const isOpen = !advanced.classList.contains("is-open");
-        advanced.classList.toggle("is-open", isOpen);
-        toggle.setAttribute("aria-expanded", String(isOpen));
-        if (icon) icon.textContent = isOpen ? "▾" : "▸";
+        setOpen(isOpen);
       });
     });
   };
@@ -1854,11 +1857,12 @@
 
     const sections = Array.from(container.querySelectorAll("[data-sidebar-section]"));
     const saved = loadSavedState();
+    const activeSection = sections.find((section) => section.querySelector(".nav-link.is-active"));
 
     sections.forEach((section) => {
       const key = section.dataset.sidebarSection;
       const hasActiveLink = section.querySelector(".nav-link.is-active");
-      const open = Object.prototype.hasOwnProperty.call(saved, key) ? !!saved[key] : !!hasActiveLink;
+      const open = activeSection ? section === activeSection : (Object.prototype.hasOwnProperty.call(saved, key) ? !!saved[key] : !!hasActiveLink);
       setSectionState(section, open);
     });
 

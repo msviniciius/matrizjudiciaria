@@ -6,6 +6,7 @@ import "./dashboard.css"
 
 type QueueCase = { id: number; internal_number: string; path: string; responsible_name: string; update_responsible_path: string }
 type Deadline = { id: number; title: string; legal_case_number: string; path: string }
+type FinancialSummary = { expected: string | number; received: string | number; open_balance: string | number; overdue: string | number; path: string }
 type Snapshot = {
   meta: { office_name: string; unit_name?: string; syncable_count: number; new_imported_events_count: number }
   kpis: Record<string, DistributionItem & { tone: string }>
@@ -13,8 +14,11 @@ type Snapshot = {
   risk_queue: Record<string, { label: string; count: number; path: string }>
   feed: { title: string; origin: string; internal_number: string; date?: string; highlight: boolean; path: string }[]
   distribution: { phase: DistributionItem[]; status: DistributionItem[] }
+  financial_summary?: FinancialSummary
   actions: { sync: string }
 }
+
+const formatCurrency = (value: string | number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value))
 
 export function DashboardApp() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
@@ -96,6 +100,7 @@ export function DashboardApp() {
       <section className="react-dashboard__kpis" aria-label="Indicadores operacionais">
         {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); selectFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
       </section>
+      {snapshot.financial_summary && <FinancialSummaryPanel summary={snapshot.financial_summary} />}
       {selectedFilter && <p className="react-dashboard__filter-status" role="status">Filtro selecionado: {selectedFilter.label} ({selectedFilter.count} processos) <a href={selectedFilter.path}>Abrir processos filtrados</a></p>}
       {nextAction && <section className="react-dashboard__next-action" aria-labelledby="next-action-title">
         <div>
@@ -129,4 +134,29 @@ export function DashboardApp() {
 
 function Queue({ title, items, empty }: { title: string; items: Array<QueueCase | Deadline>; empty: string }) {
   return <article className="react-dashboard__card"><h4>{title}</h4>{items.length ? items.map((item) => <a href={item.path} key={item.id}>{"internal_number" in item ? item.internal_number : item.title}<small>{"legal_case_number" in item ? item.legal_case_number : "Abrir processo"}</small></a>) : <p>{empty}</p>}</article>
+}
+
+function FinancialSummaryPanel({ summary }: { summary: FinancialSummary }) {
+  return <section className="react-dashboard__financial" aria-label="Resumo financeiro">
+    <div className="react-dashboard__financial-head">
+      <div>
+        <p className="react-dashboard__eyebrow">Financeiro</p>
+        <h3>Resumo financeiro</h3>
+      </div>
+      <a className="react-dashboard__financial-action" href={summary.path}>Ver financeiro →</a>
+    </div>
+    <div className="react-dashboard__financial-grid">
+      <FinancialMetric label="Previsto" value={summary.expected} tone="primary" />
+      <FinancialMetric label="Recebido" value={summary.received} tone="success" />
+      <FinancialMetric label="Em aberto" value={summary.open_balance} tone="neutral" />
+      <FinancialMetric label="Vencido" value={summary.overdue} tone="danger" />
+    </div>
+  </section>
+}
+
+function FinancialMetric({ label, value, tone }: { label: string; value: string | number; tone: "primary" | "success" | "neutral" | "danger" }) {
+  return <article className={`react-dashboard__financial-metric react-dashboard__financial-metric--${tone}`}>
+    <span>{label}</span>
+    <strong>{formatCurrency(value)}</strong>
+  </article>
 }

@@ -1,32 +1,50 @@
-<section class="receivables-filters dashboard-section">
-  <%= form_with url: receivables_path, method: :get, class: "receivables-filters__form" do |form| %>
-    <div>
-      <%= form.label :period_start, "De" %>
-      <%= form.date_field :period_start, name: "period[start]", value: params.dig(:period, :start) || params.dig("period", "start") || (Date.current - 29.days) %>
+<section class="case-section case-section--filters receivables-filters">
+  <%= form_with url: receivables_path, method: :get, local: true, class: "main-filters main-filters--clients-pattern", data: { main_filters: true, filters_open: @advanced_filters_open } do |form| %>
+    <div class="main-filters__bar">
+      <%= form.text_field :q, value: params[:q], placeholder: "Descrição, cliente ou processo", class: "main-filters__q" %>
+
+      <%= form.submit "Buscar", class: "main-filters__submit" %>
+
+      <button
+        type="button"
+        class="main-filters__toggle"
+        data-main-filters-toggle
+        aria-expanded="<%= @advanced_filters_open ? 'true' : 'false' %>"
+      >
+        Filtros avançados
+      </button>
+
+      <%= link_to "Limpar filtros", receivables_path, class: "main-filters__clear" %>
     </div>
-    <div>
-      <%= form.label :period_end, "Até" %>
-      <%= form.date_field :period_end, name: "period[end]", value: params.dig(:period, :end) || params.dig("period", "end") || Date.current %>
-    </div>
-    <div>
-      <%= form.label :unit_id, "Unidade" %>
-      <%= form.collection_select :unit_id, @units, :id, :name, { include_blank: "Matriz e todas as unidades", selected: params[:unit_id] }, {} %>
-    </div>
-    <div>
-      <%= form.label :client_id, "Cliente" %>
-      <%= form.collection_select :client_id, @clients, :id, :full_name, { include_blank: "Todos os clientes", selected: params[:client_id] }, {} %>
-    </div>
-    <div>
-      <%= form.label :legal_case_id, "Processo" %>
-      <%= form.collection_select :legal_case_id, @legal_cases, :id, :internal_number, { include_blank: "Todos os processos", selected: params[:legal_case_id] }, {} %>
-    </div>
-    <div>
-      <%= form.label :status, "Situação" %>
-      <%= form.select :status, [["Todas", ""]] + enum_options_for(Receivable, :status), selected: params[:status] %>
-    </div>
-    <div class="receivables-filters__actions">
-      <%= form.submit "Aplicar filtros", class: "btn btn-primary" %>
-      <%= link_to "Limpar", receivables_path, class: "btn btn-secondary" %>
+
+    <div class="main-filters__advanced <%= "is-open" if @advanced_filters_open %>" data-main-filters-advanced>
+      <div class="main-filters__advanced-fields">
+        <div>
+          <%= form.label :period_start, "De" %>
+          <%= form.date_field :period_start, name: "period[start]", value: params.dig(:period, :start) || params.dig("period", "start") || (Date.current - 29.days) %>
+        </div>
+        <div>
+          <%= form.label :period_end, "Até" %>
+          <%= form.date_field :period_end, name: "period[end]", value: params.dig(:period, :end) || params.dig("period", "end") || Date.current %>
+        </div>
+        <div>
+          <%= form.label :unit_id, "Unidade" %>
+          <%= form.collection_select :unit_id, @units, :id, :name, { include_blank: "Matriz e todas as unidades", selected: params[:unit_id] }, {} %>
+        </div>
+        <div>
+          <%= form.label :client_id, "Cliente" %>
+          <%= form.collection_select :client_id, @clients, :id, :full_name, { include_blank: "Todos os clientes", selected: params[:client_id] }, {} %>
+        </div>
+        <div>
+          <%= form.label :legal_case_id, "Processo" %>
+          <%= form.collection_select :legal_case_id, @legal_cases, :id, :internal_number, { include_blank: "Todos os processos", selected: params[:legal_case_id] }, {} %>
+        </div>
+        <div>
+          <%= form.label :status, "Situação" %>
+          <%= form.select :status, [["Todas", ""]] + enum_options_for(Receivable, :status), selected: params[:status] %>
+        </div>
+      </div>
+
     </div>
   <% end %>
 </section>
