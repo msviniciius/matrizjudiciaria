@@ -574,10 +574,10 @@ function FinancialPanel({
     <div className="react-legal-case-show__financial-header">
       <div>
         <p className="react-legal-case-show__eyebrow">Honorários e recebimentos</p>
-        <h2 id="financial-heading">Financeiro</h2>
+        <h2 id="financial-heading">Honorários do processo</h2>
       </div>
       <button type="button" className="react-legal-case-show__actions-button" onClick={onConfigure}>
-        {contract ? "Editar contrato financeiro" : "Configurar contrato financeiro"}
+        {contract ? "Editar honorários" : "Definir honorários"}
       </button>
     </div>
     {!contract && <p>Nenhum contrato financeiro configurado.</p>}
@@ -664,8 +664,8 @@ function FinancialContractModal({
     <section className="react-legal-case-show__outcome-modal react-legal-case-show__financial-modal" role="dialog" aria-modal="true" aria-labelledby="financial-contract-modal-heading">
       <div className="react-legal-case-show__outcome-modal-header">
         <div>
-          <p className="react-legal-case-show__eyebrow">Financeiro do processo</p>
-          <h2 id="financial-contract-modal-heading">{contract ? "Editar contrato financeiro" : "Configurar contrato financeiro"}</h2>
+          <p className="react-legal-case-show__eyebrow">Honorários do processo</p>
+          <h2 id="financial-contract-modal-heading">Definir honorários e condições de pagamento</h2>
         </div>
         <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} disabled={pending} aria-label="Fechar contrato financeiro">×</button>
       </div>

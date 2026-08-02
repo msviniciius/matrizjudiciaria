@@ -186,10 +186,10 @@ test("shows an empty financial panel and opens the contract setup action", async
   })))
   render(<LegalCaseShowApp />)
 
-  expect(await screen.findByRole("heading", { name: "Financeiro" })).toBeVisible()
+  expect(await screen.findByRole("heading", { name: "Honorários do processo" })).toBeVisible()
   expect(screen.getByText("Nenhum contrato financeiro configurado.")).toBeVisible()
-  await userEvent.setup().click(screen.getByRole("button", { name: "Configurar contrato financeiro" }))
-  expect(screen.getByRole("dialog", { name: "Configurar contrato financeiro" })).toBeVisible()
+  await userEvent.setup().click(screen.getByRole("button", { name: "Definir honorários" }))
+  expect(screen.getByRole("dialog", { name: "Definir honorários e condições de pagamento" })).toBeVisible()
 })
 
 test("opens a populated financial contract with its existing editable installment schedule", async () => {
@@ -224,7 +224,7 @@ test("opens a populated financial contract with its existing editable installmen
   })))
   render(<LegalCaseShowApp />)
 
-  await userEvent.setup().click(await screen.findByRole("button", { name: "Editar contrato financeiro" }))
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Editar honorários" }))
 
   expect(screen.getByLabelText("Primeiro vencimento")).toHaveValue("2026-11-12")
   expect(screen.getByLabelText("Valor da 1ª parcela")).toHaveValue(500)
@@ -247,7 +247,7 @@ test("submits manually edited installment values and due dates", async () => {
   const user = userEvent.setup()
   render(<LegalCaseShowApp />)
 
-  await user.click(await screen.findByRole("button", { name: "Configurar contrato financeiro" }))
+  await user.click(await screen.findByRole("button", { name: "Definir honorários" }))
   await user.type(screen.getByLabelText("Valor fixo dos honorários"), "1200")
   await user.selectOptions(screen.getByLabelText("Quantidade de parcelas"), "2")
   fireEvent.change(screen.getByLabelText("Primeiro vencimento"), { target: { value: "2026-08-10" } })
