@@ -570,6 +570,8 @@ function FinancialPanel({
   onConfigure: () => void
   onRegisterPayment: (installment: FinancialInstallment) => void
 }) {
+  const [expanded, setExpanded] = useState(false)
+
   return <section className="react-legal-case-show__financial" aria-labelledby="financial-heading">
     <div className="react-legal-case-show__financial-header">
       <div>
@@ -582,6 +584,10 @@ function FinancialPanel({
     </div>
     {!contract && <p>Nenhum contrato financeiro configurado.</p>}
     {contract && <>
+      <button type="button" className="react-legal-case-show__financial-toggle" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+        {expanded ? "Ocultar detalhes" : "Mostrar detalhes"}
+      </button>
+      {expanded && <>
       <dl className="react-legal-case-show__financial-summary">
         <div><dt>Honorários fixos</dt><dd>{contract.fixed_amount_label}</dd></div>
         <div><dt>Total contratado</dt><dd>{contract.total_amount_label}</dd></div>
@@ -605,6 +611,7 @@ function FinancialPanel({
           </li>)}
         </ol>
       </div>
+      </>}
     </>}
   </section>
 }
