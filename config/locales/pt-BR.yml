@@ -59,6 +59,7 @@ pt-BR:
         record_invalid: Registro inválido
         blank: não pode ficar em branco
         required: deve existir
+        inclusion: não está incluído nas opções disponíveis
     models:
       client: Cliente
       court: Órgão/Vara/Tribunal
@@ -72,6 +73,7 @@ pt-BR:
       process_movement: Andamento processual
       process_exam: Perícia
       receivable: Conta a receber
+      financial_contract: Contrato de honorários
     attributes:
       client:
         full_name: Nome completo
@@ -92,6 +94,13 @@ pt-BR:
         father_name: Nome do pai
         notes: Observações
         cadastro_pendente: Cadastro pendente
+      financial_contract:
+        includes_percentage: Percentual adicional
+        fixed_amount: Valor fixo dos honorários
+        percentage: Percentual adicional
+        percentage_basis: Base de cálculo
+        client_received_amount: Valor recebido pelo cliente
+        installment_count: Quantidade de parcelas
       court:
         name: Nome
       district:
