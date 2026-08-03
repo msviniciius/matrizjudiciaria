@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  mount MissionControl::Jobs::Engine, at: "/jobs"
+
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
@@ -39,6 +41,17 @@ Rails.application.routes.draw do
   resources :movement_types
   resources :movement_templates
   resources :process_movements
+  resources :legal_publications, path: "publicacoes", only: :index do
+    member do
+      patch :mark_read
+    end
+  end
+
+  namespace :integrations do
+    namespace :escavador do
+      post :callbacks, to: "callbacks#create"
+    end
+  end
 
   resources :legal_cases do
     collection do

@@ -126,14 +126,42 @@ class ApplicationController < ActionController::Base
       .order(:due_date)
       .limit(5)
 
+    @navbar_imported_events = CaseEvent
+      .joins(:legal_case)
+      .includes(legal_case: :client)
+      .where(legal_cases: { office_id: current_office.id })
+      .where(entry_kind: "andamento")
+      .where.not(pje_external_id: nil)
+      .where("case_events.created_at > COALESCE(legal_cases.last_viewed_events_at, ?)", 1.week.ago)
+      .order(created_at: :desc)
+      .limit(5)
+
+    @navbar_publications = LegalPublication
+      .includes(:legal_case)
+      .where(office: current_office)
+      .unread
+      .recent
+      .limit(5)
+
     if current_unit.present?
       @navbar_deadlines = @navbar_deadlines.where(legal_cases: { unit_id: current_unit&.id })
       @navbar_tasks = @navbar_tasks.where(legal_cases: { unit_id: current_unit&.id })
+      @navbar_imported_events = @navbar_imported_events.where(legal_cases: { unit_id: current_unit.id })
+      @navbar_publications = @navbar_publications
+        .left_outer_joins(:legal_case)
+        .where("legal_publications.legal_case_id IS NULL OR legal_cases.unit_id = ?", current_unit.id)
     elsif matrix_mode?
       @navbar_deadlines = @navbar_deadlines.where(legal_cases: { unit_id: nil })
       @navbar_tasks = @navbar_tasks.where(legal_cases: { unit_id: nil })
+      @navbar_imported_events = @navbar_imported_events.where(legal_cases: { unit_id: nil })
+      @navbar_publications = @navbar_publications
+        .left_outer_joins(:legal_case)
+        .where("legal_publications.legal_case_id IS NULL OR legal_cases.unit_id IS NULL")
     end
 
-    @navbar_notification_total = @navbar_deadlines.size + @navbar_tasks.size
+    @navbar_notification_total = @navbar_deadlines.size +
+      @navbar_tasks.size +
+      @navbar_imported_events.size +
+      @navbar_publications.size
   end
 end

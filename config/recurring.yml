@@ -3,18 +3,32 @@
 # O Solid Queue carrega tarefas recorrentes deste arquivo automaticamente.
 # Para desenvolvimento, rode: bin/rails solid_queue:start
 # Em producao, o Solid Queue roda como processo separado via Docker/Kamal.
-#
+
 production:
   # Sincronizacao automatica de andamentos do CNJ DataJud.
   # Itera todos os escritorios e seus tribunais habilitados.
   pje_cnj_sync_case_events:
     class: Pje::Ma::ImportCaseEventsJob
-    schedule: "*/30 * * * *"
+    schedule: "0 8-19 * * 1-5"
     description: "Busca andamentos do CNJ DataJud para todos os escritorios e tribunais habilitados"
 
+  djma_import_publications:
+    class: Integrations::Djma::ImportPublicationsJob
+    schedule: "30 8-19 * * 1-5"
+    description: "Busca publicacoes do DJMA pela OAB e processos cadastrados"
+
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+
 development:
-  # Em desenvolvimento, rodar a cada 2 horas para nao sobrecarregar
+  # Em desenvolvimento, rodar a cada 2 horas para nao sobrecarregar.
   pje_cnj_sync_case_events:
     class: Pje::Ma::ImportCaseEventsJob
     schedule: "0 */2 * * *"
     description: "Busca andamentos do CNJ DataJud para todos os escritorios e tribunais habilitados"
+
+  djma_import_publications:
+    class: Integrations::Djma::ImportPublicationsJob
+    schedule: "30 */2 * * *"
+    description: "Busca publicacoes do DJMA pela OAB e processos cadastrados"

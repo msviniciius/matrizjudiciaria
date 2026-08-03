@@ -170,6 +170,10 @@ type Snapshot = {
 }
 
 type Outcome = "undefined" | "won" | "lost" | "settled" | "partially_won"
+type TimelineGroup = {
+  dateLabel: string
+  items: TimelineItem[]
+}
 
 const outcomeOptions: Array<{ value: Outcome; label: string }> = [
   { value: "undefined", label: "Sem definição" },
@@ -182,6 +186,21 @@ const outcomeOptions: Array<{ value: Outcome; label: string }> = [
 function fetchSnapshot(): Promise<Snapshot> {
   return fetch(`${window.location.pathname}.json`, { headers: { Accept: "application/json" } })
     .then((response) => response.ok ? response.json() : Promise.reject(new Error("snapshot request failed")))
+}
+
+function groupTimelineByDate(items: TimelineItem[]): TimelineGroup[] {
+  return items.reduce<TimelineGroup[]>((groups, item) => {
+    const dateLabel = item.occurred_at_label || "Sem data"
+    const currentGroup = groups[groups.length - 1]
+
+    if (currentGroup?.dateLabel === dateLabel) {
+      currentGroup.items.push(item)
+    } else {
+      groups.push({ dateLabel, items: [item] })
+    }
+
+    return groups
+  }, [])
 }
 
 export function LegalCaseShowApp() {
@@ -386,6 +405,7 @@ export function LegalCaseShowApp() {
 
   const timelineLimit = 5
   const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, timelineLimit)
+  const timelineGroups = groupTimelineByDate(visibleTimeline)
   const remainingTimelineItems = snapshot.timeline.length - visibleTimeline.length
   const deadlineAlert = snapshot.alerts.deadline_near || snapshot.alerts.deadline_overdue
 
@@ -461,13 +481,24 @@ export function LegalCaseShowApp() {
       <h2 id="timeline-heading">
         {snapshot.timeline.length > timelineLimit ? <button type="button" data-testid="legal-case-show-timeline-more" aria-expanded={showAllTimeline} onClick={() => setShowAllTimeline((current) => !current)}><span>Timeline</span><span aria-hidden="true">{showAllTimeline ? "−" : "+"}</span></button> : "Timeline"}
       </h2>
-      {visibleTimeline.length ? <ol>
-        {visibleTimeline.map((item) => <li className={item.highlight ? "react-legal-case-show__timeline-item react-legal-case-show__timeline-item--highlight" : "react-legal-case-show__timeline-item"} key={`${item.source}-${item.id}`}>
-          <p className="react-legal-case-show__timeline-meta">{item.source_label || item.source} · {item.occurred_at_label}</p>
-          <h3>{item.title}</h3>
-          {item.description && <p>{item.description}</p>}
-          {item.movement_type && <p>{item.movement_type}</p>}
-          {item.exam_summary && <p>Perícia: {item.exam_summary}</p>}
+      {timelineGroups.length ? <ol className="react-legal-case-show__timeline-tree">
+        {timelineGroups.map((group) => <li className="react-legal-case-show__timeline-group" role="group" aria-label={group.dateLabel} key={group.dateLabel}>
+          <div className="react-legal-case-show__timeline-date">
+            <span className="react-legal-case-show__timeline-date-marker" aria-hidden="true" />
+            <span className="react-legal-case-show__timeline-date-label">{group.dateLabel}</span>
+          </div>
+          <ol className="react-legal-case-show__timeline-events">
+            {group.items.map((item) => <li className={item.highlight ? "react-legal-case-show__timeline-item react-legal-case-show__timeline-item--highlight" : "react-legal-case-show__timeline-item"} key={`${item.source}-${item.id}`}>
+              <span className="react-legal-case-show__timeline-item-marker" aria-hidden="true" />
+              <article className="react-legal-case-show__timeline-card">
+                <p className="react-legal-case-show__timeline-meta">{item.source_label || item.source}</p>
+                <h3>{item.title}</h3>
+                {item.description && <p>{item.description}</p>}
+                {item.movement_type && <p>{item.movement_type}</p>}
+                {item.exam_summary && <p>Perícia: {item.exam_summary}</p>}
+              </article>
+            </li>)}
+          </ol>
         </li>)}
       </ol> : <p>Nenhum andamento cadastrado.</p>}
     </section>

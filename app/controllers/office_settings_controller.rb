@@ -31,6 +31,7 @@ class OfficeSettingsController < ApplicationController
       :legal_name,
       :cnpj,
       :oab_registration,
+      :oab_state,
       :email,
       :phone,
       :zip_code,

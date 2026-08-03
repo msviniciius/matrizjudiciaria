@@ -1,11 +1,11 @@
 import "@testing-library/jest-dom/vitest"
 import { readFileSync } from "node:fs"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, vi } from "vitest"
 import { LegalCaseShowApp } from "./LegalCaseShowApp"
 
-const timelineItem = (id: number, title: string) => ({
+const timelineItem = (id: number, title: string, overrides = {}) => ({
   id,
   source: "process_movement",
   source_label: "Andamento",
@@ -18,7 +18,8 @@ const timelineItem = (id: number, title: string) => ({
   highlight: id === 1,
   nature: null,
   administrative_situation: null,
-  exam_summary: null
+  exam_summary: null,
+  ...overrides
 })
 
 const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
@@ -184,6 +185,23 @@ test("describes an empty timeline and exposes each operational section through a
     expect(screen.getByRole("button", { name: title })).toBeVisible()
   })
   expect(screen.getByTestId("legal-case-show-prazos")).toHaveAttribute("aria-controls", "legal-case-show-prazos")
+})
+
+test("groups timeline movements by date in a vertical tree", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([
+    timelineItem(1, "Intimação publicada", { occurred_at: "2026-08-03", occurred_at_label: "03/08/2026" }),
+    timelineItem(2, "Disponibilizado no DJE", { occurred_at: "2026-08-03", occurred_at_label: "03/08/2026" }),
+    timelineItem(3, "Enviado ao diário", { occurred_at: "2026-08-02", occurred_at_label: "02/08/2026" })
+  ]))))
+  render(<LegalCaseShowApp />)
+
+  const latestGroup = await screen.findByRole("group", { name: "03/08/2026" })
+  const previousGroup = screen.getByRole("group", { name: "02/08/2026" })
+
+  expect(latestGroup).toHaveClass("react-legal-case-show__timeline-group")
+  expect(within(latestGroup).getByText("Intimação publicada")).toBeVisible()
+  expect(within(latestGroup).getByText("Disponibilizado no DJE")).toBeVisible()
+  expect(within(previousGroup).getByText("Enviado ao diário")).toBeVisible()
 })
 
 test("shows an empty financial panel and opens the contract setup action", async () => {
