@@ -120,7 +120,7 @@ class PjeMaImportCaseEventsJobTest < ActiveSupport::TestCase
     )
 
     assert_not duplicado.valid?
-    assert_includes duplicado.errors[:pje_external_id].to_s, "taken"
+    assert_includes duplicado.errors[:pje_external_id], "já está em uso"
   end
 
   test "permite case_event sem pje_external_id (criado manualmente)" do
