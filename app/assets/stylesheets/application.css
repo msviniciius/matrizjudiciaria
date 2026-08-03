@@ -718,7 +718,22 @@ select {
 
 .aurora-form input::placeholder,
 .aurora-form textarea::placeholder { color: rgba(183, 201, 230, .52); }
-.aurora-form .field-help { border-color: rgba(120, 239, 208, .5); color: #78efd0; }
+.aurora-form p.field-help {
+  width: auto;
+  height: auto;
+  margin: 8px 0 0;
+  border: 0;
+  border-left: 2px solid rgba(120, 239, 208, .5);
+  border-radius: 0;
+  display: block;
+  padding: 2px 0 2px 10px;
+  color: var(--aurora-form-muted);
+  font-size: .82rem;
+  font-weight: 500;
+  line-height: 1.45;
+  background: transparent;
+  cursor: default;
+}
 .aurora-form .inline-client-actions { align-items: stretch; }
 .aurora-form .inline-client-actions select {
   flex: 1 1 auto;
@@ -728,6 +743,9 @@ select {
 }
 .aurora-form .inline-client-actions .btn-icon { min-height: 46px; min-width: 46px; }
 .aurora-form .inline-client-actions .custom-select { flex: 1 1 auto; min-width: 0; }
+.money-input { align-items: center; display: flex; position: relative; }
+.money-input__prefix { color: var(--aurora-form-muted); font-weight: 700; left: 14px; pointer-events: none; position: absolute; z-index: 1; }
+.money-input input { padding-left: 42px; width: 100%; }
 .aurora-form .inline-client-actions .custom-select__trigger {
   height: 46px;
   padding: 0 14px;
@@ -1773,6 +1791,101 @@ td.table-actions { width: 1%; }
   align-items: center;
 }
 
+.main-filters--clients-pattern {
+  background: linear-gradient(145deg, var(--aurora-surface-raised), var(--aurora-surface));
+  border: 1px solid var(--aurora-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(4, 12, 31, .24);
+  gap: .8rem;
+  padding: 1rem;
+}
+
+.main-filters--clients-pattern .main-filters__bar {
+  align-items: end;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: .65rem;
+  padding: 0;
+}
+
+.main-filters--clients-pattern label {
+  color: var(--aurora-muted);
+  display: grid;
+  font-size: .8rem;
+  gap: .35rem;
+}
+
+.main-filters--clients-pattern input,
+.main-filters--clients-pattern select {
+  background: rgba(4, 19, 43, .68);
+  border: 1px solid #3e5c83;
+  border-radius: 8px;
+  color: var(--aurora-ink);
+  font: inherit;
+  min-height: 2.55rem;
+  padding: .55rem .65rem;
+  width: 100%;
+}
+
+.main-filters--clients-pattern option {
+  background: #102747;
+  color: var(--aurora-ink);
+}
+
+.main-filters--clients-pattern .main-filters__q {
+  background: rgba(4, 19, 43, .68);
+  border: 1px solid #3e5c83;
+  border-radius: 8px;
+  color: var(--aurora-ink);
+  min-height: 2.55rem;
+  padding: .55rem .65rem;
+}
+
+.main-filters--clients-pattern .main-filters__q:focus {
+  border-color: var(--aurora-mint);
+}
+
+.main-filters--clients-pattern .main-filters__submit,
+.main-filters--clients-pattern .main-filters__toggle,
+.main-filters--clients-pattern .main-filters__clear {
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  min-height: 2.55rem;
+  padding: .55rem .75rem;
+}
+
+.main-filters--clients-pattern .main-filters__submit {
+  background: var(--aurora-mint);
+  color: #102747;
+  font-weight: 700;
+}
+
+.main-filters--clients-pattern .main-filters__toggle,
+.main-filters--clients-pattern .main-filters__clear {
+  background: transparent;
+  border: 1px solid var(--aurora-mint);
+  color: var(--aurora-ink);
+}
+
+.main-filters--clients-pattern .main-filters__toggle[aria-expanded="true"] {
+  background: rgba(120, 239, 208, .14);
+}
+
+.main-filters--clients-pattern .main-filters__advanced {
+  border-top: 0;
+  margin-top: 0;
+  padding: 0;
+}
+
+.main-filters--clients-pattern .main-filters__advanced-fields {
+  display: grid;
+  gap: .8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .main-filters__toggle {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
@@ -1806,6 +1919,29 @@ td.table-actions { width: 1%; }
   min-height: 44px;
   padding: 0 18px;
   border: 0;
+}
+
+.main-filters.main-filters--clients-pattern .main-filters__submit {
+  background: var(--aurora-mint);
+  border: 0;
+  border-radius: 8px;
+  color: #102747;
+  font-weight: 700;
+  min-height: 2.55rem;
+  padding: .55rem .75rem;
+  width: auto;
+}
+
+.main-filters__clear {
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 .main-filters__advanced {
@@ -1843,6 +1979,41 @@ td.table-actions { width: 1%; }
 
 .listing-head h3 { margin: 0; font-size: 1rem; color: var(--text); }
 .listing-head p { margin: 0; font-size: 0.82rem; color: var(--muted); }
+
+/* ===== Receivables dashboard ===== */
+.receivables-dashboard { display: grid; gap: 14px; }
+.receivables-dashboard__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.receivables-dashboard__head h2 { color: var(--aurora-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 1.55rem; margin: 0; }
+.receivables-dashboard__head p { color: var(--aurora-muted); margin: 5px 0 0; }
+.receivables-dashboard__eyebrow { color: var(--aurora-mint) !important; font-size: .74rem; font-weight: 700; letter-spacing: .12em; margin: 0 !important; text-transform: uppercase; }
+.receivables-filters { margin: 0; }
+.receivables-filters__form { align-items: end; display: grid; gap: 10px; grid-template-columns: repeat(6, minmax(130px, 1fr)); }
+.receivables-filters__actions { display: flex; gap: 8px; }
+.receivables-filters__actions .btn { justify-content: center; min-height: 44px; white-space: nowrap; }
+.receivables-metrics { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.receivables-metric { background: linear-gradient(145deg, rgba(20, 44, 81, .94), rgba(7, 18, 38, .94)); border: 1px solid var(--aurora-line); border-radius: 14px; display: grid; gap: 5px; min-height: 96px; padding: 16px; }
+.receivables-metric span { color: var(--aurora-muted); font-size: .79rem; font-weight: 600; }
+.receivables-metric strong { color: var(--aurora-ink); font-size: 1.25rem; }
+.receivables-metric--primary { border-color: rgba(115, 183, 255, .48); }
+.receivables-metric--success { border-color: rgba(50, 213, 131, .48); }
+.receivables-metric--success strong { color: var(--aurora-success); }
+.receivables-metric--danger { border-color: rgba(255, 152, 174, .48); }
+.receivables-metric--danger strong { color: var(--aurora-danger); }
+.receivables-metric--warning { border-color: rgba(255, 215, 123, .48); }
+.receivables-metric--warning strong { color: var(--aurora-warning); }
+.receivables-chart { margin: 0; }
+.receivables-chart__bars { align-items: end; display: flex; gap: 16px; min-height: 176px; overflow-x: auto; padding: 8px 2px 0; }
+.receivables-chart__item { display: grid; flex: 1 0 86px; gap: 7px; min-width: 86px; text-align: center; }
+.receivables-chart__value { color: var(--aurora-mint); font-size: .76rem; font-weight: 700; }
+.receivables-chart__track { align-items: end; background: rgba(120, 239, 208, .08); border-radius: 8px 8px 2px 2px; display: flex; height: 102px; overflow: hidden; }
+.receivables-chart__track span { background: linear-gradient(180deg, var(--aurora-mint), var(--aurora-blue)); border-radius: 8px 8px 2px 2px; min-height: 4px; width: 100%; }
+.receivables-chart__item time { color: var(--aurora-muted); font-size: .72rem; }
+.receivables-table { margin: 0; }
+.receivables-table td small { color: var(--aurora-muted); display: block; font-size: .75rem; margin-top: 3px; }
+.receivables-payment-form { align-items: center; display: flex; gap: 5px; }
+.receivables-payment-form input[type="number"] { min-height: 30px; min-width: 78px; padding: 4px 6px; width: 86px; }
+@media (max-width: 1080px) { .receivables-filters__form { grid-template-columns: repeat(3, minmax(0, 1fr)); } .receivables-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .receivables-dashboard__head { align-items: flex-start; flex-direction: column; } .receivables-filters__form, .receivables-metrics { grid-template-columns: 1fr; } .receivables-filters__actions { display: grid; grid-template-columns: 1fr 1fr; } }
 
 /* ===== Auth Pages ===== */
 .auth-page {

@@ -193,7 +193,8 @@ class DashboardController < ApplicationController
     @dashboard_snapshot ||= DashboardSnapshot.new(
       office: current_office,
       unit: current_unit,
-      all_units_mode: all_units_mode?
+      all_units_mode: all_units_mode?,
+      current_user: current_user
     )
   end
 

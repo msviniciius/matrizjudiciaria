@@ -1,0 +1,73 @@
+<%= form_with model: receivable, class: "app-form aurora-form" do |form| %>
+  <% if receivable.errors.any? %>
+    <div class="form-errors">
+      <h2>Revise os campos destacados</h2>
+      <ul><% receivable.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head"><div><h3>Cobrança</h3><p>Identifique a cobrança, seu gatilho e vencimento.</p></div></div>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :description, "Descrição" %>
+        <%= form.text_field :description, required: true, autofocus: true %>
+      </div>
+      <div>
+        <%= form.label :amount, "Valor total" %>
+        <div class="money-input">
+          <span class="money-input__prefix">R$</span>
+          <%= form.text_field :amount, data: { mask: "currency-br" }, inputmode: "decimal", required: true %>
+        </div>
+      </div>
+      <div>
+        <%= form.label :due_date, "Data de vencimento" %>
+        <%= form.date_field :due_date %>
+      </div>
+      <div>
+        <%= form.label :trigger, "Gatilho" %>
+        <%= form.select :trigger, enum_options_for(Receivable, :trigger) %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head"><div><h3>Vínculo</h3><p>Associe a cobrança a um processo, cliente e unidade do escritório.</p></div></div>
+    <div class="form-grid">
+      <div class="field-full">
+        <%= form.label :legal_case_id, "Processo" %>
+        <%= form.collection_select :legal_case_id, @legal_cases, :id, :display_number_and_client,
+          { include_blank: "Sem processo" },
+          { data: { receivable_process_select: true, context_url_template: process_context_receivable_path("PROCESS_ID") } } %>
+        <p class="field-help">Ao selecionar um processo, o cliente e a unidade são preenchidos automaticamente.</p>
+      </div>
+      <div>
+        <%= form.label :client_id, "Cliente" %>
+        <%= form.collection_select :client_id, @clients, :id, :full_name, { include_blank: "Sem cliente" }, { data: { receivable_linked_client: true } } %>
+      </div>
+      <div>
+        <%= form.label :unit_id, "Unidade" %>
+        <%= form.collection_select :unit_id, @units, :id, :name, { include_blank: "Matriz" }, { data: { receivable_linked_unit: true } } %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head"><div><h3>Recebimento</h3><p>Registre informações complementares para a cobrança.</p></div></div>
+    <div class="form-grid">
+      <div>
+        <%= form.label :payment_method, "Forma de pagamento" %>
+        <%= form.text_field :payment_method, placeholder: "Ex.: Pix, transferência" %>
+      </div>
+      <div class="field-full">
+        <%= form.label :notes, "Observações" %>
+        <%= form.text_area :notes, placeholder: "Informações adicionais sobre a cobrança" %>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions aurora-form__actions">
+    <%= link_to "Voltar", receivables_path, class: "btn btn-secondary" %>
+    <%= form.submit receivable.persisted? ? "Salvar alterações" : "Cadastrar conta", class: "btn btn-primary" %>
+  </div>
+<% end %>

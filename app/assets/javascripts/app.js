@@ -64,6 +64,52 @@
 })();
 
 (() => {
+  const initReceivableProcessSelect = () => {
+    document.querySelectorAll("[data-receivable-process-select]").forEach((select) => {
+      if (select.dataset.receivableProcessBound === "true") return;
+      select.dataset.receivableProcessBound = "true";
+
+      select.addEventListener("change", async () => {
+        const processId = select.value;
+        const clientSelect = select.form?.querySelector("[data-receivable-linked-client]");
+        const unitSelect = select.form?.querySelector("[data-receivable-linked-unit]");
+        if (!processId) {
+          [clientSelect, unitSelect].forEach((linkedSelect) => {
+            if (!linkedSelect) return;
+            linkedSelect.value = "";
+            linkedSelect.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+          return;
+        }
+
+        const template = select.dataset.contextUrlTemplate;
+        if (!template || !clientSelect || !unitSelect) return;
+
+        select.disabled = true;
+        try {
+          const response = await fetch(template.replace("PROCESS_ID", encodeURIComponent(processId)), {
+            headers: { Accept: "application/json" }
+          });
+          if (!response.ok) throw new Error("Não foi possível carregar o vínculo do processo.");
+          const context = await response.json();
+          clientSelect.value = context.client_id || "";
+          unitSelect.value = context.unit_id || "";
+          clientSelect.dispatchEvent(new Event("change", { bubbles: true }));
+          unitSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        } catch (error) {
+          console.error(error);
+        } finally {
+          select.disabled = false;
+        }
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initReceivableProcessSelect);
+  document.addEventListener("DOMContentLoaded", initReceivableProcessSelect);
+})();
+
+(() => {
   const initOfficeSettingsInteractions = () => {
     const form = document.querySelector("[data-office-settings-form]");
     if (!form) return;
@@ -184,17 +230,20 @@
       toggle.dataset.mainFiltersBound = "true";
 
       const initiallyOpen = container.dataset.filtersOpen === "true";
-      advanced.classList.toggle("is-open", initiallyOpen);
-      toggle.setAttribute("aria-expanded", String(initiallyOpen));
-
+      const fields = Array.from(advanced.querySelectorAll("input, select, textarea, button"));
       const icon = toggle.querySelector("span[aria-hidden='true']");
-      if (icon) icon.textContent = initiallyOpen ? "▾" : "▸";
+      const setOpen = (isOpen) => {
+        advanced.classList.toggle("is-open", isOpen);
+        toggle.setAttribute("aria-expanded", String(isOpen));
+        fields.forEach((field) => { field.disabled = !isOpen; });
+        if (icon) icon.textContent = isOpen ? "▾" : "▸";
+      };
+
+      setOpen(initiallyOpen);
 
       toggle.addEventListener("click", () => {
         const isOpen = !advanced.classList.contains("is-open");
-        advanced.classList.toggle("is-open", isOpen);
-        toggle.setAttribute("aria-expanded", String(isOpen));
-        if (icon) icon.textContent = isOpen ? "▾" : "▸";
+        setOpen(isOpen);
       });
     });
   };
@@ -1042,6 +1091,11 @@
   };
 
   document.addEventListener("input", handleInput);
+  document.addEventListener("submit", (event) => {
+    event.target.querySelectorAll?.('[data-mask="currency-br"]').forEach((element) => {
+      element.value = element.value.replace(/\./g, "").replace(",", ".");
+    });
+  });
   document.addEventListener("turbo:load", () => {
     document.querySelectorAll("[data-mask]").forEach((el) => formatByMask(el));
   });
@@ -1803,11 +1857,12 @@
 
     const sections = Array.from(container.querySelectorAll("[data-sidebar-section]"));
     const saved = loadSavedState();
+    const activeSection = sections.find((section) => section.querySelector(".nav-link.is-active"));
 
     sections.forEach((section) => {
       const key = section.dataset.sidebarSection;
       const hasActiveLink = section.querySelector(".nav-link.is-active");
-      const open = Object.prototype.hasOwnProperty.call(saved, key) ? !!saved[key] : !!hasActiveLink;
+      const open = activeSection ? section === activeSection : (Object.prototype.hasOwnProperty.call(saved, key) ? !!saved[key] : !!hasActiveLink);
       setSectionState(section, open);
     });
 
@@ -2042,6 +2097,11 @@
       label.textContent = text || "Selecione";
     };
 
+    select.addEventListener("change", () => {
+      updateLabel();
+      render(search.value);
+    });
+
     trigger.addEventListener("click", () => {
       const open = wrapper.classList.contains("is-open");
       closeAll(wrapper);
@@ -2073,6 +2133,8 @@
   const initCustomSelects = () => {
     document.querySelectorAll("form.main-filters select, form.app-form select").forEach(build);
   };
+
+  document.addEventListener("custom-select:refresh", initCustomSelects);
 
   document.addEventListener("click", (event) => {
     if (event.target.closest(`[${ROOT_ATTR}]`)) return;

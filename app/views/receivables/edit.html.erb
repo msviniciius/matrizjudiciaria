@@ -1,0 +1,31 @@
+<% content_for :title, "Editar conta a receber" %>
+
+<%= render "form", receivable: @receivable %>
+
+<% unless @receivable.status_awaiting_trigger? || @receivable.status_received? || @receivable.status_canceled? %>
+  <section class="form-section aurora-form__section">
+    <div class="dashboard-section__head">
+      <h3>Registrar recebimento</h3>
+      <p>Informe um pagamento total ou parcial para esta conta.</p>
+    </div>
+    <%= form_with url: register_payment_receivable_path(@receivable), method: :patch, scope: :payment, class: "app-form aurora-form" do |payment_form| %>
+      <div class="form-grid">
+        <div>
+          <%= payment_form.label :value, "Valor recebido" %>
+          <%= payment_form.number_field :value, min: 0.01, max: @receivable.balance, step: 0.01, required: true %>
+        </div>
+        <div>
+          <%= payment_form.label :paid_at, "Data do recebimento" %>
+          <%= payment_form.date_field :paid_at, value: Date.current, required: true %>
+        </div>
+        <div>
+          <%= payment_form.label :payment_method, "Forma de pagamento" %>
+          <%= payment_form.text_field :payment_method, placeholder: "Pix, transferência..." %>
+        </div>
+      </div>
+      <div class="form-actions aurora-form__actions">
+        <%= payment_form.submit "Registrar recebimento", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </section>
+<% end %>

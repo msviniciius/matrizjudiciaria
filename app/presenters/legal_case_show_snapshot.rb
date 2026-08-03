@@ -1,8 +1,9 @@
 class LegalCaseShowSnapshot
   include Rails.application.routes.url_helpers
 
-  def initialize(legal_case:)
+  def initialize(legal_case:, current_user: nil)
     @legal_case = legal_case
+    @current_user = current_user
   end
 
   def as_json(*)
@@ -14,7 +15,10 @@ class LegalCaseShowSnapshot
       deadlines: deadlines.map { |deadline| deadline_entry(deadline) },
       tasks: tasks.map { |task| task_entry(task) },
       exams: exams.map { |exam| exam_entry(exam) },
-      actions: actions
+      financial_contract: financial_contract_entry,
+      installments: financial_installments.map { |installment| financial_installment_entry(installment) },
+      actions: actions,
+      permissions: permissions
     }
   end
 
@@ -41,7 +45,15 @@ class LegalCaseShowSnapshot
       district_name: legal_case.district&.name || "-",
       claim_value: legal_case.claim_value,
       opposing_party: legal_case.opposing_party.presence || "-",
-      tem_pericia: legal_case.tem_pericia?
+      tem_pericia: legal_case.tem_pericia?,
+      outcome: legal_case.outcome,
+      outcome_label: enum_label(LegalCase, :outcome, legal_case.outcome),
+      outcome_date: legal_case.outcome_date&.iso8601,
+      outcome_date_label: date_label(legal_case.outcome_date, fallback: "Não informada"),
+      outcome_confirmed_at: legal_case.outcome_confirmed_at&.iso8601,
+      outcome_confirmed_at_label: date_label(legal_case.outcome_confirmed_at, fallback: "Ainda não registrado"),
+      outcome_notes: legal_case.outcome_notes,
+      outcome_confirmed_by_name: legal_case.outcome_confirmed_by&.name
     }
   end
 
@@ -96,6 +108,70 @@ class LegalCaseShowSnapshot
 
   def exams
     @exams ||= legal_case.process_exams.order(Arel.sql("scheduled_at IS NULL, scheduled_at ASC"))
+  end
+
+  def financial_contract
+    @financial_contract ||= legal_case.financial_contract
+  end
+
+  def financial_installments
+    return FinancialInstallment.none unless financial_contract
+
+    @financial_installments ||= financial_contract.installments.includes(payment: :recorded_by)
+  end
+
+  def financial_contract_entry
+    return nil unless financial_contract
+
+    {
+      id: financial_contract.id,
+      fixed_amount: financial_contract.fixed_amount,
+      fixed_amount_label: currency_label(financial_contract.fixed_amount),
+      includes_percentage: financial_contract.includes_percentage?,
+      percentage: financial_contract.percentage,
+      percentage_basis: financial_contract.percentage_basis,
+      percentage_basis_label: percentage_basis_label(financial_contract.percentage_basis),
+      percentage_base_amount: percentage_base_amount,
+      percentage_base_amount_label: currency_label(percentage_base_amount),
+      client_received_amount: financial_contract.client_received_amount,
+      client_received_amount_label: currency_label(financial_contract.client_received_amount),
+      installment_count: financial_contract.installment_count,
+      first_due_date: financial_installments.first&.due_date&.iso8601,
+      total_amount: financial_contract.total_amount,
+      total_amount_label: currency_label(financial_contract.total_amount),
+      contract_document: contract_document_entry
+    }
+  end
+
+  def financial_installment_entry(installment)
+    {
+      id: installment.id,
+      number: installment.number,
+      amount: installment.amount,
+      amount_label: currency_label(installment.amount),
+      due_date: installment.due_date&.iso8601,
+      due_date_label: date_label(installment.due_date),
+      status: installment.status,
+      status_label: installment.status_paid? ? "Recebida" : "Pendente",
+      payment_recorded: installment.payment.present?,
+      payment: payment_entry(installment.payment),
+      payment_action: (legal_case_financial_installment_payment_path(legal_case, installment) unless installment.payment.present?)
+    }
+  end
+
+  def payment_entry(payment)
+    return nil unless payment
+
+    {
+      amount: payment.amount,
+      amount_label: currency_label(payment.amount),
+      paid_at: payment.paid_at&.iso8601,
+      paid_at_label: date_label(payment.paid_at),
+      payment_method: payment.payment_method,
+      payment_method_label: payment_method_label(payment.payment_method),
+      recorded_by_name: payment.recorded_by&.name,
+      proof: (rails_blob_path(payment.proof, only_path: true) if payment.proof.attached?)
+    }
   end
 
   def timeline_entry(item)
@@ -179,7 +255,9 @@ class LegalCaseShowSnapshot
       new_deadline: new_deadline_path(legal_case_id: legal_case.id),
       new_task: new_task_path(legal_case_id: legal_case.id),
       new_exam: (new_legal_case_process_exam_path(legal_case) if legal_case.tem_pericia?),
-      sync: sync_action
+      sync: sync_action,
+      record_outcome: record_outcome_action,
+      financial_contract: financial_contract_action
     }
   end
 
@@ -187,6 +265,58 @@ class LegalCaseShowSnapshot
     return unless legal_case.external_number.present?
 
     { path: sync_legal_case_path(legal_case), method: "post" }
+  end
+
+  def record_outcome_action
+    return unless can_record_outcome?
+
+    { path: record_outcome_legal_case_path(legal_case), method: "patch" }
+  end
+
+  def permissions
+    { can_record_outcome: can_record_outcome?, can_manage_financial_contract: true }
+  end
+
+  def can_record_outcome?
+    @current_user&.admin? || false
+  end
+
+  def financial_contract_action
+    {
+      path: legal_case_financial_contract_path(legal_case),
+      method: financial_contract ? "patch" : "post"
+    }
+  end
+
+  def percentage_base_amount
+    return nil unless financial_contract&.includes_percentage?
+
+    financial_contract.percentage_basis_claim_value? ? legal_case.claim_value : financial_contract.client_received_amount
+  end
+
+  def percentage_basis_label(value)
+    {
+      "claim_value" => "Valor da causa",
+      "client_received" => "Valor recebido pelo cliente"
+    }[value]
+  end
+
+  def payment_method_label(value)
+    {
+      "pix" => "Pix",
+      "cash" => "Dinheiro",
+      "credit_card" => "Cartão de crédito",
+      "debit_card" => "Cartão de débito"
+    }[value]
+  end
+
+  def contract_document_entry
+    return nil unless financial_contract.contract_document.attached?
+
+    {
+      name: financial_contract.contract_document.filename.to_s,
+      url: rails_blob_path(financial_contract.contract_document, only_path: true)
+    }
   end
 
   def timeline_item_id(item)
@@ -209,6 +339,18 @@ class LegalCaseShowSnapshot
   end
 
   def date_label(value, fallback: "-")
-    value.present? ? I18n.l(value, format: :short) : fallback
+    value.present? ? I18n.l(value.to_date) : fallback
+  end
+
+  def currency_label(value)
+    return "-" if value.blank?
+
+    ActionController::Base.helpers.number_to_currency(
+      value,
+      unit: "R$ ",
+      separator: ",",
+      delimiter: ".",
+      format: "%u%n"
+    )
   end
 end

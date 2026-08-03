@@ -26,6 +26,15 @@ Rails.application.routes.draw do
     end
   end
   resources :deadline_settings, except: :show
+  resources :receivables, except: [ :show ] do
+    member do
+      get :process_context
+    end
+    member do
+      patch :register_payment
+      patch :cancel
+    end
+  end
   resources :case_events
   resources :movement_types
   resources :movement_templates
@@ -41,9 +50,14 @@ Rails.application.routes.draw do
       get :pdf
       get :google_calendar
       post :sync
+      patch :outcome, to: "legal_cases#record_outcome", as: :record_outcome
     end
 
     resources :process_exams, only: [ :new, :create ]
+    resource :financial_contract, only: [ :create, :update ]
+    resources :financial_installments, only: [] do
+      resource :payment, only: :create, controller: "financial_installment_payments"
+    end
   end
 
   get "calendar_feeds/legal_case/:token.ics", to: "calendar_feeds#legal_case", as: :legal_case_calendar_feed

@@ -55,6 +55,13 @@ test("renders the command center from the server snapshot", async () => {
         phase: [{ label: "Análise jurídica", count: 2, path: "/processos?phase=analise_juridica" }],
         status: [{ label: "Em análise", count: 4, path: "/processos?status=em_analise" }]
       },
+      financial_summary: {
+        expected: "1200.0",
+        received: "300.0",
+        open_balance: "900.0",
+        overdue: "200.0",
+        path: "/receivables"
+      },
       actions: { sync: "/painel/sync" }
     })
   }))
@@ -71,8 +78,37 @@ test("renders the command center from the server snapshot", async () => {
   expect(screen.getByRole("img", { name: "Distribuição por fase" })).toBeVisible()
   expect(screen.getByRole("button", { name: "Em análise: 4 processos" })).toBeVisible()
   expect(screen.getByRole("button", { name: "Análise jurídica: 2 processos" })).toBeVisible()
+  expect(screen.getByRole("region", { name: "Resumo financeiro" })).toBeVisible()
+  expect(screen.getByText("R$ 1.200,00")).toBeVisible()
+  expect(screen.getByText("R$ 300,00")).toBeVisible()
+  expect(screen.getByText("R$ 900,00")).toBeVisible()
+  expect(screen.getByText("R$ 200,00")).toBeVisible()
+  const financialLink = screen.getByRole("link", { name: /Ver financeiro →/ })
+  expect(financialLink).toHaveAttribute("href", "/receivables")
+  expect(financialLink.closest(".react-dashboard__financial-head")).not.toBeNull()
+  expect(screen.queryByRole("link", { name: "Abrir financeiro" })).not.toBeInTheDocument()
   expect(screen.getByRole("img", { name: "Distribuição por status" }).querySelector("circle")).toHaveAttribute("pathLength", "100")
   await waitFor(() => expect(screen.queryByRole("status", { name: /carregando/i })).not.toBeInTheDocument())
+})
+
+test("does not render financial summary when it is absent from the snapshot", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: {},
+      critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] },
+      risk_queue: {},
+      feed: [],
+      distribution: { phase: [], status: [] },
+      actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  render(<DashboardApp />)
+
+  await screen.findByRole("heading", { name: "Central de comando" })
+  expect(screen.queryByRole("region", { name: "Resumo financeiro" })).not.toBeInTheDocument()
 })
 
 test("activates a chart filter with the keyboard", async () => {

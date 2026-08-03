@@ -88,7 +88,10 @@
 
       <div>
         <%= form.label :claim_value, "Valor da causa" %>
-        <%= form.text_field :claim_value, data: { mask: "currency-br" }, inputmode: "numeric" %>
+        <%= form.text_field :claim_value,
+                            value: legal_case.claim_value.present? ? number_to_currency(legal_case.claim_value, unit: "", separator: ",", delimiter: ".").strip : nil,
+                            data: { mask: "currency-br" },
+                            inputmode: "numeric" %>
       </div>
 
       <div class="field-full">

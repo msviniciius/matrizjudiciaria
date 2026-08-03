@@ -53,13 +53,26 @@
           <h1><%= law_firm_name %></h1>
         </div>
 
+        <% active_sidebar_section =
+          case controller_name
+          when "receivables"
+            "financeiro"
+          when "deadline_settings", "courts", "districts", "units"
+            "cadastros"
+          when "office_settings", "office_users"
+            "configuracoes"
+          else
+            "operacao"
+          end
+        %>
+
         <nav class="sidebar-nav" data-sidebar-sections>
-          <section class="sidebar-section is-open" data-sidebar-section="operacao">
+          <section class="sidebar-section <%= "is-open" if active_sidebar_section == "operacao" %>" data-sidebar-section="operacao">
             <button
               type="button"
               class="sidebar-section__toggle"
               data-sidebar-section-toggle
-              aria-expanded="true"
+              aria-expanded="<%= active_sidebar_section == "operacao" %>"
               aria-controls="sidebar-section-operacao"
               aria-label="Operação"
               title="Operação"
@@ -107,12 +120,12 @@
             </div>
           </section>
 
-          <section class="sidebar-section is-open" data-sidebar-section="cadastros">
+          <section class="sidebar-section <%= "is-open" if active_sidebar_section == "cadastros" %>" data-sidebar-section="cadastros">
             <button
               type="button"
               class="sidebar-section__toggle"
               data-sidebar-section-toggle
-              aria-expanded="true"
+              aria-expanded="<%= active_sidebar_section == "cadastros" %>"
               aria-controls="sidebar-section-cadastros"
               aria-label="Cadastros"
               title="Cadastros"
@@ -147,12 +160,37 @@
             </div>
           </section>
 
-          <section class="sidebar-section is-open" data-sidebar-section="configuracoes">
+          <% if current_user&.admin? %>
+            <section class="sidebar-section <%= "is-open" if active_sidebar_section == "financeiro" %>" data-sidebar-section="financeiro">
+              <button
+                type="button"
+                class="sidebar-section__toggle"
+                data-sidebar-section-toggle
+                aria-expanded="<%= active_sidebar_section == "financeiro" %>"
+                aria-controls="sidebar-section-financeiro"
+                aria-label="Financeiro"
+                title="Financeiro"
+              >
+                <span class="sidebar-section__icon" aria-hidden="true">&#128176;</span>
+                <span class="sidebar-section__title">Financeiro</span>
+                <span class="sidebar-section__chevron" aria-hidden="true">&#9662;</span>
+              </button>
+
+              <div class="sidebar-section__body" id="sidebar-section-financeiro">
+                <%= link_to receivables_path, class: "nav-link #{'is-active' if controller_name == 'receivables'}", aria: { label: "Contas a receber" }, title: "Contas a receber" do %>
+                  <span class="nav-link__icon" aria-hidden="true">&#128176;</span>
+                  <span class="nav-link__label">Contas a receber</span>
+                <% end %>
+              </div>
+            </section>
+          <% end %>
+
+          <section class="sidebar-section <%= "is-open" if active_sidebar_section == "configuracoes" %>" data-sidebar-section="configuracoes">
             <button
               type="button"
               class="sidebar-section__toggle"
               data-sidebar-section-toggle
-              aria-expanded="true"
+              aria-expanded="<%= active_sidebar_section == "configuracoes" %>"
               aria-controls="sidebar-section-configuracoes"
               aria-label="Configurações"
               title="Configurações"

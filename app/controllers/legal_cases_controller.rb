@@ -1,5 +1,6 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync ]
+  before_action :require_admin!, only: :record_outcome
+  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync record_outcome ]
 
   def index
     @filters = legal_case_filters
@@ -23,7 +24,7 @@ class LegalCasesController < ApplicationController
 
   def show
     if request.format.json?
-      render json: LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json
+      render json: LegalCaseShowSnapshot.new(legal_case: @legal_case, current_user: current_user).as_json
       return
     end
 
@@ -134,6 +135,29 @@ class LegalCasesController < ApplicationController
     end
   end
 
+  def record_outcome
+    LegalCase.transaction do
+      @legal_case.assign_attributes(outcome_params)
+      @legal_case.outcome_confirmed_by = current_user
+      @legal_case.outcome_confirmed_at = Time.current
+      @legal_case.save!(context: :outcome_recording)
+
+      Receivables::OutcomeTrigger.call(legal_case: @legal_case, confirmed_by: current_user) if @legal_case.outcome_won?
+    end
+
+    respond_to do |format|
+      format.html { redirect_to @legal_case, notice: "Desfecho do processo registrado com sucesso." }
+      format.json { render json: LegalCaseShowSnapshot.new(legal_case: @legal_case, current_user: current_user).as_json }
+    end
+  rescue ActiveRecord::RecordInvalid, ArgumentError => error
+    @legal_case.errors.add(:base, error.message) if @legal_case.errors.empty?
+
+    respond_to do |format|
+      format.html { redirect_to @legal_case, alert: @legal_case.errors.full_messages.to_sentence }
+      format.json { render json: { errors: @legal_case.errors }, status: :unprocessable_entity }
+    end
+  end
+
   def destroy
     @legal_case.destroy!
 
@@ -195,6 +219,10 @@ class LegalCasesController < ApplicationController
     permitted << :responsible_name
 
     params.require(:legal_case).permit(*permitted)
+  end
+
+  def outcome_params
+    params.require(:legal_case).permit(:outcome, :outcome_date, :outcome_notes)
   end
 
   def load_case_related_collections

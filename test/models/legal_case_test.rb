@@ -83,7 +83,97 @@ class LegalCaseTest < ActiveSupport::TestCase
     assert_equal "Perito Teste", exam.expert_name
   end
 
+  test "aceita apenas os resultados juridicos configurados" do
+    expected_outcomes = %w[undefined won lost settled partially_won]
+
+    assert_equal expected_outcomes, LegalCase::OUTCOMES
+
+    expected_outcomes.each do |outcome|
+      legal_case = build_case(
+        outcome: outcome,
+        outcome_date: outcome == "undefined" ? nil : Date.current
+      )
+
+      assert legal_case.valid?, "esperava aceitar o resultado #{outcome.inspect}"
+    end
+
+    assert build_case(outcome: "won").outcome_won?
+
+    assert_raises(ArgumentError) do
+      build_case(outcome: "inconclusive")
+    end
+  end
+
+  test "persiste a confirmacao do resultado pelo usuario do mesmo escritorio" do
+    confirming_user = create_user
+    confirmed_at = Time.zone.local(2026, 7, 31, 16, 0, 0)
+    legal_case = build_case(
+      outcome: "won",
+      outcome_date: Date.current,
+      outcome_confirmed_by: confirming_user,
+      outcome_confirmed_at: confirmed_at
+    )
+
+    assert legal_case.save!, legal_case.errors.full_messages.join(", ")
+
+    legal_case.reload
+    assert_equal confirming_user, legal_case.outcome_confirmed_by
+    assert_equal confirmed_at, legal_case.outcome_confirmed_at
+  end
+
+  test "exposes one financial contract while preserving legacy receivables" do
+    legal_case = build_case
+    legal_case.save!
+    contract = FinancialContract.create!(
+      office: default_office,
+      legal_case: legal_case,
+      fixed_amount: 2_000,
+      installment_count: 1,
+      total_amount: 2_000
+    )
+    legacy_receivable = legal_case.receivables.create!(
+      office: default_office,
+      client: legal_case.client,
+      description: "Cobrança anterior",
+      amount: 500
+    )
+
+    assert_equal contract, legal_case.reload.financial_contract
+    assert_includes legal_case.receivables, legacy_receivable
+  end
+
+  test "rejeita confirmacao por usuario de outro escritorio" do
+    other_office = Office.create!(name: "Outro Escritorio", slug: "outro-escritorio")
+    confirming_user = create_user(office: other_office)
+    legal_case = build_case(
+      outcome: "won",
+      outcome_date: Date.current,
+      outcome_confirmed_by: confirming_user
+    )
+
+    assert_not legal_case.valid?
+    assert_includes legal_case.errors[:outcome_confirmed_by], "não pertence ao escritório atual"
+  end
+
+  test "requires an outcome date when recording a legal outcome" do
+    legal_case = build_case(outcome: "won", outcome_date: nil)
+
+    assert_not legal_case.valid?(:outcome_recording)
+    assert_includes legal_case.errors[:outcome_date], "não pode ficar em branco"
+  end
+
   private
+
+  def create_user(office: default_office)
+    User.create!(
+      office: office,
+      name: "Usuario Confirmador",
+      email: "confirmador-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+  end
 
   def build_case(attrs = {})
     LegalCase.new(

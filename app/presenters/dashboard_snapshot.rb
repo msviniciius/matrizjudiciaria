@@ -3,14 +3,15 @@ class DashboardSnapshot
 
   CONTEXT_ITEMS_LIMIT = 6
 
-  def initialize(office:, unit:, all_units_mode:)
+  def initialize(office:, unit:, all_units_mode:, current_user: nil)
     @office = office
     @unit = unit
     @all_units_mode = all_units_mode
+    @current_user = current_user
   end
 
   def as_json(*)
-    {
+    payload = {
       meta: {
         office_name: office.name,
         unit_name: unit&.name,
@@ -26,11 +27,13 @@ class DashboardSnapshot
         sync: sync_all_cases_path
       }
     }
+    payload[:financial_summary] = financial_summary if current_user&.admin?
+    payload
   end
 
   private
 
-  attr_reader :office, :unit, :all_units_mode
+  attr_reader :office, :unit, :all_units_mode, :current_user
 
   def legal_cases
     @legal_cases ||= apply_unit_scope(office.legal_cases)
@@ -161,6 +164,39 @@ class DashboardSnapshot
         { label: status_label(status), count: count, path: legal_cases_path(status: status), items: context_items(legal_cases.where(status: status)) }
       end
     }
+  end
+
+  def financial_summary
+    summary = Receivables::Summary.new(
+      scope: financial_receivables,
+      financial_scope: financial_installments,
+      reference_date: Date.current
+    ).call
+
+    summary.slice(:expected, :received, :open_balance, :overdue).merge(path: receivables_path)
+  end
+
+  def financial_query
+    @financial_query ||= Receivables::Query.new(office: office, params: financial_params)
+  end
+
+  def financial_params
+    return {} if all_units_mode
+    return { unit_id: nil } if unit.blank?
+
+    { unit_id: unit.id }
+  end
+
+  def financial_receivables
+    return office.receivables.none if unit.blank? && !all_units_mode
+
+    financial_query.call
+  end
+
+  def financial_installments
+    return FinancialInstallment.none if unit.blank? && !all_units_mode
+
+    financial_query.financial_installments
   end
 
   def context_items(records)

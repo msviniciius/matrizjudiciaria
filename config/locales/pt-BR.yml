@@ -59,6 +59,11 @@ pt-BR:
         record_invalid: Registro inválido
         blank: não pode ficar em branco
         required: deve existir
+        inclusion: deve ser informado corretamente
+        taken: já está em uso
+        greater_than: deve ser maior que %{count}
+        greater_than_or_equal_to: deve ser maior ou igual a %{count}
+        less_than_or_equal_to: deve ser menor ou igual a %{count}
     models:
       client: Cliente
       court: Órgão/Vara/Tribunal
@@ -71,6 +76,8 @@ pt-BR:
       case_event: Andamento
       process_movement: Andamento processual
       process_exam: Perícia
+      receivable: Conta a receber
+      financial_contract: Contrato de honorários
     attributes:
       client:
         full_name: Nome completo
@@ -91,6 +98,13 @@ pt-BR:
         father_name: Nome do pai
         notes: Observações
         cadastro_pendente: Cadastro pendente
+      financial_contract:
+        includes_percentage: Percentual adicional
+        fixed_amount: Valor fixo dos honorários
+        percentage: Percentual adicional
+        percentage_basis: Base de cálculo
+        client_received_amount: Valor recebido pelo cliente
+        installment_count: Quantidade de parcelas
       court:
         name: Nome
       district:
@@ -147,6 +161,12 @@ pt-BR:
           cumprimento_execucao: Cumprimento/Execução
           acordo: Acordo
           encerrado: Encerrado
+        outcomes:
+          undefined: Não definido
+          won: Ganho
+          lost: Perdido
+          settled: Acordo
+          partially_won: Parcialmente ganho
       process_exam:
         exam_natures:
           medica: Médica
@@ -309,6 +329,55 @@ pt-BR:
           phase_changed: Alteração de fase
           status_changed: Alteração de status
           case_closed: Encerramento
+      receivable:
+        description: Descrição
+        amount: Valor total
+        amount_paid: Valor recebido
+        due_date: Data de vencimento
+        paid_at: Recebido em
+        payment_method: Forma de pagamento
+        notes: Observações
+        status: Situação
+        trigger: Gatilho
+        triggered_at: Ativado em
+        office: Escritório
+        office_id: Escritório
+        unit: Unidade
+        unit_id: Unidade
+        client: Cliente
+        client_id: Cliente
+        legal_case: Processo
+        legal_case_id: Processo
+        statuses:
+          awaiting_trigger: Aguardando gatilho
+          pending: Pendente
+          partial: Parcial
+          received: Recebida
+          overdue: Vencida
+          canceled: Cancelada
+        triggers:
+          manual: Manual
+          case_started: Processo iniciado
+          case_won: Processo ganho
+      financial_contract:
+        fixed_amount: Honorários fixos
+        total_amount: Valor total
+        percentage: Percentual adicional
+        percentage_basis: Base do percentual
+        installment_count: Número de parcelas
+        percentage_bases:
+          claim_value: Valor da causa
+          client_received: Valor recebido pelo cliente
+      financial_installment:
+        statuses:
+          pending: Pendente
+          paid: Recebida
+      financial_payment:
+        payment_methods:
+          pix: Pix
+          cash: Dinheiro
+          credit_card: Cartão de crédito
+          debit_card: Cartão de débito
 
   legal_cases:
     warnings:

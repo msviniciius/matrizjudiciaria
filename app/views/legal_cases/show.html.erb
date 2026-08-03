@@ -1,3 +1,33 @@
 <% content_for :title, "Processo #{@legal_case.internal_number}" %>
 
 <div id="react-legal-case-show-root"></div>
+
+<noscript>
+  <main class="legal-case-show-fallback">
+    <p>O centro de comando requer JavaScript. Consulte os dados essenciais do processo abaixo.</p>
+
+    <h1><%= @legal_case.internal_number %></h1>
+
+    <% if @legal_case.external_number.present? %>
+      <p><strong>Número CNJ:</strong> <%= @legal_case.external_number %></p>
+    <% end %>
+
+    <dl>
+      <dt>Cliente</dt>
+      <dd><%= @legal_case.client.full_name %></dd>
+
+      <dt>Status</dt>
+      <dd><%= t("activerecord.attributes.legal_case.statuses.#{@legal_case.status}") %></dd>
+
+      <% unless @legal_case.outcome_undefined? %>
+        <dt>Desfecho</dt>
+        <dd><%= t("activerecord.attributes.legal_case.outcomes.#{@legal_case.outcome}") %></dd>
+      <% end %>
+    </dl>
+
+    <p>
+      <%= link_to "Editar processo", edit_legal_case_path(@legal_case) %>
+      <%= link_to "Voltar para processos", legal_cases_path %>
+    </p>
+  </main>
+</noscript>

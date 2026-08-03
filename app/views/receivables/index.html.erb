@@ -1,0 +1,69 @@
+<% content_for :title, "Contas a receber" %>
+
+<% content_for :topbar_actions do %>
+  <%= link_to "Nova conta", new_receivable_path, class: "btn btn-primary" %>
+<% end %>
+
+<section class="receivables-dashboard">
+  <header class="receivables-dashboard__head">
+    <div>
+      <p class="receivables-dashboard__eyebrow">Financeiro</p>
+      <h2>Visão consolidada</h2>
+      <p>Indicadores e lançamentos do período selecionado.</p>
+    </div>
+  </header>
+
+  <%= render "filters" %>
+
+  <div class="receivables-metrics" aria-label="Indicadores financeiros">
+    <article class="receivables-metric receivables-metric--primary">
+      <span>Previsto</span>
+      <strong><%= number_to_currency(@summary[:expected], unit: "R$ ", separator: ",", delimiter: ".") %></strong>
+    </article>
+    <article class="receivables-metric receivables-metric--success">
+      <span>Recebido</span>
+      <strong><%= number_to_currency(@summary[:received], unit: "R$ ", separator: ",", delimiter: ".") %></strong>
+    </article>
+    <article class="receivables-metric">
+      <span>Em aberto</span>
+      <strong><%= number_to_currency(@summary[:open_balance], unit: "R$ ", separator: ",", delimiter: ".") %></strong>
+    </article>
+    <article class="receivables-metric receivables-metric--danger">
+      <span>Vencido</span>
+      <strong><%= number_to_currency(@summary[:overdue], unit: "R$ ", separator: ",", delimiter: ".") %></strong>
+    </article>
+    <article class="receivables-metric receivables-metric--warning">
+      <span>Parcialmente recebido</span>
+      <strong><%= number_to_currency(@summary[:partial], unit: "R$ ", separator: ",", delimiter: ".") %></strong>
+    </article>
+    <article class="receivables-metric">
+      <span>Próximos 30 dias</span>
+      <strong><%= number_to_currency(@summary[:upcoming], unit: "R$ ", separator: ",", delimiter: ".") %></strong>
+    </article>
+  </div>
+
+  <section class="receivables-chart dashboard-section">
+    <div class="dashboard-section__head">
+      <div>
+        <h3>Recebimentos por dia</h3>
+        <p>Contas quitadas dentro da visão filtrada.</p>
+      </div>
+    </div>
+    <% if @summary[:received_by_day].any? %>
+      <% highest_daily_receipt = @summary[:received_by_day].values.max %>
+      <div class="receivables-chart__bars" role="img" aria-label="Recebimentos agrupados por data">
+        <% @summary[:received_by_day].sort.each do |paid_on, amount| %>
+          <div class="receivables-chart__item">
+            <span class="receivables-chart__value"><%= number_to_currency(amount, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+            <div class="receivables-chart__track"><span style="height: <%= highest_daily_receipt.zero? ? 0 : (amount / highest_daily_receipt * 100).round %>%"></span></div>
+            <time datetime="<%= paid_on.iso8601 %>"><%= l(paid_on) %></time>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="empty-state">Nenhum recebimento quitado no período.</p>
+    <% end %>
+  </section>
+
+  <%= render "table" %>
+</section>

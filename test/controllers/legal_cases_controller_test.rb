@@ -54,6 +54,22 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='legal_case_show']"
   end
 
+  test "show provides a process identity fallback when JavaScript is unavailable" do
+    @legal_case.update!(outcome: "won")
+
+    get legal_case_url(@legal_case)
+
+    assert_response :success
+    assert_select "noscript" do
+      assert_select "h1", text: @legal_case.internal_number
+      assert_select "dd", text: @client.full_name
+      assert_select "dd", text: "Em análise"
+      assert_select "dd", text: "Ganho"
+      assert_select "a[href='#{edit_legal_case_path(@legal_case)}']", text: "Editar processo"
+      assert_select "a[href='#{legal_cases_path}']", text: "Voltar para processos"
+    end
+  end
+
   test "show remains read only and preserves the new imported event alert" do
     imported_event = CaseEvent.create!(
       legal_case: @legal_case,
@@ -266,6 +282,15 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "edit shows the claim value with the Brazilian currency mask" do
+    @legal_case.update!(claim_value: 1000)
+
+    get edit_legal_case_url(@legal_case)
+
+    assert_response :success
+    assert_select "input[name='legal_case[claim_value]'][value='1.000,00']"
+  end
+
   test "should update legal_case" do
     patch legal_case_url(@legal_case), params: { legal_case: {
       subarea: "Atualizada",
@@ -291,11 +316,162 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "", @legal_case.reload.next_action
   end
 
+  test "allows an administrator to record a win and activate awaiting receivables" do
+    administrator = create_user(role: "admin")
+    receivable = Receivable.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      description: "Honorários de êxito",
+      amount: 1_500,
+      trigger: "case_won",
+      status: "awaiting_trigger"
+    )
+
+    sign_in(administrator)
+    assert_no_difference("ReceivablePayment.count") do
+      patch record_outcome_legal_case_url(@legal_case), params: { legal_case: {
+        outcome: "won",
+        outcome_date: "2026-07-30",
+        outcome_notes: "Sentença favorável transitada em julgado."
+      } }
+    end
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "won", @legal_case.reload.outcome
+    assert_equal administrator, @legal_case.outcome_confirmed_by
+    assert_not_nil @legal_case.outcome_confirmed_at
+    assert_equal Date.new(2026, 7, 30), @legal_case.outcome_date
+    assert_equal "Sentença favorável transitada em julgado.", @legal_case.outcome_notes
+    assert_equal "pending", receivable.reload.status
+    assert_not_nil receivable.triggered_at
+    assert_equal 0, receivable.amount_paid
+  end
+
+  test "returns outcome actions in the show snapshot only for administrators" do
+    attendant = create_user(role: "attendant")
+    administrator = create_user(role: "admin")
+
+    sign_in(attendant)
+    get legal_case_url(@legal_case, format: :json)
+
+    assert_response :success
+    assert_not response.parsed_body.dig("permissions", "can_record_outcome")
+    assert_nil response.parsed_body.dig("actions", "record_outcome")
+
+    sign_in(administrator)
+    get legal_case_url(@legal_case, format: :json)
+
+    assert_response :success
+    assert response.parsed_body.dig("permissions", "can_record_outcome")
+    assert_equal(
+      { "path" => record_outcome_legal_case_path(@legal_case), "method" => "patch" },
+      response.parsed_body.dig("actions", "record_outcome")
+    )
+  end
+
+  test "rolls back the recorded outcome when activating a receivable fails" do
+    administrator = create_user(role: "admin")
+    receivable = Receivable.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      description: "Honorários de êxito inválidos",
+      amount: 1_500,
+      trigger: "case_won",
+      status: "awaiting_trigger"
+    )
+    receivable.update_column(:amount_paid, 1_501)
+
+    sign_in(administrator)
+    assert_no_difference("ReceivablePayment.count") do
+      patch record_outcome_legal_case_url(@legal_case), params: { legal_case: {
+        outcome: "won",
+        outcome_date: "2026-07-30",
+        outcome_notes: "Tentativa que deve ser revertida."
+      } }
+    end
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "undefined", @legal_case.reload.outcome
+    assert_nil @legal_case.outcome_confirmed_at
+    assert_nil @legal_case.outcome_confirmed_by
+    assert_equal "awaiting_trigger", receivable.reload.status
+    assert_nil receivable.triggered_at
+  end
+
+  test "does not allow a non-administrator to record a case outcome" do
+    unit = Unit.create!(office: default_office, name: "Contencioso")
+    attendant = create_user(role: "attendant")
+    UserUnit.create!(user: attendant, unit: unit)
+    @legal_case.update!(unit: unit)
+
+    sign_in(attendant)
+    patch record_outcome_legal_case_url(@legal_case, format: :json), params: { legal_case: {
+      outcome: "won",
+      outcome_date: "2026-07-30"
+    } }
+
+    assert_redirected_to root_url
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "rejects an invalid outcome without changing the case" do
+    administrator = create_user(role: "admin")
+
+    sign_in(administrator)
+    patch record_outcome_legal_case_url(@legal_case, format: :json), params: { legal_case: {
+      outcome: "inconclusive",
+      outcome_date: "2026-07-30"
+    } }
+
+    assert_response :unprocessable_entity
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "rejects a malformed outcome date without changing the case" do
+    administrator = create_user(role: "admin")
+
+    sign_in(administrator)
+    patch record_outcome_legal_case_url(@legal_case, format: :json), params: { legal_case: {
+      outcome: "won",
+      outcome_date: "not-a-date"
+    } }
+
+    assert_response :unprocessable_entity
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
+  test "does not change an outcome through the general update endpoint" do
+    administrator = create_user(role: "admin")
+
+    sign_in(administrator)
+    patch legal_case_url(@legal_case), params: { legal_case: { outcome: "won" } }
+
+    assert_redirected_to legal_case_url(@legal_case)
+    assert_equal "undefined", @legal_case.reload.outcome
+  end
+
   test "should destroy legal_case" do
     assert_difference("LegalCase.count", -1) do
       delete legal_case_url(@legal_case)
     end
 
     assert_redirected_to legal_cases_url
+  end
+
+  private
+
+  def create_user(role:)
+    User.create!(
+      office: default_office,
+      name: "Usuário #{role}",
+      email: "#{role}-#{SecureRandom.hex(4)}@example.com",
+      role: role,
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+  end
+
+  def sign_in(user)
+    post login_path, params: { email: user.email, password: "segredo123" }
   end
 end
