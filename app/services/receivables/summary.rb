@@ -37,7 +37,7 @@ class Receivables::Summary
   def financial_open_balance
     return 0.to_d unless financial_scope
 
-    financial_scope.where(status: "pending").sum(:amount)
+    financial_scope.where(status: "pending").where("due_date <= ?", reference_date).sum(:amount)
   end
 
   def financial_overdue

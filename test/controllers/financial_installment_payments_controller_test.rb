@@ -40,6 +40,6 @@ class FinancialInstallmentPaymentsControllerTest < ActionDispatch::IntegrationTe
   private
 
   def proof_upload
-    { io: StringIO.new("comprovante"), filename: "comprovante.txt", content_type: "text/plain" }
+    Rack::Test::UploadedFile.new(StringIO.new("comprovante"), "text/plain", original_filename: "comprovante.txt")
   end
 end

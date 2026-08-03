@@ -86,7 +86,7 @@ class FinancialPaymentTest < ActiveSupport::TestCase
       )
     end
 
-    assert_includes error.record.errors[:payment_method], "não está incluído na lista"
+    assert_includes error.record.errors[:payment_method], "deve ser informado corretamente"
   end
 
   test "rejects a recording user from another office" do

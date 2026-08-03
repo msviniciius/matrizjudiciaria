@@ -35,6 +35,8 @@ class FinancialPayment < ApplicationRecord
   end
 
   def proof_must_be_attached
-    errors.add(:proof, "deve ser anexado") unless proof.attached?
+    return if proof.attached? || attachment_changes&.key?("proof")
+
+    errors.add(:proof, "deve ser anexado")
   end
 end
