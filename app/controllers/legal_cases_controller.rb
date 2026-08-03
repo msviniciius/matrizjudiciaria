@@ -1,6 +1,6 @@
 class LegalCasesController < ApplicationController
-  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync record_outcome ]
   before_action :require_admin!, only: :record_outcome
+  before_action :set_legal_case, only: %i[ show edit update destroy print pdf google_calendar sync record_outcome ]
 
   def index
     @filters = legal_case_filters

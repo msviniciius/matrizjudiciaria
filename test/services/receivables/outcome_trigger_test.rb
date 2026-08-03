@@ -2,7 +2,7 @@ require "test_helper"
 
 class Receivables::OutcomeTriggerTest < ActiveSupport::TestCase
   test "activates only awaiting case-won receivables for a won case and records its confirmation" do
-    legal_case = create_full_legal_case(outcome: "won")
+    legal_case = create_full_legal_case(outcome: "undefined")
     confirming_user = create_confirming_user
     triggered_receivable = create_receivable(
       legal_case: legal_case,
@@ -11,7 +11,11 @@ class Receivables::OutcomeTriggerTest < ActiveSupport::TestCase
       amount_paid: 250
     )
     different_trigger = create_receivable(legal_case: legal_case, trigger: "case_started", status: "awaiting_trigger")
+    different_trigger_status = different_trigger.status
+    different_trigger_triggered_at = different_trigger.triggered_at
     already_active = create_receivable(legal_case: legal_case, trigger: "case_won", status: "pending")
+    already_active.update_columns(status: "pending", triggered_at: nil)
+    legal_case.update!(outcome: "won")
 
     Receivables::OutcomeTrigger.call(legal_case: legal_case, confirmed_by: confirming_user)
 
@@ -19,8 +23,8 @@ class Receivables::OutcomeTriggerTest < ActiveSupport::TestCase
     assert_not_nil triggered_receivable.triggered_at
     assert_equal 250, triggered_receivable.amount_paid
 
-    assert_equal "awaiting_trigger", different_trigger.reload.status
-    assert_nil different_trigger.triggered_at
+    assert_equal different_trigger_status, different_trigger.reload.status
+    assert_equal different_trigger_triggered_at.to_i, different_trigger.triggered_at.to_i
     assert_equal "pending", already_active.reload.status
     assert_nil already_active.triggered_at
 

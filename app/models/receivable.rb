@@ -32,6 +32,7 @@ class Receivable < ApplicationRecord
   validate :legal_case_belongs_to_same_office, if: -> { legal_case.present? && office.present? }
   validate :legal_case_links_match
 
+  before_validation :sync_links_from_legal_case
   before_validation :apply_trigger_state
   validate :received_status_requires_full_payment
 
@@ -72,6 +73,13 @@ class Receivable < ApplicationRecord
   end
 
   private
+
+  def sync_links_from_legal_case
+    return unless legal_case.present?
+
+    self.client ||= legal_case.client
+    self.unit ||= legal_case.unit
+  end
 
   def unit_belongs_to_same_office
     return if unit.office_id == office_id

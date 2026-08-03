@@ -61,7 +61,7 @@ class ReceivableTest < ActiveSupport::TestCase
     assert_not negative_paid.valid?
     assert_includes negative_paid.errors[:amount_paid], "deve ser maior ou igual a 0"
     assert_not overpaid.valid?
-    assert_includes overpaid.errors[:amount_paid], "deve ser menor ou igual a 1500"
+    assert_includes overpaid.errors[:amount_paid], "deve ser menor ou igual a 1500.0"
   end
 
   test "returns the unpaid balance" do

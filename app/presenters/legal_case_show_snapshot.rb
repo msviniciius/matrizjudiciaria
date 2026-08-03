@@ -339,7 +339,7 @@ class LegalCaseShowSnapshot
   end
 
   def date_label(value, fallback: "-")
-    value.present? ? I18n.l(value, format: :short) : fallback
+    value.present? ? I18n.l(value.to_date) : fallback
   end
 
   def currency_label(value)
