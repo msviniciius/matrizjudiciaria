@@ -10,6 +10,7 @@ class LegalCaseShowSnapshot
     {
       case: case_entry,
       alerts: alerts,
+      intelligence: intelligence,
       next_action: next_action,
       timeline: timeline_items.map { |item| timeline_entry(item) },
       deadlines: deadlines.map { |deadline| deadline_entry(deadline) },
@@ -77,6 +78,10 @@ class LegalCaseShowSnapshot
       last_movement_at: legal_case.last_movement_at&.iso8601,
       last_movement_label: date_label(legal_case.last_movement_at, fallback: "Sem registro")
     }
+  end
+
+  def intelligence
+    LegalCases::IntelligenceSnapshot.new(legal_case: legal_case).as_json
   end
 
   def timeline_items
@@ -256,6 +261,7 @@ class LegalCaseShowSnapshot
       new_task: new_task_path(legal_case_id: legal_case.id),
       new_exam: (new_legal_case_process_exam_path(legal_case) if legal_case.tem_pericia?),
       sync: sync_action,
+      ai_analysis: ai_analysis_action,
       record_outcome: record_outcome_action,
       financial_contract: financial_contract_action
     }
@@ -271,6 +277,12 @@ class LegalCaseShowSnapshot
     return unless can_record_outcome?
 
     { path: record_outcome_legal_case_path(legal_case), method: "patch" }
+  end
+
+  def ai_analysis_action
+    return unless can_record_outcome?
+
+    { path: ai_analysis_legal_case_path(legal_case), method: "post" }
   end
 
   def permissions
