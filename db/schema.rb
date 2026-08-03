@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_133000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_194000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -205,6 +205,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_133000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["justice_branch", "name"], name: "index_legal_areas_on_justice_branch_and_name", unique: true
+  end
+
+  create_table "legal_case_ai_analyses", force: :cascade do |t|
+    t.string "confidence", default: "low", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.jsonb "deterministic_snapshot", default: {}, null: false
+    t.bigint "legal_case_id", null: false
+    t.string "model", null: false
+    t.text "notes"
+    t.string "provider", null: false
+    t.jsonb "raw_response", default: {}, null: false
+    t.jsonb "risks", default: [], null: false
+    t.text "suggested_action", null: false
+    t.text "summary", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_legal_case_ai_analyses_on_created_by_id"
+    t.index ["legal_case_id", "created_at"], name: "index_legal_case_ai_analyses_on_legal_case_id_and_created_at"
+    t.index ["legal_case_id"], name: "index_legal_case_ai_analyses_on_legal_case_id"
+    t.index ["provider", "model"], name: "index_legal_case_ai_analyses_on_provider_and_model"
   end
 
   create_table "legal_cases", force: :cascade do |t|
@@ -698,6 +718,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_133000) do
   add_foreign_key "financial_installments", "financial_contracts"
   add_foreign_key "financial_payments", "financial_installments"
   add_foreign_key "financial_payments", "users", column: "recorded_by_id"
+  add_foreign_key "legal_case_ai_analyses", "legal_cases"
+  add_foreign_key "legal_case_ai_analyses", "users", column: "created_by_id"
   add_foreign_key "legal_cases", "clients"
   add_foreign_key "legal_cases", "courts"
   add_foreign_key "legal_cases", "districts"

@@ -185,4 +185,41 @@ class LegalCaseShowSnapshotTest < ActiveSupport::TestCase
 
     assert_equal movement.id, timeline_entry.fetch(:id)
   end
+
+  test "serializes deterministic process intelligence" do
+    @legal_case.update!(next_action: "", next_deadline_on: Date.current - 1.day)
+    Deadline.create!(
+      legal_case: @legal_case,
+      title: "Prazo vencido",
+      due_date: Date.current - 1.day,
+      status: "pending",
+      priority: "high"
+    )
+    Task.create!(
+      legal_case: @legal_case,
+      title: "Tarefa pendente",
+      due_date: Date.current + 1.day,
+      status: "pending"
+    )
+    LegalPublication.create!(
+      office: default_office,
+      legal_case: @legal_case,
+      source: "djma",
+      external_id: "intelligence-publication-#{SecureRandom.hex(4)}",
+      event_name: "djma_publication",
+      title: "Publicação pendente",
+      content: "Intimação disponibilizada"
+    )
+
+    intelligence = LegalCaseShowSnapshot.new(legal_case: @legal_case).as_json.fetch(:intelligence)
+
+    assert_match @legal_case.internal_number, intelligence.fetch(:summary)
+    assert_equal "critical", intelligence.fetch(:status)
+    assert_equal "Regularizar prazo vencido", intelligence.dig(:suggested_action, :title)
+    assert_includes intelligence.fetch(:attention_points).pluck(:title), "Prazo vencido"
+    assert_includes intelligence.fetch(:attention_points).pluck(:title), "Publicações não lidas"
+    assert_operator intelligence.dig(:metrics, :overdue_deadlines_count), :>=, 1
+    assert_operator intelligence.dig(:metrics, :pending_tasks_count), :>=, 1
+    assert_equal 1, intelligence.dig(:metrics, :unread_publications_count)
+  end
 end

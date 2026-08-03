@@ -63,6 +63,7 @@ Rails.application.routes.draw do
       get :pdf
       get :google_calendar
       post :sync
+      post :ai_analysis, to: "legal_case_ai_analyses#create"
       patch :outcome, to: "legal_cases#record_outcome", as: :record_outcome
     end
 

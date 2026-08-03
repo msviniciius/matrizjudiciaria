@@ -60,6 +60,28 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     health_status: "amarelo",
     has_new_imported_events: false
   },
+  intelligence: {
+    status: "attention",
+    summary: "Processo PROC-001 de Cliente Aurora está em análise com prazo próximo.",
+    suggested_action: {
+      title: "Analisar publicação mais recente",
+      description: "Existem publicações ainda não lidas vinculadas ao processo.",
+      priority: "high"
+    },
+    attention_points: [
+      { title: "Publicações não lidas", description: "1 publicação aguardando leitura.", severity: "attention" },
+      { title: "Prazo próximo", description: "1 prazo próximo.", severity: "attention" }
+    ],
+    metrics: {
+      timeline_events_count: 3,
+      pending_deadlines_count: 1,
+      overdue_deadlines_count: 0,
+      pending_tasks_count: 1,
+      unread_publications_count: 1,
+      latest_movement_label: "30/07/2026",
+      next_deadline_label: "31/07/2026"
+    }
+  },
   next_action: {
     description: "Protocolar manifestação",
     deadline_on: "2026-07-31",
@@ -122,6 +144,7 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     new_task: "/tasks/new?legal_case_id=1",
     new_exam: "/legal_cases/1/process_exams/new",
     sync: { path: "/legal_cases/1/sync", method: "post" },
+    ai_analysis: { path: "/legal_cases/1/ai_analysis", method: "post" },
     record_outcome: { path: "/legal_cases/1/outcome", method: "patch" }
   },
   permissions: { can_record_outcome: true }
@@ -162,6 +185,51 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(screen.queryByRole("main")).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: /Prazos/ })).toHaveAttribute("aria-expanded", "true")
   expect(screen.getByRole("link", { name: "Editar processo" })).toBeVisible()
+})
+
+test("renders the deterministic process intelligence panel", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+
+  expect(await screen.findByRole("heading", { name: "Inteligência do processo" })).toBeVisible()
+  expect(screen.getByText("Processo PROC-001 de Cliente Aurora está em análise com prazo próximo.")).toBeVisible()
+  expect(screen.getByRole("heading", { name: "Analisar publicação mais recente" })).toBeVisible()
+  expect(screen.getByText("Publicações não lidas")).toBeVisible()
+  expect(screen.getByText("1 publicação aguardando leitura.")).toBeVisible()
+  expect(screen.getByText("Publicações não lidas").closest("article")).toHaveClass("react-legal-case-show__intelligence-point")
+  expect(screen.getByText("Eventos na timeline").nextElementSibling).toHaveTextContent("3")
+  expect(screen.getByText("Publicações pendentes").nextElementSibling).toHaveTextContent("1")
+})
+
+test("generates and displays an external ai analysis", async () => {
+  const user = userEvent.setup()
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(okResponse(alertedSnapshot))
+    .mockResolvedValueOnce({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        analysis: {
+          summary: "Resumo gerado pelo Gemini.",
+          risks: ["Prazo recursal possível"],
+          suggested_action: "Revisar publicação e confirmar prazo.",
+          confidence: "medium",
+          notes: "Sugestão gerada por IA. Revise antes de agir.",
+          created_at_label: "03/08/2026 19:40"
+        }
+      })
+    })
+  vi.stubGlobal("fetch", fetchMock)
+  render(<LegalCaseShowApp />)
+
+  await screen.findByRole("heading", { name: "Inteligência do processo" })
+  await user.click(screen.getByRole("button", { name: "Gerar análise com IA" }))
+
+  expect(await screen.findByRole("heading", { name: "Análise com IA" })).toBeVisible()
+  expect(screen.getByText("Resumo gerado pelo Gemini.")).toBeVisible()
+  expect(screen.getByText("Prazo recursal possível")).toBeVisible()
+  expect(screen.getByText("Revisar publicação e confirmar prazo.")).toBeVisible()
+  expect(fetchMock).toHaveBeenLastCalledWith("/legal_cases/1/ai_analysis", expect.objectContaining({ method: "POST" }))
 })
 
 test("formats the claim value as Brazilian currency in the case data panel", async () => {

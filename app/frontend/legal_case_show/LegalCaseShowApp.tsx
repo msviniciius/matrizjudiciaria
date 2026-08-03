@@ -105,6 +105,15 @@ type FinancialInstallment = {
   payment_action: string | null
 }
 
+type AiAnalysis = {
+  summary: string
+  risks: string[]
+  suggested_action: string
+  confidence: "low" | "medium" | "high"
+  notes: string | null
+  created_at_label: string | null
+}
+
 type Snapshot = {
   case: {
     id: number
@@ -140,6 +149,29 @@ type Snapshot = {
     health_status: string
     has_new_imported_events: boolean
   }
+  intelligence: {
+    status: "stable" | "attention" | "critical"
+    summary: string
+    suggested_action: {
+      title: string
+      description: string
+      priority: "low" | "medium" | "high"
+    }
+    attention_points: Array<{
+      title: string
+      description: string
+      severity: "attention" | "critical"
+    }>
+    metrics: {
+      timeline_events_count: number
+      pending_deadlines_count: number
+      overdue_deadlines_count: number
+      pending_tasks_count: number
+      unread_publications_count: number
+      latest_movement_label: string
+      next_deadline_label: string
+    }
+  }
   next_action: {
     description: string
     deadline_on: string | null
@@ -163,6 +195,7 @@ type Snapshot = {
     new_task: string
     new_exam: string | null
     sync: { path: string; method: string } | null
+    ai_analysis: { path: string; method: string } | null
     record_outcome: { path: string; method: string } | null
     financial_contract?: { path: string; method: string }
   }
@@ -222,6 +255,9 @@ export function LegalCaseShowApp() {
   const [paymentInstallment, setPaymentInstallment] = useState<FinancialInstallment | null>(null)
   const [paymentPending, setPaymentPending] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null)
+  const [aiPending, setAiPending] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
   const outcomeButtonRef = useRef<HTMLButtonElement>(null)
   const restoreOutcomeButtonFocus = useRef(false)
 
@@ -403,6 +439,28 @@ export function LegalCaseShowApp() {
     }
   }
 
+  const generateAiAnalysis = async () => {
+    if (!snapshot.actions.ai_analysis) return
+
+    setAiPending(true)
+    setAiError(null)
+    try {
+      const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content
+      const response = await fetch(snapshot.actions.ai_analysis.path, {
+        method: snapshot.actions.ai_analysis.method.toUpperCase(),
+        headers: { Accept: "application/json", ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) }
+      })
+      const body = await response.json().catch(() => ({})) as { analysis?: AiAnalysis; error?: string }
+      if (!response.ok || !body.analysis) throw new Error(body.error || "Não foi possível gerar a análise com IA.")
+
+      setAiAnalysis(body.analysis)
+    } catch (generationError) {
+      setAiError(generationError instanceof Error ? generationError.message : "Não foi possível gerar a análise com IA.")
+    } finally {
+      setAiPending(false)
+    }
+  }
+
   const timelineLimit = 5
   const visibleTimeline = showAllTimeline ? snapshot.timeline : snapshot.timeline.slice(0, timelineLimit)
   const timelineGroups = groupTimelineByDate(visibleTimeline)
@@ -449,6 +507,15 @@ export function LegalCaseShowApp() {
 
     <div className="react-legal-case-show__layout">
     <div className="react-legal-case-show__main-column">
+    <ProcessIntelligencePanel
+      intelligence={snapshot.intelligence}
+      analysis={aiAnalysis}
+      actionAvailable={Boolean(snapshot.actions.ai_analysis)}
+      pending={aiPending}
+      error={aiError}
+      onGenerate={generateAiAnalysis}
+    />
+
     <section className="react-legal-case-show__next-action" aria-labelledby="next-action-heading">
       <h2 id="next-action-heading">Próxima providência</h2>
       <p>{snapshot.next_action.description}</p>
@@ -582,6 +649,90 @@ export function LegalCaseShowApp() {
       onClose={() => !paymentPending && setPaymentInstallment(null)}
       onSubmit={registerPayment}
     />}
+  </section>
+}
+
+function ProcessIntelligencePanel({
+  intelligence,
+  analysis,
+  actionAvailable,
+  pending,
+  error,
+  onGenerate
+}: {
+  intelligence: Snapshot["intelligence"]
+  analysis: AiAnalysis | null
+  actionAvailable: boolean
+  pending: boolean
+  error: string | null
+  onGenerate: () => Promise<void>
+}) {
+  const statusLabel = {
+    stable: "Estável",
+    attention: "Atenção",
+    critical: "Crítico"
+  }[intelligence.status]
+
+  const priorityLabel = {
+    low: "Baixa",
+    medium: "Média",
+    high: "Alta"
+  }[intelligence.suggested_action.priority]
+
+  return <section className={`react-legal-case-show__intelligence react-legal-case-show__intelligence--${intelligence.status}`} aria-labelledby="process-intelligence-heading">
+    <div className="react-legal-case-show__intelligence-header">
+      <div>
+        <p className="react-legal-case-show__eyebrow">Análise operacional</p>
+        <h2 id="process-intelligence-heading">Inteligência do processo</h2>
+      </div>
+      <div className="react-legal-case-show__intelligence-controls">
+        <span className="react-legal-case-show__intelligence-status">{statusLabel}</span>
+        {actionAvailable && <button type="button" className="react-legal-case-show__actions-button" onClick={() => void onGenerate()} disabled={pending} aria-busy={pending || undefined}>
+          {pending ? "Gerando análise…" : "Gerar análise com IA"}
+        </button>}
+      </div>
+    </div>
+
+    <p className="react-legal-case-show__intelligence-summary">{intelligence.summary}</p>
+
+    <article className="react-legal-case-show__intelligence-action">
+      <p className="react-legal-case-show__intelligence-label">Próxima ação sugerida · Prioridade {priorityLabel}</p>
+      <h3>{intelligence.suggested_action.title}</h3>
+      <p>{intelligence.suggested_action.description}</p>
+    </article>
+
+    <div className="react-legal-case-show__intelligence-grid">
+      <div>
+        <h3>Pontos de atenção</h3>
+        {intelligence.attention_points.length ? <div className="react-legal-case-show__intelligence-points">
+          {intelligence.attention_points.map((point) => <article className={`react-legal-case-show__intelligence-point react-legal-case-show__intelligence-point--${point.severity}`} key={point.title}>
+            <strong>{point.title}</strong>
+            <p>{point.description}</p>
+          </article>)}
+        </div> : <p className="react-legal-case-show__intelligence-empty">Nenhum ponto crítico identificado.</p>}
+      </div>
+
+      <dl className="react-legal-case-show__intelligence-metrics">
+        <div><dt>Eventos na timeline</dt><dd>{intelligence.metrics.timeline_events_count}</dd></div>
+        <div><dt>Prazos pendentes</dt><dd>{intelligence.metrics.pending_deadlines_count}</dd></div>
+        <div><dt>Prazos vencidos</dt><dd>{intelligence.metrics.overdue_deadlines_count}</dd></div>
+        <div><dt>Tarefas pendentes</dt><dd>{intelligence.metrics.pending_tasks_count}</dd></div>
+        <div><dt>Publicações pendentes</dt><dd>{intelligence.metrics.unread_publications_count}</dd></div>
+        <div><dt>Próximo prazo</dt><dd>{intelligence.metrics.next_deadline_label}</dd></div>
+      </dl>
+    </div>
+
+    {error && <p className="react-legal-case-show__intelligence-error" role="alert">{error}</p>}
+    {analysis && <article className="react-legal-case-show__ai-analysis" aria-labelledby="ai-analysis-heading">
+      <p className="react-legal-case-show__intelligence-label">Sugestão gerada por IA · Confiança {analysis.confidence}</p>
+      <h3 id="ai-analysis-heading">Análise com IA</h3>
+      <p>{analysis.summary}</p>
+      {analysis.risks.length > 0 && <ul>
+        {analysis.risks.map((risk) => <li key={risk}>{risk}</li>)}
+      </ul>}
+      <p><strong>Providência sugerida:</strong> {analysis.suggested_action}</p>
+      <p className="react-legal-case-show__ai-disclaimer">{analysis.notes || "Sugestão gerada por IA. Revise antes de agir."}</p>
+    </article>}
   </section>
 }
 
