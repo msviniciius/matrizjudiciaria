@@ -103,6 +103,11 @@
                 <span class="nav-link__label">Andamentos</span>
               <% end %>
 
+              <%= link_to legal_publications_path, class: "nav-link #{'is-active' if controller_name == 'legal_publications'}", aria: { label: "Publicações" }, title: "Publicações" do %>
+                <span class="nav-link__icon" aria-hidden="true">&#128240;</span>
+                <span class="nav-link__label">Publicações</span>
+              <% end %>
+
               <%= link_to deadlines_path, class: "nav-link #{'is-active' if controller_name == 'deadlines'}", aria: { label: "Prazos" }, title: "Prazos" do %>
                 <span class="nav-link__icon" aria-hidden="true">&#9200;</span>
                 <span class="nav-link__label">Prazos</span>
@@ -333,9 +338,45 @@
                   <% end %>
                 </div>
 
+                <div class="navbar-notifications__group">
+                  <p class="navbar-notifications__title">Andamentos</p>
+                  <% if @navbar_imported_events.present? %>
+                    <% @navbar_imported_events.each do |event| %>
+                      <div class="navbar-notifications__item">
+                        <%= link_to legal_case_path(event.legal_case), class: "navbar-notifications__item-link" do %>
+                          <strong><%= event.legal_case.internal_number %></strong>
+                          <span><%= truncate(event.description.to_s, length: 90) %></span>
+                          <span><%= event.source_tribunal.presence || "Tribunal" %> - <%= l(event.created_at, format: :short) %></span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <p class="navbar-notifications__empty">Sem andamentos novos.</p>
+                  <% end %>
+                </div>
+
+                <div class="navbar-notifications__group">
+                  <p class="navbar-notifications__title">Publicações</p>
+                  <% if @navbar_publications.present? %>
+                    <% @navbar_publications.each do |publication| %>
+                      <div class="navbar-notifications__item">
+                        <%= link_to legal_publications_path(status: "unread"), class: "navbar-notifications__item-link" do %>
+                          <strong><%= publication.title.presence || "Publicação sem título" %></strong>
+                          <span><%= publication.process_number.presence || publication.legal_case&.internal_number || "Sem processo vinculado" %></span>
+                          <span><%= publication.journal_name.presence || publication.source.to_s.upcase %></span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <p class="navbar-notifications__empty">Sem publicações novas.</p>
+                  <% end %>
+                </div>
+
                 <div class="navbar-notifications__actions">
                   <%= link_to "Ver prazos", deadlines_path, class: "btn btn-secondary" %>
                   <%= link_to "Ver tarefas", tasks_path, class: "btn btn-secondary" %>
+                  <%= link_to "Ver andamentos", process_movements_path, class: "btn btn-secondary" %>
+                  <%= link_to "Ver publicações", legal_publications_path(status: "unread"), class: "btn btn-secondary" %>
                 </div>
               </div>
             </details>

@@ -60,6 +60,11 @@
             </div>
 
             <div>
+              <%= form.label :oab_state, "UF da OAB" %>
+              <%= form.text_field :oab_state, data: { mask: "uf" }, inputmode: "text", maxlength: 2 %>
+            </div>
+
+            <div>
               <%= form.label :email, "E-mail do escritório" %>
               <%= form.email_field :email %>
             </div>

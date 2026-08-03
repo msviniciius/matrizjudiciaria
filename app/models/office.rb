@@ -1,5 +1,8 @@
 class Office < ApplicationRecord
   CALENDAR_FEED_PURPOSE = :office_calendar_feed
+  BRAZILIAN_STATES = %w[
+    AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO
+  ].freeze
 
   TRIBUNAL_INTEGRATIONS = {
     # Tribunais Estaduais
@@ -80,10 +83,12 @@ class Office < ApplicationRecord
   has_many :units, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :legal_cases, dependent: :destroy
+  has_many :legal_publications, dependent: :destroy
   has_many :receivables, dependent: :destroy
   has_many :deadline_settings, dependent: :destroy
 
   before_validation :normalize_slug
+  before_validation :normalize_oab_settings
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
@@ -94,6 +99,8 @@ class Office < ApplicationRecord
   validates :default_priority, inclusion: { in: LegalCase.priorities.keys }
   validates :deadline_alert_days, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 60 }
   validates :task_alert_days, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 60 }
+  validate :oab_registration_and_state_must_be_present_together
+  validate :oab_state_must_be_valid
   validate :enabled_tribunals_must_be_allowed
 
   def logo_attached?
@@ -136,5 +143,21 @@ class Office < ApplicationRecord
     return if slug.blank? && name.blank?
 
     self.slug = (slug.presence || name).to_s.parameterize
+  end
+
+  def normalize_oab_settings
+    self.oab_registration = oab_registration.to_s.gsub(/\D/, "").presence
+    self.oab_state = oab_state.to_s.upcase.gsub(/[^A-Z]/, "").presence
+  end
+
+  def oab_registration_and_state_must_be_present_together
+    errors.add(:oab_state, "deve ser informada quando houver registro OAB") if oab_registration.present? && oab_state.blank?
+    errors.add(:oab_registration, "deve ser informado quando houver UF da OAB") if oab_state.present? && oab_registration.blank?
+  end
+
+  def oab_state_must_be_valid
+    return if oab_state.blank? || BRAZILIAN_STATES.include?(oab_state)
+
+    errors.add(:oab_state, "deve ser uma UF valida")
   end
 end

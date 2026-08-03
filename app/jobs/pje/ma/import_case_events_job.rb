@@ -67,7 +67,7 @@ module Pje
       end
 
       def import_for_tribunal(office, tribunal_code, legal_case_ids, limit)
-        scope = office.legal_cases.syncable
+        scope = legal_case_ids.present? ? office.legal_cases.syncable : office.legal_cases.needing_sync
         scope = scope.where(id: legal_case_ids) if legal_case_ids.present?
         scope = scope.limit(limit)
 

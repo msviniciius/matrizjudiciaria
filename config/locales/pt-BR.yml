@@ -109,6 +109,9 @@ pt-BR:
         name: Nome
       district:
         name: Nome
+      office:
+        oab_registration: Registro OAB
+        oab_state: UF da OAB
       legal_case:
         internal_number: Número interno
         external_number: Número do processo

@@ -1,0 +1,102 @@
+<% content_for :title, "Publicações" %>
+
+<section class="case-section case-section--filters">
+  <%= form_with url: legal_publications_path, method: :get, local: true, class: "main-filters main-filters--clients-pattern", html: { "aria-label": "Filtros de publicações" }, data: { main_filters: true, filters_open: @advanced_filters_open } do |form| %>
+    <div class="main-filters__bar">
+      <label>
+        Busca
+        <%= form.text_field :q, value: @filters[:q], placeholder: "Título, conteúdo, processo ou fonte", class: "main-filters__q" %>
+      </label>
+
+      <%= form.submit "Buscar", class: "main-filters__submit" %>
+
+      <button
+        type="button"
+        class="main-filters__toggle"
+        data-main-filters-toggle
+        aria-expanded="<%= @advanced_filters_open ? 'true' : 'false' %>"
+      >
+        Filtros avançados
+      </button>
+
+      <%= link_to "Limpar filtros", legal_publications_path, class: "main-filters__clear" %>
+    </div>
+
+    <div class="main-filters__advanced <%= "is-open" if @advanced_filters_open %>" data-main-filters-advanced>
+      <div class="main-filters__advanced-fields">
+        <label>
+          Leitura
+          <%= form.select :status, [["Todas", ""], ["Não lidas", "unread"], ["Lidas", "read"]], { selected: @filters[:status] } %>
+        </label>
+        <label>
+          Vínculo
+          <%= form.select :link, [["Todas", ""], ["Vinculadas", "linked"], ["Sem processo", "unlinked"]], { selected: @filters[:link] } %>
+        </label>
+      </div>
+    </div>
+  <% end %>
+</section>
+
+<section class="case-section case-section--listing">
+  <div class="listing-head">
+    <h3>Publicações</h3>
+    <p>Exibindo <strong><%= @legal_publications.size %></strong> publicação(ões)</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Publicação</th>
+          <th>Processo</th>
+          <th>Fonte</th>
+          <th>Data</th>
+          <th>Status</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @legal_publications.any? %>
+          <% @legal_publications.each do |publication| %>
+            <tr>
+              <td>
+                <strong><%= publication.title.presence || publication.event_name %></strong>
+                <br>
+                <span><%= truncate(publication.content, length: 140) %></span>
+              </td>
+              <td>
+                <% if publication.legal_case.present? %>
+                  <%= link_to publication.legal_case.internal_number, legal_case_path(publication.legal_case) %>
+                  <br>
+                  <span><%= publication.legal_case.client.full_name %></span>
+                <% else %>
+                  <%= publication.process_number.presence || "-" %>
+                <% end %>
+              </td>
+              <td>
+                <%= publication.court_name.presence || "-" %>
+                <br>
+                <span><%= publication.journal_name.presence || publication.source %></span>
+              </td>
+              <td><%= publication.published_at.present? ? l(publication.published_at, format: :short) : "-" %></td>
+              <td><%= publication.read_at.present? ? "Lida" : "Não lida" %></td>
+              <td class="table-actions">
+                <% if publication.read_at.blank? %>
+                  <%= button_to mark_read_legal_publication_path(publication), method: :patch, class: "btn btn-secondary" do %>
+                    Marcar como lida
+                  <% end %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="6" class="table-empty-state">Nenhuma publicação recebida.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -64,6 +64,48 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select "#react-dashboard-root"
   end
 
+  test "shows imported movements and unread publications in navbar notifications" do
+    legal_case = create_full_legal_case(
+      unit: @unit,
+      internal_number: "PROC-NOTIF-001",
+      external_number: "0000001-00.2026.8.10.0001"
+    )
+    imported_event = CaseEvent.create!(
+      legal_case: legal_case,
+      description: "Movimentação importada do tribunal",
+      entry_kind: "andamento",
+      event_date: Time.current,
+      pje_external_id: "navbar-event-#{SecureRandom.hex(4)}",
+      source_tribunal: "TJMA"
+    )
+    legal_case.update_column(:last_viewed_events_at, imported_event.created_at - 1.minute)
+    LegalPublication.create!(
+      office: @office,
+      legal_case: legal_case,
+      source: "djma",
+      external_id: "navbar-publication-#{SecureRandom.hex(4)}",
+      event_name: "djma_publication",
+      title: "Publicação nova no DJMA",
+      content: "Intimação disponibilizada no diário"
+    )
+
+    get painel_path
+
+    assert_response :success
+    assert_select ".navbar-notifications__badge" do |badges|
+      assert_operator badges.first.text.to_i, :>=, 2
+    end
+    assert_select ".navbar-notifications__title", text: "Andamentos"
+    assert_select ".navbar-notifications__item-link[href='#{legal_case_path(legal_case)}']" do
+      assert_select "strong", text: legal_case.internal_number
+      assert_select "span", text: /Movimentação importada do tribunal/
+    end
+    assert_select ".navbar-notifications__title", text: "Publicações"
+    assert_select ".navbar-notifications__item-link[href='#{legal_publications_path(status: "unread")}']" do
+      assert_select "strong", text: "Publicação nova no DJMA"
+    end
+  end
+
   test "updates a responsible person through JSON" do
     legal_case = create_full_legal_case(unit: @unit, responsible_name: "")
 
