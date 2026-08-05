@@ -9,6 +9,7 @@ on:
 jobs:
   run-scheduled-jobs:
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 15
     steps:
       - name: Import case events
