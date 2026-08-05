@@ -1,0 +1,30 @@
+name: Scheduled Jobs
+
+on:
+  schedule:
+    # 08:00-19:00 America/Sao_Paulo while Brazil is UTC-3.
+    - cron: "0 11-22 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  run-scheduled-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Import case events
+        run: |
+          curl -fsS -X POST "$APP_URL/internal/jobs/import-case-events" \
+            -H "Authorization: Bearer $JOB_TRIGGER_TOKEN" \
+            -H "Accept: application/json"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          JOB_TRIGGER_TOKEN: ${{ secrets.JOB_TRIGGER_TOKEN }}
+
+      - name: Import DJMA publications
+        run: |
+          curl -fsS -X POST "$APP_URL/internal/jobs/import-djma-publications" \
+            -H "Authorization: Bearer $JOB_TRIGGER_TOKEN" \
+            -H "Accept: application/json"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          JOB_TRIGGER_TOKEN: ${{ secrets.JOB_TRIGGER_TOKEN }}
