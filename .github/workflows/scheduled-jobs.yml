@@ -13,18 +13,22 @@ jobs:
     steps:
       - name: Import case events
         run: |
-          curl -fsS -X POST "$APP_URL/internal/jobs/import-case-events" \
+          test -n "$APP_PUBLIC_URL"
+          test -n "$JOB_TRIGGER_TOKEN"
+          curl -fsS -X POST "$APP_PUBLIC_URL/internal/jobs/import-case-events" \
             -H "Authorization: Bearer $JOB_TRIGGER_TOKEN" \
             -H "Accept: application/json"
         env:
-          APP_URL: ${{ secrets.APP_URL }}
+          APP_PUBLIC_URL: ${{ secrets.APP_PUBLIC_URL }}
           JOB_TRIGGER_TOKEN: ${{ secrets.JOB_TRIGGER_TOKEN }}
 
       - name: Import DJMA publications
         run: |
-          curl -fsS -X POST "$APP_URL/internal/jobs/import-djma-publications" \
+          test -n "$APP_PUBLIC_URL"
+          test -n "$JOB_TRIGGER_TOKEN"
+          curl -fsS -X POST "$APP_PUBLIC_URL/internal/jobs/import-djma-publications" \
             -H "Authorization: Bearer $JOB_TRIGGER_TOKEN" \
             -H "Accept: application/json"
         env:
-          APP_URL: ${{ secrets.APP_URL }}
+          APP_PUBLIC_URL: ${{ secrets.APP_PUBLIC_URL }}
           JOB_TRIGGER_TOKEN: ${{ secrets.JOB_TRIGGER_TOKEN }}
