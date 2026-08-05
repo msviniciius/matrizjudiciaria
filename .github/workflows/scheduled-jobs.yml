@@ -9,27 +9,27 @@ on:
 jobs:
   run-scheduled-jobs:
     runs-on: ubuntu-latest
-    environment: production
+    environment: matrizjuduciaria
     timeout-minutes: 15
     steps:
       - name: Import case events
         run: |
-          test -n "$APP_PUBLIC_URL"
+          test -n "$APP_URL"
           test -n "$JOB_TRIGGER_TOKEN"
-          curl -fsS -X POST "$APP_PUBLIC_URL/internal/jobs/import-case-events" \
+          curl -fsS -X POST "$APP_URL/internal/jobs/import-case-events" \
             -H "Authorization: Bearer $JOB_TRIGGER_TOKEN" \
             -H "Accept: application/json"
         env:
-          APP_PUBLIC_URL: ${{ secrets.APP_PUBLIC_URL }}
+          APP_URL: ${{ secrets.APP_URL }}
           JOB_TRIGGER_TOKEN: ${{ secrets.JOB_TRIGGER_TOKEN }}
 
       - name: Import DJMA publications
         run: |
-          test -n "$APP_PUBLIC_URL"
+          test -n "$APP_URL"
           test -n "$JOB_TRIGGER_TOKEN"
-          curl -fsS -X POST "$APP_PUBLIC_URL/internal/jobs/import-djma-publications" \
+          curl -fsS -X POST "$APP_URL/internal/jobs/import-djma-publications" \
             -H "Authorization: Bearer $JOB_TRIGGER_TOKEN" \
             -H "Accept: application/json"
         env:
-          APP_PUBLIC_URL: ${{ secrets.APP_PUBLIC_URL }}
+          APP_URL: ${{ secrets.APP_URL }}
           JOB_TRIGGER_TOKEN: ${{ secrets.JOB_TRIGGER_TOKEN }}
