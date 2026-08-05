@@ -53,6 +53,11 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :internal do
+    post "jobs/import-case-events", to: "scheduled_jobs#import_case_events", as: :jobs_import_case_events
+    post "jobs/import-djma-publications", to: "scheduled_jobs#import_djma_publications", as: :jobs_import_djma_publications
+  end
+
   resources :legal_cases do
     collection do
       get :daily_closure

@@ -184,7 +184,12 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(screen.getByRole("region", { name: "Central de comando" })).toBeVisible()
   expect(screen.queryByRole("main")).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: /Prazos/ })).toHaveAttribute("aria-expanded", "true")
-  expect(screen.getByRole("link", { name: "Editar processo" })).toBeVisible()
+  const shortcuts = screen.getByRole("navigation", { name: "Atalhos do processo" })
+  expect(within(shortcuts).getByRole("button", { name: "Registrar desfecho" })).toBeVisible()
+  expect(within(shortcuts).getByRole("link", { name: "Editar processo" })).toBeVisible()
+  expect(within(shortcuts).getByRole("link", { name: "Exportar PDF" })).toBeVisible()
+  expect(within(shortcuts).getByRole("link", { name: "Voltar" })).toBeVisible()
+  expect(within(shortcuts).getAllByRole("link").at(-1)).toHaveAccessibleName("Voltar")
 })
 
 test("renders the deterministic process intelligence panel", async () => {

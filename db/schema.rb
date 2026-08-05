@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_194000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_05_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -515,6 +515,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_194000) do
     t.index ["payment_recorded_by_id"], name: "index_receivables_on_payment_recorded_by_id"
     t.index ["status"], name: "index_receivables_on_status"
     t.index ["unit_id"], name: "index_receivables_on_unit_id"
+  end
+
+  create_table "scheduled_job_runs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "duration_ms", default: 0, null: false
+    t.text "error_message"
+    t.datetime "finished_at", null: false
+    t.string "job_name", null: false
+    t.jsonb "result", default: {}, null: false
+    t.datetime "started_at", null: false
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_name", "started_at"], name: "index_scheduled_job_runs_on_job_name_and_started_at"
+    t.index ["status", "started_at"], name: "index_scheduled_job_runs_on_status_and_started_at"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

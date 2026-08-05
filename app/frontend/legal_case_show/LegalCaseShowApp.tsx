@@ -489,7 +489,7 @@ export function LegalCaseShowApp() {
         <p className="react-legal-case-show__eyebrow">Processo {snapshot.case.internal_number}</p>
         <p className="react-legal-case-show__identifiers">{snapshot.case.external_number ? `CNJ: ${snapshot.case.external_number}` : "Sem número CNJ"}</p>
       </div>
-      <div className="react-legal-case-show__header-actions"><div className="react-legal-case-show__actions">{snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}<a href={snapshot.actions.edit}>Editar processo</a><a href={snapshot.actions.pdf} target="_blank" rel="noreferrer">Exportar PDF</a><a href={snapshot.actions.index}>Voltar</a></div><div className="react-legal-case-show__badges" aria-label="Situação do processo">
+      <div className="react-legal-case-show__header-actions"><div className="react-legal-case-show__badges" aria-label="Situação do processo">
         <span className="react-legal-case-show__badge">{snapshot.case.phase_label}</span>
         <span className="react-legal-case-show__badge">{snapshot.case.status_label}</span>
         <span className="react-legal-case-show__badge react-legal-case-show__badge--priority">Prioridade {snapshot.case.priority_label}</span>
@@ -620,8 +620,12 @@ export function LegalCaseShowApp() {
     {snapshot.case.outcome !== "undefined" && <OutcomeSummary legalCase={snapshot.case} />}
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
+      {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
+      <a href={snapshot.actions.edit}>Editar processo</a>
+      <a href={snapshot.actions.pdf} target="_blank" rel="noreferrer">Exportar PDF</a>
       <a href={snapshot.actions.calendar}>Adicionar ao calendário</a>
       {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} onSync={syncCase} pending={syncPending} />}
+      <a href={snapshot.actions.index}>Voltar</a>
     </nav>
     </aside>
     </div>
