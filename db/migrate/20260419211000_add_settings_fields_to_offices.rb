@@ -1,4 +1,4 @@
-class AddSettingsFieldsToOffices < ActiveRecord::Migration[8.1]
+class AddSettingsFieldsToOffices < ActiveRecord::Migration[8.0]
   def change
     change_table :offices, bulk: true do |t|
       t.string :legal_name

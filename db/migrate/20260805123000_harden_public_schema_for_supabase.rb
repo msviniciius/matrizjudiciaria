@@ -1,4 +1,4 @@
-class HardenPublicSchemaForSupabase < ActiveRecord::Migration[8.1]
+class HardenPublicSchemaForSupabase < ActiveRecord::Migration[8.0]
   TABLES = %w[
     active_storage_attachments
     active_storage_blobs

@@ -1,4 +1,4 @@
-class AddOperationalFieldsToUnits < ActiveRecord::Migration[8.1]
+class AddOperationalFieldsToUnits < ActiveRecord::Migration[8.0]
   def change
     change_table :units, bulk: true do |t|
       t.string :email

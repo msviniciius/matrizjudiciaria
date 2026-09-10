@@ -1,4 +1,4 @@
-class CreateFinancialInstallments < ActiveRecord::Migration[8.1]
+class CreateFinancialInstallments < ActiveRecord::Migration[8.0]
   def change
     create_table :financial_installments do |t|
       t.references :financial_contract, null: false, foreign_key: true

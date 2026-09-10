@@ -1,4 +1,4 @@
-class CreateProcessMovements < ActiveRecord::Migration[8.1]
+class CreateProcessMovements < ActiveRecord::Migration[8.0]
   def change
     create_table :process_movements do |t|
       t.references :process, null: false, foreign_key: { to_table: :legal_cases }

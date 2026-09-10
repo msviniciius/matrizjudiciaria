@@ -1,4 +1,4 @@
-class CreateReceivables < ActiveRecord::Migration[8.1]
+class CreateReceivables < ActiveRecord::Migration[8.0]
   def change
     create_table :receivables do |t|
       t.references :office, null: false, foreign_key: true

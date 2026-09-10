@@ -1,4 +1,4 @@
-class CreateReceivablePayments < ActiveRecord::Migration[8.1]
+class CreateReceivablePayments < ActiveRecord::Migration[8.0]
   def change
     create_table :receivable_payments do |t|
       t.references :receivable, null: false, foreign_key: true

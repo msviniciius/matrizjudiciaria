@@ -1,4 +1,4 @@
-class CreateLegalAreas < ActiveRecord::Migration[8.1]
+class CreateLegalAreas < ActiveRecord::Migration[8.0]
   def change
     create_table :legal_areas do |t|
       t.string :name, null: false

@@ -1,4 +1,4 @@
-class AddPjeFieldsToLegalCases < ActiveRecord::Migration[8.1]
+class AddPjeFieldsToLegalCases < ActiveRecord::Migration[8.0]
   def change
     add_column :legal_cases, :pje_case_id, :string
     add_index :legal_cases, :pje_case_id

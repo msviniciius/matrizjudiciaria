@@ -1,4 +1,4 @@
-class AddDadosGovToClients < ActiveRecord::Migration[8.1]
+class AddDadosGovToClients < ActiveRecord::Migration[8.0]
   def change
     add_column :clients, :dados_gov, :text
   end

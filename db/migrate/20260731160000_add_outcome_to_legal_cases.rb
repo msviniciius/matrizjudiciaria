@@ -1,4 +1,4 @@
-class AddOutcomeToLegalCases < ActiveRecord::Migration[8.1]
+class AddOutcomeToLegalCases < ActiveRecord::Migration[8.0]
   def change
     add_column :legal_cases, :outcome, :string, null: false, default: "undefined"
     add_column :legal_cases, :outcome_confirmed_at, :datetime

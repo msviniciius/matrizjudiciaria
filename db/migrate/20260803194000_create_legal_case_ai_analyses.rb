@@ -1,4 +1,4 @@
-class CreateLegalCaseAiAnalyses < ActiveRecord::Migration[8.1]
+class CreateLegalCaseAiAnalyses < ActiveRecord::Migration[8.0]
   def change
     create_table :legal_case_ai_analyses do |t|
       t.references :legal_case, null: false, foreign_key: true

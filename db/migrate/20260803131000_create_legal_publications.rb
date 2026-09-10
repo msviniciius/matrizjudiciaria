@@ -1,4 +1,4 @@
-class CreateLegalPublications < ActiveRecord::Migration[8.1]
+class CreateLegalPublications < ActiveRecord::Migration[8.0]
   def change
     create_table :legal_publications do |t|
       t.references :office, null: false, foreign_key: true

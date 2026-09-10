@@ -1,4 +1,4 @@
-class CreateProcessPhasesAndStatuses < ActiveRecord::Migration[8.1]
+class CreateProcessPhasesAndStatuses < ActiveRecord::Migration[8.0]
   def change
     create_table :process_phases do |t|
       t.string :code, null: false
