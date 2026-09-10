@@ -1,4 +1,4 @@
-class CreateOffices < ActiveRecord::Migration[8.1]
+class CreateOffices < ActiveRecord::Migration[8.0]
   def change
     create_table :offices do |t|
       t.string :name, null: false

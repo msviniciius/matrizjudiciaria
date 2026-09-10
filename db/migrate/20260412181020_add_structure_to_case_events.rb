@@ -1,4 +1,4 @@
-class AddStructureToCaseEvents < ActiveRecord::Migration[8.1]
+class AddStructureToCaseEvents < ActiveRecord::Migration[8.0]
   def change
     add_reference :case_events, :movement_type, foreign_key: true
     add_column :case_events, :entry_kind, :string, null: false, default: "andamento"

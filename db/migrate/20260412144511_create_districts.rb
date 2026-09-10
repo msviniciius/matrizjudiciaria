@@ -1,4 +1,4 @@
-class CreateDistricts < ActiveRecord::Migration[8.1]
+class CreateDistricts < ActiveRecord::Migration[8.0]
   def change
     create_table :districts do |t|
       t.string :name, null: false

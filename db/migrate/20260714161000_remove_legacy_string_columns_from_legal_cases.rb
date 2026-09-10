@@ -1,4 +1,4 @@
-class RemoveLegacyStringColumnsFromLegalCases < ActiveRecord::Migration[8.1]
+class RemoveLegacyStringColumnsFromLegalCases < ActiveRecord::Migration[8.0]
   def change
     # Colunas string legadas, substituídas por FKs (court_id, district_id, etc.)
     # As associações belongs_to sombreiam estas colunas, tornando-as inacessíveis

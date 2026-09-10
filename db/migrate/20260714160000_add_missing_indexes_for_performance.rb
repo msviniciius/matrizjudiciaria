@@ -1,4 +1,4 @@
-class AddMissingIndexesForPerformance < ActiveRecord::Migration[8.1]
+class AddMissingIndexesForPerformance < ActiveRecord::Migration[8.0]
   def change
     # tasks - usados em filtros e ordenação
     add_index :tasks, :status

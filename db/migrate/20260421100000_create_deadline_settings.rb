@@ -1,4 +1,4 @@
-class CreateDeadlineSettings < ActiveRecord::Migration[8.1]
+class CreateDeadlineSettings < ActiveRecord::Migration[8.0]
   def change
     create_table :deadline_settings do |t|
       t.references :office, null: false, foreign_key: true

@@ -1,4 +1,4 @@
-class CreateLegalCases < ActiveRecord::Migration[8.1]
+class CreateLegalCases < ActiveRecord::Migration[8.0]
   def change
     create_table :legal_cases do |t|
       t.string :internal_number

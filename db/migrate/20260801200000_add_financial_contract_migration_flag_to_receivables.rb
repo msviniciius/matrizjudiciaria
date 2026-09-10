@@ -1,4 +1,4 @@
-class AddFinancialContractMigrationFlagToReceivables < ActiveRecord::Migration[8.1]
+class AddFinancialContractMigrationFlagToReceivables < ActiveRecord::Migration[8.0]
   def change
     add_column :receivables, :migrated_to_financial_contract, :boolean, null: false, default: false
     add_index :receivables, :migrated_to_financial_contract

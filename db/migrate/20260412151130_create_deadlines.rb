@@ -1,4 +1,4 @@
-class CreateDeadlines < ActiveRecord::Migration[8.1]
+class CreateDeadlines < ActiveRecord::Migration[8.0]
   def change
     create_table :deadlines do |t|
       t.references :legal_case, null: false, foreign_key: true

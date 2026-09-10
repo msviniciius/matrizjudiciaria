@@ -1,4 +1,4 @@
-class AddManagementFieldsToLegalCases < ActiveRecord::Migration[8.1]
+class AddManagementFieldsToLegalCases < ActiveRecord::Migration[8.0]
   def change
     add_column :legal_cases, :last_movement, :text
     add_column :legal_cases, :last_movement_at, :datetime

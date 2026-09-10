@@ -1,4 +1,4 @@
-class EnsureNextDeadlineOnOnLegalCases < ActiveRecord::Migration[8.1]
+class EnsureNextDeadlineOnOnLegalCases < ActiveRecord::Migration[8.0]
   def change
     return if column_exists?(:legal_cases, :next_deadline_on)
 

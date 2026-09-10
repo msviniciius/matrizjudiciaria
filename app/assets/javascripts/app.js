@@ -1169,6 +1169,7 @@
 
     if (!areaId) {
       processSelect.disabled = true;
+      processSelect.dispatchEvent(new Event("change", { bubbles: true }));
       return;
     }
 
@@ -1184,6 +1185,7 @@
       processSelect.appendChild(buildOption(currentValue, currentValue, true));
     } finally {
       processSelect.disabled = false;
+      processSelect.dispatchEvent(new Event("change", { bubbles: true }));
     }
   };
 
@@ -1367,6 +1369,7 @@
         checkbox.dataset.periciaPrevChecked = isChecked ? "true" : "false";
 
         if (!wasChecked && isChecked && checkbox.dataset.periciaOpenModalOnCheck === "true") {
+          setPericiaModalFieldsEnabled(modal, true);
           openDialog(modal);
         }
       });

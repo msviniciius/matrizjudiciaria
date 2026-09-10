@@ -1,4 +1,4 @@
-class CreateScheduledJobRuns < ActiveRecord::Migration[8.1]
+class CreateScheduledJobRuns < ActiveRecord::Migration[8.0]
   def change
     create_table :scheduled_job_runs do |t|
       t.string :job_name, null: false

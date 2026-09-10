@@ -1,4 +1,4 @@
-class CreateCourts < ActiveRecord::Migration[8.1]
+class CreateCourts < ActiveRecord::Migration[8.0]
   def change
     create_table :courts do |t|
       t.string :name, null: false

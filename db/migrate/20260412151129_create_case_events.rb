@@ -1,4 +1,4 @@
-class CreateCaseEvents < ActiveRecord::Migration[8.1]
+class CreateCaseEvents < ActiveRecord::Migration[8.0]
   def change
     create_table :case_events do |t|
       t.references :legal_case, null: false, foreign_key: true

@@ -1,4 +1,4 @@
-class CreateUnitsAndUserUnits < ActiveRecord::Migration[8.1]
+class CreateUnitsAndUserUnits < ActiveRecord::Migration[8.0]
   def change
     create_table :units do |t|
       t.references :office, null: false, foreign_key: true

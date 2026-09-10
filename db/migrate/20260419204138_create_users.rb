@@ -1,4 +1,4 @@
-class CreateUsers < ActiveRecord::Migration[8.1]
+class CreateUsers < ActiveRecord::Migration[8.0]
   def change
     create_table :users do |t|
       t.references :office, null: false, foreign_key: true

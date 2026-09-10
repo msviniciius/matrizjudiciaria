@@ -1,4 +1,4 @@
-class CreateProcessMovementAudits < ActiveRecord::Migration[8.1]
+class CreateProcessMovementAudits < ActiveRecord::Migration[8.0]
   def change
     create_table :process_movement_audits do |t|
       t.references :process_movement, null: false, foreign_key: true

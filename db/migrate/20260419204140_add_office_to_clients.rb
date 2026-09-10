@@ -1,4 +1,4 @@
-class AddOfficeToClients < ActiveRecord::Migration[8.1]
+class AddOfficeToClients < ActiveRecord::Migration[8.0]
   class MigrationOffice < ApplicationRecord
     self.table_name = "offices"
   end

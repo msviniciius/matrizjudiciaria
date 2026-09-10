@@ -1,0 +1,4 @@
+{
+  "installCommand": "dnf install -y libyaml-devel && bundle install && npm ci",
+  "outputDirectory": "public"
+}

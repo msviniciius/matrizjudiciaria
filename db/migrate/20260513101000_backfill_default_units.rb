@@ -1,4 +1,4 @@
-class BackfillDefaultUnits < ActiveRecord::Migration[8.1]
+class BackfillDefaultUnits < ActiveRecord::Migration[8.0]
   class Office < ApplicationRecord
     self.table_name = "offices"
   end

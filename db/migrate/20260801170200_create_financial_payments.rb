@@ -1,4 +1,4 @@
-class CreateFinancialPayments < ActiveRecord::Migration[8.1]
+class CreateFinancialPayments < ActiveRecord::Migration[8.0]
   def change
     create_table :financial_payments do |t|
       t.references :financial_installment, null: false, foreign_key: true, index: { unique: true }

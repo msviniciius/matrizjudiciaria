@@ -1,4 +1,4 @@
-class AddExceptionFieldsToProcessMovements < ActiveRecord::Migration[8.1]
+class AddExceptionFieldsToProcessMovements < ActiveRecord::Migration[8.0]
   def change
     add_column :process_movements, :manual_override, :boolean, null: false, default: false
     add_column :process_movements, :exception_authorized, :boolean, null: false, default: false

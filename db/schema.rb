@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_123000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -163,7 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_123000) do
     t.index ["office_id"], name: "index_financial_contracts_on_office_id"
     t.check_constraint "client_received_amount IS NULL OR client_received_amount >= 0::numeric", name: "financial_contracts_client_received_amount_nonnegative"
     t.check_constraint "fixed_amount > 0::numeric", name: "financial_contracts_fixed_amount_positive"
-    t.check_constraint "includes_percentage AND percentage > 0::numeric AND percentage <= 100::numeric AND (percentage_basis::text = ANY (ARRAY['claim_value'::character varying, 'client_received'::character varying]::text[])) OR NOT includes_percentage AND percentage IS NULL AND percentage_basis IS NULL", name: "financial_contracts_percentage_configuration"
+    t.check_constraint "includes_percentage AND percentage > 0::numeric AND percentage <= 100::numeric AND (percentage_basis::text = ANY (ARRAY['claim_value'::character varying::text, 'client_received'::character varying::text])) OR NOT includes_percentage AND percentage IS NULL AND percentage_basis IS NULL", name: "financial_contracts_percentage_configuration"
     t.check_constraint "installment_count >= 1 AND installment_count <= 12", name: "financial_contracts_installment_count_range"
     t.check_constraint "total_amount > 0::numeric", name: "financial_contracts_total_amount_positive"
   end
@@ -182,7 +182,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_123000) do
     t.index ["status"], name: "index_financial_installments_on_status"
     t.check_constraint "amount > 0::numeric", name: "financial_installments_amount_positive"
     t.check_constraint "number >= 1 AND number <= 12", name: "financial_installments_number_range"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'paid'::character varying]::text[])", name: "financial_installments_status_allowed"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'paid'::character varying::text])", name: "financial_installments_status_allowed"
   end
 
   create_table "financial_payments", force: :cascade do |t|
@@ -196,7 +196,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_123000) do
     t.index ["financial_installment_id"], name: "index_financial_payments_on_financial_installment_id", unique: true
     t.index ["recorded_by_id"], name: "index_financial_payments_on_recorded_by_id"
     t.check_constraint "amount > 0::numeric", name: "financial_payments_amount_positive"
-    t.check_constraint "payment_method::text = ANY (ARRAY['pix'::character varying, 'cash'::character varying, 'credit_card'::character varying, 'debit_card'::character varying]::text[])", name: "financial_payments_method_allowed"
+    t.check_constraint "payment_method::text = ANY (ARRAY['pix'::character varying::text, 'cash'::character varying::text, 'credit_card'::character varying::text, 'debit_card'::character varying::text])", name: "financial_payments_method_allowed"
   end
 
   create_table "legal_areas", force: :cascade do |t|

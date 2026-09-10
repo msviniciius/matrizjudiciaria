@@ -1,4 +1,4 @@
-class CreateMovementTypes < ActiveRecord::Migration[8.1]
+class CreateMovementTypes < ActiveRecord::Migration[8.0]
   def change
     create_table :movement_types do |t|
       t.string :name, null: false

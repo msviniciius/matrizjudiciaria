@@ -1,4 +1,4 @@
-class CreateProcessExams < ActiveRecord::Migration[8.1]
+class CreateProcessExams < ActiveRecord::Migration[8.0]
   def change
     create_table :process_exams do |t|
       t.references :legal_case, null: false, foreign_key: true

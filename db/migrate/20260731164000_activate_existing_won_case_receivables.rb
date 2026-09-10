@@ -1,4 +1,4 @@
-class ActivateExistingWonCaseReceivables < ActiveRecord::Migration[8.1]
+class ActivateExistingWonCaseReceivables < ActiveRecord::Migration[8.0]
   def up
     execute <<~SQL
       UPDATE receivables

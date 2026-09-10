@@ -1,4 +1,4 @@
-class CreateMovementTemplates < ActiveRecord::Migration[8.1]
+class CreateMovementTemplates < ActiveRecord::Migration[8.0]
   def change
     create_table :movement_templates do |t|
       t.references :phase, null: false, foreign_key: { to_table: :process_phases }
