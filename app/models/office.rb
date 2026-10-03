@@ -1,5 +1,7 @@
 class Office < ApplicationRecord
   CALENDAR_FEED_PURPOSE = :office_calendar_feed
+  LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
+  LOGO_MAX_SIZE = 5.megabytes
   BRAZILIAN_STATES = %w[
     AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO
   ].freeze
@@ -102,6 +104,7 @@ class Office < ApplicationRecord
   validate :oab_registration_and_state_must_be_present_together
   validate :oab_state_must_be_valid
   validate :enabled_tribunals_must_be_allowed
+  validate :logo_must_be_safe
 
   def logo_attached?
     logo.attached?
@@ -126,6 +129,15 @@ class Office < ApplicationRecord
   end
 
   private
+
+  def logo_must_be_safe
+    logo_change = attachment_changes["logo"]
+    return unless logo_change.respond_to?(:blob)
+
+    blob = logo_change.blob
+    errors.add(:logo, "deve ser PNG, JPEG ou WebP") unless LOGO_CONTENT_TYPES.include?(blob.content_type)
+    errors.add(:logo, "deve ter no máximo 5 MB") if blob.byte_size > LOGO_MAX_SIZE
+  end
 
   def enabled_tribunals_must_be_allowed
     return unless respond_to?(:enabled_tribunals)

@@ -121,6 +121,68 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_empty JSON.parse(response.body).fetch("legal_cases")
   end
 
+  test "creates and lists only the office matrix case in matrix context" do
+    matrix_user = create_user(role: "attendant")
+    unit = Unit.create!(office: default_office, name: "Unidade fora da Matriz")
+    unit_case = create_full_legal_case(
+      internal_number: "PROC-MATRIX-UNIT",
+      office: default_office,
+      unit: unit
+    )
+    other_office = Office.create!(name: "Escritório externo", slug: "escritorio-externo")
+    other_client = Client.create!(
+      full_name: "Cliente externo",
+      cpf_cnpj: "77777777777",
+      office: other_office
+    )
+    other_office_case = create_full_legal_case(
+      internal_number: "PROC-MATRIX-OTHER-OFFICE",
+      office: other_office,
+      client: other_client,
+      unit: nil
+    )
+    sign_in(matrix_user)
+
+    post clients_url, params: { client: {
+      full_name: "Cliente da Matriz",
+      cpf_cnpj: "88888888888"
+    } }
+    assert_response :redirect
+    matrix_client = Client.find_by!(cpf_cnpj: "88888888888")
+
+    assert_nil matrix_client.unit_id
+    assert_equal default_office.id, matrix_client.office_id
+
+    post legal_cases_url, params: { legal_case: {
+      internal_number: "PROC-MATRIX-001",
+      entry_date: Date.current,
+      phase: "analise_juridica",
+      status: "em_analise",
+      next_action: "Acompanhar processo",
+      next_deadline_on: Date.current + 2.days,
+      priority: "medium",
+      client_id: matrix_client.id,
+      legal_area_id: @test_legal_area.id,
+      process_type_id: @test_process_type.id,
+      district_id: @test_district.id,
+      court_id: @test_court.id
+    } }
+    assert_response :redirect
+    matrix_case = LegalCase.find_by!(internal_number: "PROC-MATRIX-001")
+
+    assert_nil matrix_case.unit_id
+    assert_equal default_office.id, matrix_case.office_id
+    assert_equal matrix_client.id, matrix_case.client_id
+
+    get legal_cases_url(format: :json)
+
+    assert_response :success
+    case_ids = response.parsed_body.fetch("legal_cases").pluck("id")
+    assert_includes case_ids, matrix_case.id
+    assert_not_includes case_ids, unit_case.id
+    assert_not_includes case_ids, other_office_case.id
+  end
+
   test "should get new" do
     get new_legal_case_url
     assert_response :success

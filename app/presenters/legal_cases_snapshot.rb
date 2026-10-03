@@ -12,10 +12,11 @@ class LegalCasesSnapshot
     [ "Sem prazo", "without_deadline" ]
   ].freeze
 
-  def initialize(office:, unit:, all_units_mode:, filters:)
+  def initialize(office:, unit:, all_units_mode:, matrix_mode:, filters:)
     @office = office
     @unit = unit
     @all_units_mode = all_units_mode
+    @matrix_mode = matrix_mode
     @filters = filters.to_h.symbolize_keys
   end
 
@@ -39,7 +40,7 @@ class LegalCasesSnapshot
 
   private
 
-  attr_reader :office, :unit, :all_units_mode, :filters
+  attr_reader :office, :unit, :all_units_mode, :matrix_mode, :filters
 
   def legal_cases
     @legal_cases ||= LegalCaseQuery.new(scoped_cases, filters).call.includes(:client, :legal_area).order(updated_at: :desc)
@@ -51,6 +52,7 @@ class LegalCasesSnapshot
 
   def scope_by_unit(scope)
     return scope if all_units_mode
+    return scope.where(unit_id: nil) if matrix_mode
     return scope.none if unit.blank?
 
     scope.where(unit_id: unit.id)

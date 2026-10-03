@@ -9,6 +9,7 @@ class LegalCasesController < ApplicationController
         office: current_office,
         unit: current_unit,
         all_units_mode: all_units_mode?,
+        matrix_mode: matrix_mode?,
         filters: @filters
       ).as_json
       return

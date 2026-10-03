@@ -123,7 +123,7 @@
 
             <div class="field-full">
               <%= form.label :logo, "Logotipo" %>
-              <%= form.file_field :logo, accept: "image/png,image/jpeg,image/webp,image/svg+xml" %>
+              <%= form.file_field :logo, accept: "image/png,image/jpeg,image/webp" %>
             </div>
 
             <% if @office.logo_attached? %>
