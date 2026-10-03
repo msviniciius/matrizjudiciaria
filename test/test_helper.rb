@@ -1,11 +1,41 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "base64"
+require "stringio"
+
+module LogoUploadTestHelper
+  LOGO_FILE_DATA = {
+    png: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    jpeg: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAEf/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABAf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k=",
+    webp: "UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA"
+  }.freeze
+  LOGO_CONTENT_TYPES = {
+    png: "image/png",
+    jpeg: "image/jpeg",
+    webp: "image/webp"
+  }.freeze
+  LOGO_EXTENSIONS = { png: "png", jpeg: "jpg", webp: "webp" }.freeze
+
+  def logo_upload(format: :png, filename: nil, padding: 0)
+    data = Base64.strict_decode64(LOGO_FILE_DATA.fetch(format)) + ("\0" * padding)
+    uploaded_file(
+      data,
+      content_type: LOGO_CONTENT_TYPES.fetch(format),
+      filename: filename || "logo.#{LOGO_EXTENSIONS.fetch(format)}"
+    )
+  end
+
+  def uploaded_file(data, content_type:, filename:)
+    Rack::Test::UploadedFile.new(StringIO.new(data), content_type, original_filename: filename)
+  end
+end
 
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
+    include LogoUploadTestHelper
     # Fixtures disabled: test data is built in each test case to avoid FK-order issues on restricted PostgreSQL users.
 
     # Helper para fornecer um Office padrao em todos os testes.

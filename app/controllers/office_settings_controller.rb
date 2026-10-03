@@ -13,12 +13,14 @@ class OfficeSettingsController < ApplicationController
   def update
     @office = current_office
     @users = current_office.users.order(:name, :email)
+    attributes = office_params
+    remove_logo = logo_removal_requested? && attributes[:logo].blank?
 
-    purge_logo_if_requested
-
-    if @office.update(office_params)
+    if @office.update(attributes)
+      @office.logo.purge if remove_logo && @office.logo_attached?
       redirect_to edit_office_setting_path, notice: "Configurações do escritório atualizadas com sucesso."
     else
+      discard_pending_logo_change
       render :edit, status: :unprocessable_entity
     end
   end
@@ -50,11 +52,13 @@ class OfficeSettingsController < ApplicationController
     ])
   end
 
-  def purge_logo_if_requested
+  def logo_removal_requested?
     return unless params[:office].is_a?(ActionController::Parameters)
-    return unless params[:office][:remove_logo] == "1"
-    return unless current_office.logo_attached?
 
-    current_office.logo.purge
+    params[:office][:remove_logo] == "1"
+  end
+
+  def discard_pending_logo_change
+    @office.attachment_changes.delete("logo")
   end
 end
