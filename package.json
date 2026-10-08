@@ -14,7 +14,7 @@
     "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
-    "vite-plugin-ruby": "^5.2.2",
+    "vite-plugin-ruby": "^5.2.5",
     "vitest": "^4.1.10"
   },
   "dependencies": {
