@@ -177,14 +177,14 @@ function FilterSelect({ label, filterKey, value, options, onChange }: { label: s
 
 function Cards({ legalCases }: { legalCases: LegalCase[] }) {
   if (!legalCases.length) return <EmptyState />
-  return <section className="react-legal-cases__cards" aria-label="Listagem de processos">{legalCases.map((legalCase) => <a className={`react-legal-cases__card react-legal-cases__card--${legalCase.deadline_tone}`} href={legalCase.path} key={legalCase.id}>
-    <div className="react-legal-cases__card-head"><h2>{legalCase.internal_number}</h2>{legalCase.has_new_imported_events && <span className="react-legal-cases__new-events">Novos andamentos</span>}</div>
+  return <section className="react-legal-cases__cards" aria-label="Listagem de processos">{legalCases.map((legalCase) => <article className={`react-legal-cases__card react-legal-cases__card--${legalCase.deadline_tone}`} key={legalCase.id}>
+    <div className="react-legal-cases__card-head"><h2><a href={legalCase.path}>{legalCase.internal_number}</a></h2>{legalCase.has_new_imported_events && <span className="react-legal-cases__new-events">Novos andamentos</span>}</div>
     <p className="react-legal-cases__client">{legalCase.client_name}</p>
     <p className="react-legal-cases__area">{legalCase.legal_area_name}</p>
     <div className="react-legal-cases__badges"><span className="react-legal-cases__badge">{legalCase.status_label}</span><span className="react-legal-cases__badge react-legal-cases__badge--priority">Prioridade {legalCase.priority_label}</span></div>
     <dl><div><dt>Próximo prazo</dt><dd className={`react-legal-cases__deadline react-legal-cases__deadline--${legalCase.deadline_tone}`}>{legalCase.next_deadline_label}</dd></div><div><dt>Responsável</dt><dd>{legalCase.responsible_name || "Não definido"}</dd></div></dl>
     <p className="react-legal-cases__movement"><span>Último andamento</span>{legalCase.last_movement}</p>
-  </a>)}</section>
+  </article>)}</section>
 }
 
 function CasesTable({ legalCases }: { legalCases: LegalCase[] }) {
