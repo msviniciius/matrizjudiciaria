@@ -254,6 +254,7 @@ class LegalCaseShowSnapshot
     {
       index: legal_cases_path,
       edit: edit_legal_case_path(legal_case),
+      delete: legal_case_path(legal_case),
       pdf: pdf_legal_case_path(legal_case),
       calendar: google_calendar_legal_case_path(legal_case),
       new_movement: new_process_movement_path(process_id: legal_case.id),
