@@ -188,6 +188,7 @@ type Snapshot = {
   actions: {
     index: string
     edit: string
+    delete: string
     pdf: string
     calendar: string
     new_movement: string
@@ -248,6 +249,7 @@ export function LegalCaseShowApp() {
   const [outcomePending, setOutcomePending] = useState(false)
   const [outcomeError, setOutcomeError] = useState<string | null>(null)
   const [outcomeMessage, setOutcomeMessage] = useState<string | null>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [financialModalOpen, setFinancialModalOpen] = useState(false)
   const [financialPending, setFinancialPending] = useState(false)
   const [financialError, setFinancialError] = useState<string | null>(null)
@@ -622,6 +624,7 @@ export function LegalCaseShowApp() {
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
       <a href={snapshot.actions.edit}>Editar processo</a>
+      <button className="react-legal-case-show__actions-button" type="button" onClick={() => setDeleteModalOpen(true)}>Excluir processo</button>
       <a href={snapshot.actions.pdf} target="_blank" rel="noreferrer">Exportar PDF</a>
       <a href={snapshot.actions.calendar}>Adicionar ao calendário</a>
       {snapshot.actions.sync && <SyncForm action={snapshot.actions.sync} onSync={syncCase} pending={syncPending} />}
@@ -637,6 +640,7 @@ export function LegalCaseShowApp() {
       onClose={closeOutcomeModal}
       onSubmit={recordOutcome}
     />}
+    {deleteModalOpen && <CaseDeleteModal action={snapshot.actions.delete} internalNumber={snapshot.case.internal_number} onClose={() => setDeleteModalOpen(false)} />}
     {financialModalOpen && snapshot.actions.financial_contract && <FinancialContractModal
       legalCase={snapshot.case}
       contract={snapshot.financial_contract || null}
@@ -654,6 +658,21 @@ export function LegalCaseShowApp() {
       onSubmit={registerPayment}
     />}
   </section>
+}
+
+function CaseDeleteModal({ action, internalNumber, onClose }: { action: string; internalNumber: string; onClose: () => void }) {
+  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
+  return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <section className="react-legal-case-show__outcome-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-process-title" aria-describedby="delete-process-warning">
+      <header className="react-legal-case-show__outcome-modal-header"><div><h2 id="delete-process-title">Excluir processo?</h2><p>Processo {internalNumber}</p></div><button type="button" className="react-legal-case-show__outcome-close" aria-label="Fechar" onClick={onClose}>×</button></header>
+      <p id="delete-process-warning">Os registros relacionados também serão excluídos, incluindo andamentos e históricos, perícias, tarefas, prazos, eventos, análises e contrato financeiro. Esta ação não pode ser desfeita.</p>
+      <form action={action} method="post">
+        <input type="hidden" name="_method" value="delete" />
+        {token && <input type="hidden" name="authenticity_token" value={token} />}
+        <div className="react-legal-case-show__outcome-modal-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="submit">Excluir processo e registros</button></div>
+      </form>
+    </section>
+  </div>
 }
 
 function ProcessIntelligencePanel({
