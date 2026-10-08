@@ -59,6 +59,7 @@ class LegalCase < ApplicationRecord
   has_many :legal_publications, dependent: :nullify
   has_many :ai_analyses, class_name: "LegalCaseAiAnalysis", dependent: :destroy
   has_one :financial_contract, dependent: :destroy
+  before_destroy :destroy_process_monitoring_dependencies, prepend: true
   accepts_nested_attributes_for :process_exams,
     reject_if: :process_exam_attributes_blank?,
     allow_destroy: true
@@ -262,6 +263,26 @@ class LegalCase < ApplicationRecord
   end
 
   private
+
+  def destroy_process_monitoring_dependencies
+    connection = self.class.connection
+    document_ids = if connection.data_source_exists?("process_monitoring_documents")
+      connection.select_values("SELECT id FROM process_monitoring_documents WHERE legal_case_id = #{connection.quote(id)}")
+    else
+      []
+    end
+
+    if document_ids.any? && connection.data_source_exists?("active_storage_attachments")
+      ActiveStorage::Attachment.where(record_type: "ProcessMonitoringDocument", record_id: document_ids).delete_all
+    end
+
+    %w[process_monitoring_documents process_monitoring_events process_monitorings].each do |table_name|
+      next unless connection.data_source_exists?(table_name)
+
+      quoted_table_name = connection.quote_table_name(table_name)
+      connection.delete("DELETE FROM #{quoted_table_name} WHERE legal_case_id = #{connection.quote(id)}")
+    end
+  end
 
   def operational_tracking_required?
     return false if status_arquivado? || status_encerrado? || phase_encerrado?
