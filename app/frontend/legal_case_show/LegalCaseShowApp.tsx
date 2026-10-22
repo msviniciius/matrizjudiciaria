@@ -1,6 +1,7 @@
 /// <reference path="../vite-env.d.ts" />
 
 import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import "./legalCaseShow.css"
 
 type TimelineItem = {
@@ -743,7 +744,7 @@ function NewExpedienteModal({ action, legalCaseId, token, onClose }: { action: s
     return () => document.removeEventListener("keydown", closeOnEscape)
   }, [onClose])
 
-  return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
+  return createPortal(<div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
     if (event.target === event.currentTarget) onClose()
   }}>
     <section className="react-legal-case-show__outcome-modal react-legal-case-show__expediente-modal" role="dialog" aria-modal="true" aria-labelledby="expediente-modal-heading" aria-describedby="expediente-modal-description">
@@ -774,7 +775,7 @@ function NewExpedienteModal({ action, legalCaseId, token, onClose }: { action: s
         </div>
       </form>
     </section>
-  </div>
+  </div>, document.body)
 }
 
 function ProcessIntelligencePanel({

@@ -212,3 +212,9 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Criado modal próprio de cadastro de expediente, seguindo o padrão já usado para desfecho e financeiro.
 - O modal tem fechamento por botão, clique fora e tecla Escape, além de largura adequada para a grade de campos.
 - Teste atualizado para abrir o modal e validar os campos do fluxo: 28/28 passando.
+
+## Validação visual real e correção do modal: 2026-10-22
+
+- Screenshot real do ambiente local revelou que o modal estava dentro de `content-surface`, cujo `backdrop-filter` criava um containing block para elementos `position: fixed`.
+- O modal foi movido para um portal em `document.body`, eliminando o deslocamento vertical e o corte na viewport.
+- Screenshot após a correção: modal centralizado, com largura de 736px, altura de 719px e todos os campos/ações visíveis.
