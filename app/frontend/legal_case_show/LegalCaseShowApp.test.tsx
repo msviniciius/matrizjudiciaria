@@ -299,6 +299,27 @@ test("describes an empty timeline and exposes each operational section through a
   expect(screen.getByTestId("legal-case-show-prazos")).toHaveAttribute("aria-controls", "legal-case-show-prazos")
 })
 
+test("minimizes and maximizes the deadlines section without triggering the new expediente action", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+  const toggle = await screen.findByTestId("legal-case-show-prazos")
+  const content = screen.getByRole("button", { name: /Novo expediente/ }).closest("section")?.querySelector(".react-legal-case-show__operational-content")
+
+  expect(content).not.toBeNull()
+  expect(toggle).toHaveAttribute("aria-expanded", "true")
+  expect(content).not.toHaveAttribute("hidden")
+
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute("aria-expanded", "false")
+  expect(content).toHaveAttribute("hidden")
+  expect(screen.queryByRole("dialog", { name: "Cadastrar expediente" })).not.toBeInTheDocument()
+
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute("aria-expanded", "true")
+  expect(content).not.toHaveAttribute("hidden")
+})
+
 test("groups timeline movements by date in a vertical tree", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([
     timelineItem(1, "Intimação publicada", { occurred_at: "2026-08-03", occurred_at_label: "03/08/2026" }),

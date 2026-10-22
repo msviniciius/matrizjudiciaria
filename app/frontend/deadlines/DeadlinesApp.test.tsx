@@ -69,6 +69,7 @@ test("loads deadline cards with status and edit/delete actions", async () => {
   expect(card).toHaveTextContent("Hoje")
   expect(card).toHaveTextContent("Cliente Aurora")
   expect(screen.getByRole("link", { name: "Prazo inicial" })).toHaveAttribute("href", "/deadlines/1")
+  expect(screen.queryByRole("link", { name: "Novo prazo" })).not.toBeInTheDocument()
   expect(screen.getByRole("link", { name: "Editar prazo Prazo inicial" })).toHaveAttribute("href", "/deadlines/1/edit")
   expect(screen.getByRole("button", { name: "Excluir prazo Prazo inicial" })).toBeVisible()
 })

@@ -147,7 +147,6 @@ export function DeadlinesApp() {
         {snapshot && <p className="react-deadlines__count" role="status">{snapshot.meta.total_count} prazo(s)</p>}
       </div>
       <div className="react-deadlines__header-actions">
-        {snapshot?.actions.new && <a className="react-deadlines__new" href={snapshot.actions.new}>Novo prazo</a>}
         <div className="react-deadlines__view-switch" aria-label="Visualização">
         <button type="button" aria-pressed={view === "cards"} onClick={() => chooseView("cards")}>Cartões</button>
         <button type="button" aria-pressed={view === "table"} onClick={() => chooseView("table")}>Tabela</button>
@@ -213,11 +212,11 @@ function DeadlineActions({ deadline, compact = false }: { deadline: Deadline; co
   const className = compact ? "react-deadlines__actions react-deadlines__actions--compact" : "react-deadlines__actions"
   return <div className={className}>
     <a href={deadline.edit_path} aria-label={`Editar prazo ${deadline.title}`}>Editar</a>
-    {deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
+    {!deadline.ciencia_path && deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
       <input type="hidden" name="_method" value="patch" />
       {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
       {deadline.expediente_id && <input name="protocolo_ref" placeholder="Protocolo (opcional)" aria-label={`Protocolo ${deadline.title}`} />}
-      <button type="submit" aria-label={`Cumprir prazo ${deadline.title}`}>Cumprir</button>
+      <button type="submit" aria-label={`Cumprir prazo ${deadline.title}`}>Cumprir prazo</button>
     </form>}
     {deadline.ciencia_path && deadline.expediente_id && <form action={deadline.ciencia_path} method="post">
       {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}

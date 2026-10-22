@@ -244,3 +244,35 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Revalidação confirmou que a captura anexada continua representando a versão antiga da tela, enquanto a renderização atual já usa modal e CTA contextual em “Prazos”.
 - O CTA foi alinhado explicitamente ao botão primário global do projeto.
 - Screenshot atual do card de Prazos foi gerado para comparação visual.
+
+## Ajuste de clareza do fluxo: 2026-10-22
+
+- O estado do prazo agora prioriza o fluxo operacional: expediente sem ciência exibe “Aguardando ciência” e a única ação disponível é “Registrar ciência”.
+- “Cumprir prazo” só aparece depois que a ciência foi registrada, evitando uma ação prematura.
+- “Origem do prazo” foi renomeado para “Expediente vinculado”, alinhando o texto ao domínio da feature.
+- O bloco “Próxima ação” foi incluído em cada prazo não concluído.
+- O indicador de expansão das seções deixou de usar “+” e passou a usar chevrons, evitando conflito visual com “Novo expediente”.
+- Teste focado: 28/28 passando; `git diff --check` aprovado.
+- Suíte frontend completa: 81/82; permanece a falha preexistente em `dashboard/DashboardApp.test.tsx` sobre o campo “Responsável do processo SEI01”, sem relação com esta alteração.
+
+## Correção do acordeão de Prazos: 2026-10-22
+
+- Identificado que o atributo HTML `hidden` era aplicado pelo React, mas a regra `.react-legal-case-show__operational-content { display: grid; }` continuava exibindo o conteúdo no navegador.
+- Adicionada a regra explícita `.react-legal-case-show__operational-content[hidden] { display: none; }`.
+- Adicionado teste de regressão para minimizar e maximizar “Prazos” sem abrir o modal de novo expediente.
+- Teste focado: 29/29 passando; `git diff --check` aprovado.
+
+## Correção da listagem global de Prazos: 2026-10-22
+
+- A captura analisada era da tela global `/deadlines`, não da seção de prazos do processo.
+- Corrigido o fluxo para não exibir “Cumprir prazo” enquanto o expediente aguarda ciência; a listagem agora apresenta apenas “Dar ciência” nesse estado.
+- Corrigido o layout dos controles: protocolo estilizado, input e botão alinhados na mesma linha em telas largas e empilhados em telas menores.
+- “Cumprir” foi renomeado para “Cumprir prazo” para manter consistência com a tela do processo.
+- Testes focados de prazos e processo: 36/36 passando; `git diff --check` aprovado.
+
+## Remoção da criação direta na listagem global: 2026-10-22
+
+- Removido o botão “Novo prazo” do cabeçalho da listagem global de prazos.
+- A criação passa a ficar contextualizada no processo, através de “Novo expediente”, evitando dois caminhos concorrentes para o mesmo fluxo.
+- Adicionado teste garantindo que a listagem não exiba mais o link de criação direta.
+- Testes focados de prazos e processo: 36/36 passando.

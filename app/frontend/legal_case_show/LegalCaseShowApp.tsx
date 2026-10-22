@@ -605,7 +605,7 @@ export function LegalCaseShowApp() {
               <p className="react-legal-case-show__item-eyebrow">Prazo jurídico</p>
               <h3><a href={deadline.path}>{deadline.title}</a></h3>
             </div>
-            <span className="react-legal-case-show__deadline-status">{deadline.status_label}</span>
+            <span className={`react-legal-case-show__deadline-status ${deadline.ciencia_path ? "react-legal-case-show__deadline-status--awaiting" : ""}`}>{deadline.expediente && !deadline.expediente.ciencia_registrada ? "Aguardando ciência" : deadline.status_label}</span>
           </div>
           <dl className="react-legal-case-show__deadline-meta">
             <div><dt>Data limite</dt><dd>{deadline.due_date_label}</dd></div>
@@ -613,10 +613,11 @@ export function LegalCaseShowApp() {
             <div><dt>Responsável</dt><dd>{deadline.responsible_name}</dd></div>
           </dl>
           {deadline.expediente && <div className="react-legal-case-show__expediente-summary">
-            <p className="react-legal-case-show__item-eyebrow">Origem do prazo</p>
+            <p className="react-legal-case-show__item-eyebrow">Expediente vinculado</p>
             <strong>{deadline.expediente.descricao}</strong>
             <p>Disponibilizado em {deadline.expediente.data_disponibilizacao || "data não informada"}</p>
           </div>}
+          {deadline.status !== "completed" && <p className="react-legal-case-show__deadline-next-action"><span>Próxima ação</span><strong>{deadline.ciencia_path ? "Registrar ciência" : "Cumprir prazo"}</strong></p>}
           <div className="react-legal-case-show__operational-actions">
             {deadline.ciencia_path && deadline.expediente && <form action={deadline.ciencia_path} method="post">
               {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
@@ -625,7 +626,7 @@ export function LegalCaseShowApp() {
               <label>Data da ciência<input name="ciencia[data_ciencia]" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></label>
               <div className="form-actions"><button className="btn btn-primary" type="submit">Registrar ciência</button></div>
             </form>}
-            {deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
+            {!deadline.ciencia_path && deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
               <input type="hidden" name="_method" value="patch" />
               {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
               <label>Protocolo <span>(opcional)</span><input name="protocolo_ref" placeholder="Ex.: 2026-001" aria-label={`Protocolo ${deadline.title}`} /></label>
@@ -1352,7 +1353,7 @@ function OperationalSection({ title, hasAlert, action, children }: { title: stri
 
   return <section className="react-legal-case-show__operational-section">
     <div className="react-legal-case-show__operational-heading">
-      <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
+      <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span className="react-legal-case-show__operational-toggle" aria-hidden="true">{isOpen ? "⌃" : "⌄"}</span></button></h2>
       {action && <div className="react-legal-case-show__operational-heading-action">{action}</div>}
     </div>
     <div className="react-legal-case-show__operational-content" id={contentId} hidden={!isOpen}>{children}</div>
