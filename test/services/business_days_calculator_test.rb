@@ -46,6 +46,32 @@ class BusinessDaysCalculatorTest < ActiveSupport::TestCase
     assert_equal Date.new(2026, 9, 9), calculator.somar_dias_uteis(Date.new(2026, 9, 4), 2)
   end
 
+  test "soma dias uteis comuns sem incluir a data inicial" do
+    calculator = BusinessDaysCalculator.new(office: @office)
+
+    assert_equal Date.new(2026, 9, 9), calculator.somar_dias_uteis(Date.new(2026, 9, 7), 2)
+  end
+
+  test "somar zero dias uteis preserva a data inicial" do
+    calculator = BusinessDaysCalculator.new(office: @office)
+    date = Date.new(2026, 9, 7)
+
+    assert_equal date, calculator.somar_dias_uteis(date, 0)
+  end
+
+  test "soma dias uteis atravessa feriados e suspensoes consecutivos" do
+    Feriado.create!(data: @monday, descricao: "Feriado", ambito: :nacional)
+    Suspensao.create!(
+      inicio: @monday + 1.day,
+      fim: @monday + 2.days,
+      descricao: "Recesso",
+      office: @office
+    )
+    calculator = BusinessDaysCalculator.new(office: @office)
+
+    assert_equal Date.new(2026, 9, 10), calculator.somar_dias_uteis(Date.new(2026, 9, 4), 1)
+  end
+
   test "conta dias uteis de forma inclusiva no intervalo" do
     Feriado.create!(data: @monday, descricao: "Feriado", ambito: :nacional)
     Suspensao.create!(
@@ -69,5 +95,18 @@ class BusinessDaysCalculatorTest < ActiveSupport::TestCase
 
     refute calculator.dia_util?(@monday)
     assert calculator.dia_util?(@monday + 1.day)
+  end
+
+  test "carrega somente calendario sobre o intervalo consultado" do
+    queries = []
+    subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |_name, _start, _finish, _id, payload|
+      queries << payload[:sql] if payload[:sql].include?("feriados") || payload[:sql].include?("suspensoes")
+    end
+
+    BusinessDaysCalculator.new(reference_date: @monday, office: @office).dia_util?(@monday)
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscriber)
+    assert queries.any? { |sql| sql.match?(/WHERE.*"feriados"\."data"/) }
+    assert queries.any? { |sql| sql.match?(/WHERE.*inicio/) && sql.match?(/WHERE.*fim/) }
   end
 end
