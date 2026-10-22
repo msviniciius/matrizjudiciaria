@@ -38,6 +38,24 @@ type Deadline = {
   path: string
 }
 
+const expedienteTypeOptions = [
+  ["intimacao", "Intimação"],
+  ["citacao", "Citação"],
+  ["despacho", "Despacho"],
+  ["sentenca", "Sentença"]
+] as const
+
+const expedienteCountOptions = [
+  ["uteis", "Dias úteis"],
+  ["corridos", "Dias corridos"]
+] as const
+
+const expedienteOriginOptions = [
+  ["manual", "Cadastro manual"],
+  ["djma", "DJMA"],
+  ["pje", "PJe"]
+] as const
+
 type Task = {
   id: number
   title: string
@@ -579,22 +597,36 @@ export function LegalCaseShowApp() {
 
     <OperationalSection title="Prazos" hasAlert={deadlineAlert}>
       <CollectionEmpty items={snapshot.deadlines} message="Nenhum prazo cadastrado.">
-        {snapshot.deadlines.map((deadline) => <article className="react-legal-case-show__operational-item" key={deadline.id}>
-          <h3><a href={deadline.path}>{deadline.title}</a></h3>
-          <p>{deadline.due_date_label} · {deadline.status_label} · Prioridade {deadline.priority_label}</p>
-          <p>Responsável: {deadline.responsible_name}</p>
+        {snapshot.deadlines.map((deadline) => <article className={`react-legal-case-show__operational-item react-legal-case-show__deadline-item react-legal-case-show__deadline-item--${deadline.status}`} key={deadline.id}>
+          <div className="react-legal-case-show__deadline-heading">
+            <div>
+              <p className="react-legal-case-show__item-eyebrow">Prazo jurídico</p>
+              <h3><a href={deadline.path}>{deadline.title}</a></h3>
+            </div>
+            <span className="react-legal-case-show__deadline-status">{deadline.status_label}</span>
+          </div>
+          <dl className="react-legal-case-show__deadline-meta">
+            <div><dt>Data limite</dt><dd>{deadline.due_date_label}</dd></div>
+            <div><dt>Prioridade</dt><dd>{deadline.priority_label}</dd></div>
+            <div><dt>Responsável</dt><dd>{deadline.responsible_name}</dd></div>
+          </dl>
+          {deadline.expediente && <div className="react-legal-case-show__expediente-summary">
+            <p className="react-legal-case-show__item-eyebrow">Origem do prazo</p>
+            <strong>{deadline.expediente.descricao}</strong>
+            <p>Disponibilizado em {deadline.expediente.data_disponibilizacao || "data não informada"}</p>
+          </div>}
           <div className="react-legal-case-show__operational-actions">
             {deadline.ciencia_path && deadline.expediente && <form action={deadline.ciencia_path} method="post">
               {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
               <input type="hidden" name="ciencia[expediente_id]" value={deadline.expediente.id} />
               <input type="hidden" name="ciencia[tipo]" value="expressa" />
-              <input type="hidden" name="ciencia[data_ciencia]" value={new Date().toISOString().slice(0, 10)} />
-              <button type="submit">Dar ciência</button>
+              <label>Data da ciência<input name="ciencia[data_ciencia]" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></label>
+              <button type="submit">Registrar ciência</button>
             </form>}
             {deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
               <input type="hidden" name="_method" value="patch" />
               {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
-              <input name="protocolo_ref" placeholder="Protocolo (opcional)" aria-label={`Protocolo ${deadline.title}`} />
+              <label>Protocolo <span>(opcional)</span><input name="protocolo_ref" placeholder="Ex.: 2026-001" aria-label={`Protocolo ${deadline.title}`} /></label>
               <button type="submit">Cumprir prazo</button>
             </form>}
           </div>
@@ -643,17 +675,18 @@ export function LegalCaseShowApp() {
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
       <details>
-        <summary>Novo expediente</summary>
+        <summary><span>Novo expediente</span><small>Transforme uma intimação em prazo controlado</small></summary>
         <form action={snapshot.actions.new_expediente} method="post">
           {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
           <input type="hidden" name="expediente[legal_case_id]" value={snapshot.case.id} />
-          <input type="hidden" name="expediente[tipo]" value="intimacao" />
-          <input type="hidden" name="expediente[contagem]" value="uteis" />
-          <input type="hidden" name="expediente[origem]" value="manual" />
-          <label>Descrição<input name="expediente[descricao]" required /></label>
+          <p className="react-legal-case-show__form-help">Cadastre a publicação recebida. Depois registre a ciência para iniciar a contagem.</p>
+          <label>Descrição<input name="expediente[descricao]" placeholder="Ex.: Intimação para manifestação" required /></label>
+          <label>Tipo<select name="expediente[tipo]" defaultValue="intimacao">{expedienteTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
           <label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label>
-          <label>Dias<input name="expediente[quantidade_dias]" type="number" min="1" required /></label>
-          <button type="submit">Criar expediente</button>
+          <label>Dias do prazo<input name="expediente[quantidade_dias]" type="number" min="1" placeholder="Ex.: 5" required /></label>
+          <label>Contagem<select name="expediente[contagem]" defaultValue="uteis">{expedienteCountOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Origem<select name="expediente[origem]" defaultValue="manual">{expedienteOriginOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <button type="submit">Criar prazo a partir do expediente</button>
         </form>
       </details>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}

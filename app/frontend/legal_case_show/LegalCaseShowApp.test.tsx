@@ -196,6 +196,38 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(within(shortcuts).getAllByRole("link").at(-1)).toHaveAccessibleName("Voltar")
 })
 
+test("guides the legal deadline workflow with visible expediente fields and science date", async () => {
+  const snapshot = {
+    ...alertedSnapshot,
+    deadlines: [{
+      ...alertedSnapshot.deadlines[0],
+      due_date: null,
+      due_date_label: "Aguardando ciência",
+      status: "pending",
+      status_label: "Aguardando ciência",
+      expediente: {
+        id: 7,
+        tipo: "intimacao",
+        descricao: "Intimação para manifestação",
+        data_disponibilizacao: "22/10/2026",
+        ciencia_registrada: false
+      },
+      ciencia_path: "/ciencias"
+    }]
+  }
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshot)))
+  render(<LegalCaseShowApp />)
+
+  expect(await screen.findByText("Transforme uma intimação em prazo controlado")).toBeVisible()
+  expect(screen.getByLabelText("Tipo")).toHaveValue("intimacao")
+  expect(screen.getByLabelText("Contagem")).toHaveValue("uteis")
+  expect(screen.getByLabelText("Dias do prazo")).toBeRequired()
+  expect(screen.getByLabelText("Data da ciência")).toBeVisible()
+  expect(screen.getByRole("button", { name: "Registrar ciência" })).toBeVisible()
+  expect(screen.getAllByText("Aguardando ciência")).toHaveLength(2)
+  expect(screen.getByText("Intimação para manifestação")).toBeVisible()
+})
+
 test("renders the deterministic process intelligence panel", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
   render(<LegalCaseShowApp />)
