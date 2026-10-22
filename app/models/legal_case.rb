@@ -53,6 +53,7 @@ class LegalCase < ApplicationRecord
   has_many :case_events, dependent: :destroy
   has_many :process_movements, foreign_key: :process_id, dependent: :destroy
   has_many :deadlines, dependent: :destroy
+  has_many :expedientes, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :process_exams, dependent: :destroy
   has_many :receivables, dependent: :nullify

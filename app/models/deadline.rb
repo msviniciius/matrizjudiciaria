@@ -1,5 +1,6 @@
 class Deadline < ApplicationRecord
   belongs_to :legal_case
+  belongs_to :expediente, optional: true
 
   enum :status, {
     pending: "pending",
@@ -30,7 +31,8 @@ class Deadline < ApplicationRecord
     contractual: "contractual"
   }, prefix: true
 
-  validates :title, :due_date, :status, presence: true
+  validates :title, :status, presence: true
+  validates :due_date, presence: true, unless: :awaiting_expediente_ciencia?
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :deadline_type, inclusion: { in: deadline_types.keys }, allow_blank: true
@@ -39,6 +41,10 @@ class Deadline < ApplicationRecord
   before_validation :apply_default_deadline_setting, on: :create
 
   private
+
+  def awaiting_expediente_ciencia?
+    expediente.present? && status_pending?
+  end
 
   def start_date_cannot_be_after_due_date
     return if start_date.blank? || due_date.blank?

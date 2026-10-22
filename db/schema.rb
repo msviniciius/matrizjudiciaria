@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_21_010100) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_21_020100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_010100) do
     t.index ["pje_external_id"], name: "index_case_events_on_pje_external_id", unique: true, where: "(pje_external_id IS NOT NULL)"
     t.index ["process_exam_id"], name: "index_case_events_on_process_exam_id"
     t.index ["source_tribunal"], name: "index_case_events_on_source_tribunal"
+  end
+
+  create_table "ciencias", force: :cascade do |t|
+    t.bigint "expediente_id", null: false
+    t.bigint "user_id"
+    t.string "tipo", null: false
+    t.date "data_ciencia", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expediente_id"], name: "index_ciencias_on_expediente_id", unique: true
+    t.index ["user_id"], name: "index_ciencias_on_user_id"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -133,8 +144,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_010100) do
     t.string "status"
     t.string "title"
     t.datetime "updated_at", null: false
+    t.bigint "expediente_id"
     t.index ["deadline_type"], name: "index_deadlines_on_deadline_type"
     t.index ["due_date"], name: "index_deadlines_on_due_date"
+    t.index ["expediente_id"], name: "index_deadlines_on_expediente_id"
     t.index ["extended_at"], name: "index_deadlines_on_extended_at"
     t.index ["legal_case_id"], name: "index_deadlines_on_legal_case_id"
     t.index ["status"], name: "index_deadlines_on_status"
@@ -145,6 +158,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_010100) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_districts_on_name", unique: true
+  end
+
+  create_table "expedientes", force: :cascade do |t|
+    t.bigint "legal_case_id", null: false
+    t.string "tipo", null: false
+    t.text "descricao", null: false
+    t.date "data_disponibilizacao", null: false
+    t.integer "quantidade_dias", null: false
+    t.string "contagem", null: false
+    t.boolean "prazo_em_dobro", default: false, null: false
+    t.string "origem", null: false
+    t.string "referencia_externa"
+    t.string "referencia_evento"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["legal_case_id", "referencia_externa"], name: "index_expedientes_on_legal_case_id_and_referencia_externa", unique: true, where: "(referencia_externa IS NOT NULL)"
+    t.index ["legal_case_id"], name: "index_expedientes_on_legal_case_id"
   end
 
   create_table "feriados", force: :cascade do |t|
@@ -746,11 +776,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_010100) do
   add_foreign_key "case_events", "legal_cases"
   add_foreign_key "case_events", "movement_types"
   add_foreign_key "case_events", "process_exams"
+  add_foreign_key "ciencias", "expedientes"
+  add_foreign_key "ciencias", "users"
   add_foreign_key "clients", "offices"
   add_foreign_key "clients", "units"
   add_foreign_key "courts", "districts"
   add_foreign_key "deadline_settings", "offices"
+  add_foreign_key "deadlines", "expedientes"
   add_foreign_key "deadlines", "legal_cases"
+  add_foreign_key "expedientes", "legal_cases"
   add_foreign_key "feriados", "offices"
   add_foreign_key "financial_contracts", "legal_cases"
   add_foreign_key "financial_contracts", "offices"
