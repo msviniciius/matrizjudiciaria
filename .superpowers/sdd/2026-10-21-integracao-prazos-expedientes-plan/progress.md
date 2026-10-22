@@ -191,3 +191,11 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Teste focado da tela: 28/28 passando.
 - Suíte frontend: 81/82; permanece a falha preexistente em `dashboard/DashboardApp.test.tsx` sobre edição de responsável.
 - `git diff --check`: aprovado.
+
+## Segunda revisão visual: 2026-10-22
+
+- A captura revelou que a primeira padronização ainda deixava três contêineres aninhados e o campo de descrição sem layout de formulário adequado.
+- Removido o painel interno redundante; o expediente agora usa a própria área expandida da lateral como contêiner visual.
+- Corrigido o layout dos rótulos/campos, incluindo descrição em largura total e grade consistente para os demais campos.
+- Teste focado após a revisão: 28/28 passando.
+- O servidor local já estava ativo na porta 3002; a nova inicialização foi impedida pelo PID existente, sem alteração de dados.

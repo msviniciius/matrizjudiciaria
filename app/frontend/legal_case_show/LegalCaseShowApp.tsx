@@ -679,7 +679,7 @@ export function LegalCaseShowApp() {
         <form className="app-form aurora-form react-legal-case-show__expediente-form" action={snapshot.actions.new_expediente} method="post">
           {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
           <input type="hidden" name="expediente[legal_case_id]" value={snapshot.case.id} />
-          <section className="form-section aurora-form__section">
+          <div className="react-legal-case-show__expediente-content">
             <div className="dashboard-section__head">
               <div>
                 <h3>Dados do expediente</h3>
@@ -699,7 +699,7 @@ export function LegalCaseShowApp() {
             <div className="form-actions aurora-form__actions">
               <button className="btn btn-primary" type="submit">Criar prazo a partir do expediente</button>
             </div>
-          </section>
+          </div>
         </form>
       </details>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
