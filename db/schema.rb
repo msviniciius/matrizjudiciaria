@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_21_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
     t.index ["pje_external_id"], name: "index_case_events_on_pje_external_id", unique: true, where: "(pje_external_id IS NOT NULL)"
     t.index ["process_exam_id"], name: "index_case_events_on_process_exam_id"
     t.index ["source_tribunal"], name: "index_case_events_on_source_tribunal"
+  end
+
+  create_table "ciencias", force: :cascade do |t|
+    t.bigint "expediente_id", null: false
+    t.bigint "user_id"
+    t.string "tipo", null: false
+    t.date "data_ciencia", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expediente_id"], name: "index_ciencias_on_expediente_id", unique: true
+    t.index ["user_id"], name: "index_ciencias_on_user_id"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -133,10 +144,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
     t.string "status"
     t.string "title"
     t.datetime "updated_at", null: false
+    t.bigint "expediente_id"
+    t.string "protocolo_ref"
     t.index ["deadline_type"], name: "index_deadlines_on_deadline_type"
     t.index ["due_date"], name: "index_deadlines_on_due_date"
+    t.index ["expediente_id"], name: "index_deadlines_on_expediente_id_unique", unique: true
     t.index ["extended_at"], name: "index_deadlines_on_extended_at"
     t.index ["legal_case_id"], name: "index_deadlines_on_legal_case_id"
+    t.index ["protocolo_ref"], name: "index_deadlines_on_protocolo_ref"
     t.index ["status"], name: "index_deadlines_on_status"
   end
 
@@ -145,6 +160,36 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_districts_on_name", unique: true
+  end
+
+  create_table "expedientes", force: :cascade do |t|
+    t.bigint "legal_case_id", null: false
+    t.string "tipo", null: false
+    t.text "descricao", null: false
+    t.date "data_disponibilizacao", null: false
+    t.integer "quantidade_dias", null: false
+    t.string "contagem", null: false
+    t.boolean "prazo_em_dobro", default: false, null: false
+    t.string "origem", null: false
+    t.string "referencia_externa"
+    t.string "referencia_evento"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id", "legal_case_id"], name: "index_expedientes_on_id_and_legal_case_id", unique: true
+    t.index ["legal_case_id", "referencia_externa"], name: "index_expedientes_on_legal_case_id_and_referencia_externa", unique: true, where: "(referencia_externa IS NOT NULL)"
+    t.index ["legal_case_id"], name: "index_expedientes_on_legal_case_id"
+  end
+
+  create_table "feriados", force: :cascade do |t|
+    t.date "data", null: false
+    t.string "descricao", null: false
+    t.string "ambito", null: false
+    t.bigint "office_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["data"], name: "index_feriados_on_data"
+    t.index ["office_id", "data"], name: "index_feriados_on_office_id_and_data"
+    t.index ["office_id"], name: "index_feriados_on_office_id"
   end
 
   create_table "financial_contracts", force: :cascade do |t|
@@ -652,6 +697,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "suspensoes", force: :cascade do |t|
+    t.date "inicio", null: false
+    t.date "fim", null: false
+    t.string "descricao", null: false
+    t.bigint "office_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["inicio", "fim"], name: "index_suspensoes_on_inicio_and_fim"
+    t.index ["office_id", "inicio", "fim"], name: "index_suspensoes_on_office_id_and_inicio_and_fim"
+    t.index ["office_id"], name: "index_suspensoes_on_office_id"
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -722,11 +779,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
   add_foreign_key "case_events", "legal_cases"
   add_foreign_key "case_events", "movement_types"
   add_foreign_key "case_events", "process_exams"
+  add_foreign_key "ciencias", "expedientes"
+  add_foreign_key "ciencias", "users"
   add_foreign_key "clients", "offices"
   add_foreign_key "clients", "units"
   add_foreign_key "courts", "districts"
   add_foreign_key "deadline_settings", "offices"
+  add_foreign_key "deadlines", "expedientes", column: ["expediente_id", "legal_case_id"], primary_key: ["id", "legal_case_id"], name: "fk_deadlines_expediente_and_legal_case"
   add_foreign_key "deadlines", "legal_cases"
+  add_foreign_key "expedientes", "legal_cases"
+  add_foreign_key "feriados", "offices"
   add_foreign_key "financial_contracts", "legal_cases"
   add_foreign_key "financial_contracts", "offices"
   add_foreign_key "financial_installments", "financial_contracts"
@@ -770,6 +832,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "suspensoes", "offices"
   add_foreign_key "tasks", "legal_cases"
   add_foreign_key "units", "offices"
   add_foreign_key "user_units", "units"

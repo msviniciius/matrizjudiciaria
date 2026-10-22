@@ -322,6 +322,98 @@ districts.each do |name|
   District.find_or_create_by!(name: name)
 end
 
+# Calendário jurídico base: mantém os dois anos disponíveis para o planejamento
+# de prazos e pode ser executado novamente sem duplicar registros.
+calendar_years = [ Date.current.year, Date.current.year + 1 ]
+
+easter_sunday = lambda do |year|
+  # Algoritmo Gregoriano anônimo (Meeus/Jones/Butcher), válido para o
+  # calendário gregoriano e sem os ajustes incorretos da fórmula anterior.
+  golden_number = year % 19
+  century = year / 100
+  century_remainder = year % 100
+  leap_year_correction = century / 4
+  century_remainder_leap_year = century % 4
+  lunar_correction = (century + 8) / 25
+  solar_correction = (century - lunar_correction + 1) / 3
+  epact = (19 * golden_number + century - leap_year_correction - solar_correction + 15) % 30
+  century_remainder_leap_day = century_remainder / 4
+  century_remainder_remainder = century_remainder % 4
+  weekday_correction = (32 + 2 * century_remainder_leap_year + 2 * century_remainder_leap_day - epact - century_remainder_remainder) % 7
+  march_correction = (golden_number + 11 * epact + 22 * weekday_correction) / 451
+  month_day = epact + weekday_correction - 7 * march_correction + 114
+  Date.new(year, month_day / 31, month_day % 31 + 1)
+end
+
+national_holidays = lambda do |year|
+  easter = easter_sunday.call(year)
+  fixed = {
+    [ 1, 1 ] => "Confraternização Universal",
+    [ 4, 21 ] => "Tiradentes",
+    [ 5, 1 ] => "Dia do Trabalho",
+    [ 9, 7 ] => "Independência do Brasil",
+    [ 10, 12 ] => "Nossa Senhora Aparecida",
+    [ 11, 2 ] => "Finados",
+    [ 11, 15 ] => "Proclamação da República",
+    [ 11, 20 ] => "Dia Nacional de Zumbi e da Consciência Negra",
+    [ 12, 25 ] => "Natal"
+  }
+
+  fixed.map { |(month, day), description| [ Date.new(year, month, day), description ] } + [
+    [ easter - 48.days, "Carnaval" ],
+    [ easter - 47.days, "Carnaval" ],
+    [ easter - 2.days, "Paixão de Cristo" ],
+    [ easter + 60.days, "Corpus Christi" ]
+  ]
+end
+
+forensic_holidays = lambda do |year|
+  easter = easter_sunday.call(year)
+  [
+    [ Date.new(year, 1, 1), "Confraternização Universal" ],
+    [ easter - 48.days, "Carnaval" ],
+    [ easter - 47.days, "Carnaval" ],
+    [ easter - 3.days, "Semana Santa" ],
+    [ easter - 2.days, "Paixão de Cristo" ],
+    [ Date.new(year, 4, 21), "Tiradentes" ],
+    [ Date.new(year, 5, 1), "Dia do Trabalho" ],
+    [ easter + 60.days, "Corpus Christi" ],
+    [ Date.new(year, 7, 28), "Adesão do Maranhão à Independência do Brasil" ],
+    [ Date.new(year, 8, 11), "Dia do Advogado" ],
+    [ Date.new(year, 9, 7), "Independência do Brasil" ],
+    [ Date.new(year, 10, 12), "Nossa Senhora Aparecida" ],
+    [ Date.new(year, 10, 28), "Dia do Servidor Público" ],
+    [ Date.new(year, 11, 2), "Finados" ],
+    [ Date.new(year, 11, 20), "Dia Nacional de Zumbi e da Consciência Negra" ],
+    [ Date.new(year, 12, 8), "Dia da Justiça" ],
+    [ Date.new(year, 12, 25), "Natal" ]
+  ]
+end
+
+calendar_years.each do |year|
+  national_holidays.call(year).each do |date, description|
+    Feriado.find_or_create_by!(data: date, ambito: :nacional, office_id: nil) do |feriado|
+      feriado.descricao = description
+    end
+  end
+
+  Feriado.find_or_create_by!(
+    data: Date.new(year, 7, 28), ambito: :estadual, office_id: nil
+  ) { |feriado| feriado.descricao = "Data Magna do Maranhão" }
+
+  forensic_holidays.call(year).each do |date, description|
+    Feriado.find_or_create_by!(data: date, ambito: :forense, office_id: nil) do |feriado|
+      feriado.descricao = description
+    end
+  end
+
+  Suspensao.find_or_create_by!(
+    inicio: Date.new(year, 12, 20),
+    fim: Date.new(year + 1, 1, 20),
+    office_id: nil
+  ) { |suspensao| suspensao.descricao = "Recesso forense (20/12 a 20/01)" }
+end
+
 # ===== Catálogos do módulo de andamento processual =====
 process_phases = [
   [ "atendimento_inicial", "Atendimento Inicial" ],

@@ -103,7 +103,10 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     deadline_type_label: "Judicial",
     responsible_name: "Marina",
     delay_reason: "-",
-    path: "/deadlines/1"
+    path: "/deadlines/1",
+    complete_path: "/deadlines/1/cumprir",
+    expediente: null,
+    ciencia_path: null
   }],
   tasks: [{
     id: 1,
@@ -141,6 +144,7 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     calendar: "/legal_cases/1/google_calendar",
     new_movement: "/process_movements/new?process_id=1",
     new_deadline: "/deadlines/new?legal_case_id=1",
+    new_expediente: "/expedientes",
     new_task: "/tasks/new?legal_case_id=1",
     new_exam: "/legal_cases/1/process_exams/new",
     sync: { path: "/legal_cases/1/sync", method: "post" },
@@ -190,6 +194,41 @@ test("renders the command center and opens an alerted deadline section", async (
   expect(within(shortcuts).getByRole("link", { name: "Exportar PDF" })).toBeVisible()
   expect(within(shortcuts).getByRole("link", { name: "Voltar" })).toBeVisible()
   expect(within(shortcuts).getAllByRole("link").at(-1)).toHaveAccessibleName("Voltar")
+})
+
+test("guides the legal deadline workflow with visible expediente fields and science date", async () => {
+  const snapshot = {
+    ...alertedSnapshot,
+    deadlines: [{
+      ...alertedSnapshot.deadlines[0],
+      due_date: null,
+      due_date_label: "Aguardando ciência",
+      status: "pending",
+      status_label: "Aguardando ciência",
+      expediente: {
+        id: 7,
+        tipo: "intimacao",
+        descricao: "Intimação para manifestação",
+        data_disponibilizacao: "22/10/2026",
+        ciencia_registrada: false
+      },
+      ciencia_path: "/ciencias"
+    }]
+  }
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshot)))
+  render(<LegalCaseShowApp />)
+
+  const newExpedienteButton = await screen.findByRole("button", { name: /Novo expediente/ })
+  expect(newExpedienteButton).toBeVisible()
+  await userEvent.click(newExpedienteButton)
+  expect(await screen.findByRole("heading", { name: "Cadastrar expediente" })).toBeVisible()
+  expect(screen.getByLabelText("Tipo")).toHaveValue("intimacao")
+  expect(screen.getByLabelText("Contagem")).toHaveValue("uteis")
+  expect(screen.getByLabelText("Dias do prazo")).toBeRequired()
+  expect(screen.getByLabelText("Data da ciência")).toBeVisible()
+  expect(screen.getByRole("button", { name: "Registrar ciência" })).toBeVisible()
+  expect(screen.getAllByText("Aguardando ciência")).toHaveLength(2)
+  expect(screen.getByText("Intimação para manifestação")).toBeVisible()
 })
 
 test("renders the deterministic process intelligence panel", async () => {
@@ -258,6 +297,27 @@ test("describes an empty timeline and exposes each operational section through a
     expect(screen.getByRole("button", { name: title })).toBeVisible()
   })
   expect(screen.getByTestId("legal-case-show-prazos")).toHaveAttribute("aria-controls", "legal-case-show-prazos")
+})
+
+test("minimizes and maximizes the deadlines section without triggering the new expediente action", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(alertedSnapshot)))
+  render(<LegalCaseShowApp />)
+  const user = userEvent.setup()
+  const toggle = await screen.findByTestId("legal-case-show-prazos")
+  const content = screen.getByRole("button", { name: /Novo expediente/ }).closest("section")?.querySelector(".react-legal-case-show__operational-content")
+
+  expect(content).not.toBeNull()
+  expect(toggle).toHaveAttribute("aria-expanded", "true")
+  expect(content).not.toHaveAttribute("hidden")
+
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute("aria-expanded", "false")
+  expect(content).toHaveAttribute("hidden")
+  expect(screen.queryByRole("dialog", { name: "Cadastrar expediente" })).not.toBeInTheDocument()
+
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute("aria-expanded", "true")
+  expect(content).not.toHaveAttribute("hidden")
 })
 
 test("groups timeline movements by date in a vertical tree", async () => {

@@ -77,6 +77,44 @@ class DashboardSnapshotTest < ActiveSupport::TestCase
     assert_equal 2, snapshot.dig(:distribution, :phase).sum { |item| item.fetch(:count) }
   end
 
+  test "groups legal deadlines by state, sorts due dates, and keeps manual deadlines" do
+    legal_case = create_full_legal_case(unit: @unit)
+    awaiting = create_expediente_for(legal_case, descricao: "Aguardando ciência")
+    in_progress = create_expediente_for(legal_case, descricao: "Em curso")
+    in_progress.create_ciencia!(tipo: :expressa, data_ciencia: Date.current - 1.day)
+    in_progress.deadline.update!(start_date: Date.current, due_date: Date.current + 10.days, status: :in_progress)
+    due_soon = create_expediente_for(legal_case, descricao: "Vencendo")
+    due_soon.create_ciencia!(tipo: :expressa, data_ciencia: Date.current - 3.days)
+    due_soon.deadline.update!(start_date: Date.current - 2.days, due_date: Date.current + 1.day, status: :in_progress)
+    overdue = create_expediente_for(legal_case, descricao: "Vencido")
+    overdue.create_ciencia!(tipo: :expressa, data_ciencia: Date.current - 10.days)
+    overdue.deadline.update!(start_date: Date.current - 9.days, due_date: Date.current - 2.days, status: :overdue)
+    completed = create_expediente_for(legal_case, descricao: "Concluído")
+    completed.create_ciencia!(tipo: :expressa, data_ciencia: Date.current - 12.days)
+    completed.deadline.update!(start_date: Date.current - 11.days, due_date: Date.current - 5.days, status: :completed, completed_at: 2.days.ago)
+    old_completed = create_expediente_for(legal_case, descricao: "Concluído antigo")
+    old_completed.create_ciencia!(tipo: :expressa, data_ciencia: Date.current - 20.days)
+    old_completed.deadline.update!(start_date: Date.current - 19.days, due_date: Date.current - 12.days, status: :completed, completed_at: 11.days.ago)
+    manual = Deadline.create!(legal_case: legal_case, title: "Manual", status: :pending, due_date: Date.current + 2.days)
+
+    snapshot = DashboardSnapshot.new(office: @office, unit: @unit, all_units_mode: false).as_json
+    boxes = snapshot.fetch(:deadline_boxes)
+
+    assert_equal [ awaiting.deadline.id ], boxes.dig(:awaiting_science, :items).pluck(:id)
+    assert_equal [ in_progress.deadline.id ], boxes.dig(:in_progress, :items).pluck(:id)
+    assert_equal [ due_soon.deadline.id ], boxes.dig(:due_soon, :items).pluck(:id)
+    assert_equal [ overdue.deadline.id ], boxes.dig(:overdue, :items).pluck(:id)
+    assert_equal [ completed.deadline.id ], boxes.dig(:completed_recent, :items).pluck(:id)
+    assert_equal 1, boxes.dig(:completed_recent, :count)
+    assert_equal 1, snapshot.dig(:deadline_boxes, :in_progress, :items).size
+    assert_equal 1, snapshot.dig(:kpis, :deadline_soon, :count)
+    assert_equal "/deadlines?legal_state=awaiting_science", boxes.dig(:awaiting_science, :path)
+    assert_equal "/deadlines?legal_state=in_progress", boxes.dig(:in_progress, :path)
+    assert_equal "/deadlines?legal_state=due_soon", boxes.dig(:due_soon, :path)
+    assert_equal "/deadlines?legal_state=overdue", boxes.dig(:overdue, :path)
+    assert_equal "/deadlines?legal_state=completed_recent", boxes.dig(:completed_recent, :path)
+  end
+
   test "serializes filtered context items with Rails quick-action paths" do
     legal_case = create_full_legal_case(unit: @unit, responsible_name: "", next_action: "")
 
@@ -218,6 +256,18 @@ class DashboardSnapshotTest < ActiveSupport::TestCase
   end
 
   private
+
+  def create_expediente_for(legal_case, descricao:)
+    legal_case.expedientes.create!(
+      tipo: :intimacao,
+      descricao: descricao,
+      data_disponibilizacao: Date.current,
+      quantidade_dias: 5,
+      contagem: :uteis,
+      prazo_em_dobro: false,
+      origem: :manual
+    )
+  end
 
   def assert_context_path_matches(filter, expected_ids)
     query = Rack::Utils.parse_nested_query(URI.parse(filter.fetch(:path)).query)

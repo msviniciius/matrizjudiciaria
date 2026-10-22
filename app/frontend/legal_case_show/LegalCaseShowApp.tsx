@@ -1,6 +1,7 @@
 /// <reference path="../vite-env.d.ts" />
 
 import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import "./legalCaseShow.css"
 
 type TimelineItem = {
@@ -32,8 +33,29 @@ type Deadline = {
   deadline_type_label: string
   responsible_name: string
   delay_reason: string
+  complete_path: string
+  expediente: { id: number; tipo: string; descricao: string; data_disponibilizacao: string | null; ciencia_registrada: boolean } | null
+  ciencia_path: string | null
   path: string
 }
+
+const expedienteTypeOptions = [
+  ["intimacao", "Intimação"],
+  ["citacao", "Citação"],
+  ["despacho", "Despacho"],
+  ["sentenca", "Sentença"]
+] as const
+
+const expedienteCountOptions = [
+  ["uteis", "Dias úteis"],
+  ["corridos", "Dias corridos"]
+] as const
+
+const expedienteOriginOptions = [
+  ["manual", "Cadastro manual"],
+  ["djma", "DJMA"],
+  ["pje", "PJe"]
+] as const
 
 type Task = {
   id: number
@@ -193,6 +215,7 @@ type Snapshot = {
     calendar: string
     new_movement: string
     new_deadline: string
+    new_expediente: string
     new_task: string
     new_exam: string | null
     sync: { path: string; method: string } | null
@@ -250,6 +273,7 @@ export function LegalCaseShowApp() {
   const [outcomeError, setOutcomeError] = useState<string | null>(null)
   const [outcomeMessage, setOutcomeMessage] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [expedienteModalOpen, setExpedienteModalOpen] = useState(false)
   const [financialModalOpen, setFinancialModalOpen] = useState(false)
   const [financialPending, setFinancialPending] = useState(false)
   const [financialError, setFinancialError] = useState<string | null>(null)
@@ -262,6 +286,7 @@ export function LegalCaseShowApp() {
   const [aiError, setAiError] = useState<string | null>(null)
   const outcomeButtonRef = useRef<HTMLButtonElement>(null)
   const restoreOutcomeButtonFocus = useRef(false)
+  const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || ""
 
   const loadSnapshot = async () => {
     setError(null)
@@ -281,7 +306,7 @@ export function LegalCaseShowApp() {
     loadSnapshot()
   }, [])
 
-  const interactionLocked = syncPending || outcomeModalOpen || financialModalOpen || Boolean(paymentInstallment)
+  const interactionLocked = syncPending || outcomeModalOpen || expedienteModalOpen || financialModalOpen || Boolean(paymentInstallment)
 
   useEffect(() => {
     if (!interactionLocked) return
@@ -572,12 +597,42 @@ export function LegalCaseShowApp() {
       </ol> : <p>Nenhum andamento cadastrado.</p>}
     </section>
 
-    <OperationalSection title="Prazos" hasAlert={deadlineAlert}>
+    <OperationalSection title="Prazos" hasAlert={deadlineAlert} action={<button className="btn btn-primary react-legal-case-show__operational-create" type="button" onClick={() => setExpedienteModalOpen(true)}>Novo expediente</button>}>
       <CollectionEmpty items={snapshot.deadlines} message="Nenhum prazo cadastrado.">
-        {snapshot.deadlines.map((deadline) => <article className="react-legal-case-show__operational-item" key={deadline.id}>
-          <h3><a href={deadline.path}>{deadline.title}</a></h3>
-          <p>{deadline.due_date_label} · {deadline.status_label} · Prioridade {deadline.priority_label}</p>
-          <p>Responsável: {deadline.responsible_name}</p>
+        {snapshot.deadlines.map((deadline) => <article className={`react-legal-case-show__operational-item react-legal-case-show__deadline-item react-legal-case-show__deadline-item--${deadline.status}`} key={deadline.id}>
+          <div className="react-legal-case-show__deadline-heading">
+            <div>
+              <p className="react-legal-case-show__item-eyebrow">Prazo jurídico</p>
+              <h3><a href={deadline.path}>{deadline.title}</a></h3>
+            </div>
+            <span className={`react-legal-case-show__deadline-status ${deadline.ciencia_path ? "react-legal-case-show__deadline-status--awaiting" : ""}`}>{deadline.expediente && !deadline.expediente.ciencia_registrada ? "Aguardando ciência" : deadline.status_label}</span>
+          </div>
+          <dl className="react-legal-case-show__deadline-meta">
+            <div><dt>Data limite</dt><dd>{deadline.due_date_label}</dd></div>
+            <div><dt>Prioridade</dt><dd>{deadline.priority_label}</dd></div>
+            <div><dt>Responsável</dt><dd>{deadline.responsible_name}</dd></div>
+          </dl>
+          {deadline.expediente && <div className="react-legal-case-show__expediente-summary">
+            <p className="react-legal-case-show__item-eyebrow">Expediente vinculado</p>
+            <strong>{deadline.expediente.descricao}</strong>
+            <p>Disponibilizado em {deadline.expediente.data_disponibilizacao || "data não informada"}</p>
+          </div>}
+          {deadline.status !== "completed" && <p className="react-legal-case-show__deadline-next-action"><span>Próxima ação</span><strong>{deadline.ciencia_path ? "Registrar ciência" : "Cumprir prazo"}</strong></p>}
+          <div className="react-legal-case-show__operational-actions">
+            {deadline.ciencia_path && deadline.expediente && <form action={deadline.ciencia_path} method="post">
+              {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+              <input type="hidden" name="ciencia[expediente_id]" value={deadline.expediente.id} />
+              <input type="hidden" name="ciencia[tipo]" value="expressa" />
+              <label>Data da ciência<input name="ciencia[data_ciencia]" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></label>
+              <div className="form-actions"><button className="btn btn-primary" type="submit">Registrar ciência</button></div>
+            </form>}
+            {!deadline.ciencia_path && deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
+              <input type="hidden" name="_method" value="patch" />
+              {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+              <label>Protocolo <span>(opcional)</span><input name="protocolo_ref" placeholder="Ex.: 2026-001" aria-label={`Protocolo ${deadline.title}`} /></label>
+              <div className="form-actions"><button className="btn btn-secondary" type="submit">Cumprir prazo</button></div>
+            </form>}
+          </div>
         </article>)}
       </CollectionEmpty>
     </OperationalSection>
@@ -633,6 +688,7 @@ export function LegalCaseShowApp() {
     </aside>
     </div>
     </div>
+    {expedienteModalOpen && <NewExpedienteModal action={snapshot.actions.new_expediente} legalCaseId={snapshot.case.id} token={csrfToken} onClose={() => setExpedienteModalOpen(false)} />}
     {outcomeModalOpen && snapshot.actions.record_outcome && <OutcomeModal
       legalCase={snapshot.case}
       pending={outcomePending}
@@ -673,6 +729,50 @@ function CaseDeleteModal({ action, internalNumber, onClose }: { action: string; 
       </form>
     </section>
   </div>
+}
+
+function NewExpedienteModal({ action, legalCaseId, token, onClose }: { action: string; legalCaseId: number; token: string; onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+
+    document.addEventListener("keydown", closeOnEscape)
+    return () => document.removeEventListener("keydown", closeOnEscape)
+  }, [onClose])
+
+  return createPortal(<div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
+    if (event.target === event.currentTarget) onClose()
+  }}>
+    <section className="react-legal-case-show__outcome-modal react-legal-case-show__expediente-modal" role="dialog" aria-modal="true" aria-labelledby="expediente-modal-heading" aria-describedby="expediente-modal-description">
+      <div className="react-legal-case-show__outcome-modal-header">
+        <div>
+          <p className="react-legal-case-show__eyebrow">Novo registro</p>
+          <h2 id="expediente-modal-heading">Cadastrar expediente</h2>
+        </div>
+        <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} aria-label="Fechar cadastro de expediente">×</button>
+      </div>
+      <p id="expediente-modal-description">Informe os dados da publicação para criar o prazo jurídico. A contagem começa quando a ciência for registrada.</p>
+      <form className="app-form aurora-form" action={action} method="post">
+        {token && <input type="hidden" name="authenticity_token" value={token} />}
+        <input type="hidden" name="expediente[legal_case_id]" value={legalCaseId} />
+        <p className="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
+        <div className="form-grid">
+          <div className="field-full"><label>Descrição<input name="expediente[descricao]" placeholder="Ex.: Intimação para manifestação" required /></label></div>
+          <div><label>Tipo<select name="expediente[tipo]" defaultValue="intimacao">{expedienteTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+          <div><label>Origem<select name="expediente[origem]" defaultValue="manual">{expedienteOriginOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+          <div><label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label></div>
+          <div><label>Dias do prazo<input name="expediente[quantidade_dias]" type="number" min="1" placeholder="Ex.: 5" required /></label></div>
+          <div><label>Contagem<select name="expediente[contagem]" defaultValue="uteis">{expedienteCountOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+        </div>
+        <p className="field-help">Escolha dias úteis para a contagem conforme o calendário jurídico; dias corridos incluem finais de semana e feriados.</p>
+        <div className="react-legal-case-show__outcome-modal-actions">
+          <button className="btn btn-secondary" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" type="submit">Criar prazo</button>
+        </div>
+      </form>
+    </section>
+  </div>, document.body)
 }
 
 function ProcessIntelligencePanel({
@@ -1247,12 +1347,15 @@ function AlertSummary({ alerts }: { alerts: Snapshot["alerts"] }) {
   </>
 }
 
-function OperationalSection({ title, hasAlert, children }: { title: string; hasAlert: boolean; children: React.ReactNode }) {
+function OperationalSection({ title, hasAlert, action, children }: { title: string; hasAlert: boolean; action?: React.ReactNode; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(hasAlert)
   const contentId = `legal-case-show-${title.toLocaleLowerCase("pt-BR")}`
 
   return <section className="react-legal-case-show__operational-section">
-    <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
+    <div className="react-legal-case-show__operational-heading">
+      <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span className="react-legal-case-show__operational-toggle" aria-hidden="true">{isOpen ? "⌃" : "⌄"}</span></button></h2>
+      {action && <div className="react-legal-case-show__operational-heading-action">{action}</div>}
+    </div>
     <div className="react-legal-case-show__operational-content" id={contentId} hidden={!isOpen}>{children}</div>
   </section>
 }

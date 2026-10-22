@@ -61,6 +61,23 @@ class InternalScheduledJobsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ {} ], calls
   end
 
+  test "refreshes legal deadlines immediately" do
+    calls = []
+    stub_job(RefreshPrazosJob, ->(params = {}) {
+      calls << params
+      { processed: 3, tacit_acknowledgements: 1 }
+    }) do
+      post internal_jobs_refresh_prazos_path,
+        headers: authorization_header,
+        as: :json
+    end
+
+    assert_response :success
+    assert_equal "refresh_prazos", response.parsed_body.fetch("job")
+    assert_equal "success", response.parsed_body.fetch("status")
+    assert_equal [ {} ], calls
+  end
+
   test "records job failures with duration" do
     stub_job(Pje::Ma::ImportCaseEventsJob, ->(*) { raise "boom" }) do
       assert_difference("ScheduledJobRun.count", 1) do

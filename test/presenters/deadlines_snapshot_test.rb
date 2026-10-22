@@ -40,5 +40,54 @@ class DeadlinesSnapshotTest < ActiveSupport::TestCase
     assert_equal "today", entry.fetch(:due_state)
     assert_equal "Hoje", entry.fetch(:due_state_label)
     assert_equal "Marina", entry.fetch(:responsible_name)
+    assert_equal "manual", entry.fetch(:origin)
+    assert_nil entry.fetch(:legal_state)
+    assert_nil entry.fetch(:science_date)
+    assert_nil entry.fetch(:expediente)
+  end
+
+  test "serializes legal state, origin, science and expediente details" do
+    legal_case = create_full_legal_case(internal_number: "PROC-DEAD-SNAP-LEGAL")
+    expediente = legal_case.expedientes.create!(
+      tipo: :intimacao,
+      descricao: "Intimação para manifestação",
+      data_disponibilizacao: Date.current - 2.days,
+      quantidade_dias: 5,
+      contagem: :uteis,
+      prazo_em_dobro: false,
+      origem: :pje,
+      referencia_externa: "PJE-#{SecureRandom.hex(3)}"
+    )
+    ciencia = expediente.create_ciencia!(tipo: :expressa, data_ciencia: Date.current - 1.day)
+    deadline = expediente.deadline
+    deadline.update!(start_date: Date.current, due_date: Date.current + 3.days, status: :in_progress)
+
+    entry = DeadlinesSnapshot.new(
+      office: default_office,
+      unit: nil,
+      deadlines: [ deadline.reload ],
+      filters: {}
+    ).as_json.fetch(:deadlines).sole
+
+    assert_equal "in_progress", entry.fetch(:legal_state)
+    assert_equal "pje", entry.fetch(:origin)
+    assert_equal "Pje", entry.fetch(:origin_label)
+    assert_equal ciencia.data_ciencia.iso8601, entry.fetch(:science_date)
+    assert_equal I18n.l(ciencia.data_ciencia, format: :short), entry.fetch(:science_date_label)
+    assert_equal expediente.id, entry.dig(:expediente, :id)
+    assert_equal "Intimação para manifestação", entry.dig(:expediente, :description)
+    assert_equal "Intimacao", entry.dig(:expediente, :type_label)
+  end
+
+  test "serializes completed legal deadline as completed even without science" do
+    legal_case = create_full_legal_case(internal_number: "PROC-DEAD-SNAP-COMPLETED")
+    expediente = legal_case.expedientes.create!(tipo: :intimacao, descricao: "Sem ciência", data_disponibilizacao: Date.current, quantidade_dias: 2, contagem: :uteis, prazo_em_dobro: false, origem: :manual)
+    deadline = expediente.deadline
+    deadline.update!(due_date: Date.current + 1.day, status: :completed, completed_at: Time.current)
+
+    entry = DeadlinesSnapshot.new(office: default_office, unit: nil, deadlines: [ deadline.reload ], filters: {}).as_json.fetch(:deadlines).sole
+
+    assert_equal "completed", entry.fetch(:legal_state)
+    assert_equal "Concluído", entry.fetch(:legal_state_label)
   end
 end

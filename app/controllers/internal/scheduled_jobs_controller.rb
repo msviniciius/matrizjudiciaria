@@ -4,7 +4,8 @@ module Internal
 
     JOBS = {
       "pje_case_events" => Pje::Ma::ImportCaseEventsJob,
-      "djma_publications" => Integrations::Djma::ImportPublicationsJob
+      "djma_publications" => Integrations::Djma::ImportPublicationsJob,
+      "refresh_prazos" => RefreshPrazosJob
     }.freeze
 
     def import_case_events
@@ -13,6 +14,10 @@ module Internal
 
     def import_djma_publications
       run_job!("djma_publications")
+    end
+
+    def refresh_prazos
+      run_job!("refresh_prazos")
     end
 
     private

@@ -91,6 +91,32 @@ test("renders the command center from the server snapshot", async () => {
   await waitFor(() => expect(screen.queryByRole("status", { name: /carregando/i })).not.toBeInTheDocument())
 })
 
+test("renders the five legal deadline boxes from the server snapshot", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      meta: { office_name: "Kayran Advocacia", syncable_count: 0, new_imported_events_count: 0 },
+      kpis: {},
+      deadline_boxes: {
+        awaiting_science: { label: "Aguardando ciência", count: 1, path: "/deadlines?status=pending", items: [{ id: 1, title: "Aguardar", legal_case_number: "PROC-1", path: "/deadlines/1", due_date: null, legal_state: "awaiting_science", origin: "pje", science_date: null, expediente_id: 1 }] },
+        in_progress: { label: "Em curso", count: 1, path: "/deadlines?status=in_progress", items: [] },
+        due_soon: { label: "Vencendo", count: 0, path: "/deadlines?due_state=upcoming", items: [] },
+        overdue: { label: "Vencidos", count: 0, path: "/deadlines?due_state=overdue", items: [] },
+        completed_recent: { label: "Concluídos nos últimos 10 dias", count: 0, path: "/deadlines?status=completed", items: [] }
+      },
+      critical_queues: { without_responsible: [], without_next_action: [], overdue_deadlines_without_reason: [] },
+      risk_queue: {}, feed: [], distribution: { phase: [], status: [] }, actions: { sync: "/painel/sync" }
+    })
+  }))
+
+  render(<DashboardApp />)
+
+  expect(await screen.findByRole("heading", { name: "Prazos jurídicos" })).toBeVisible()
+  expect(screen.getByText("Aguardando ciência")).toBeVisible()
+  expect(screen.getByText("Concluídos nos últimos 10 dias")).toBeVisible()
+  expect(screen.getByText("Aguardar")).toBeVisible()
+})
+
 test("does not render financial summary when it is absent from the snapshot", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
     ok: true,

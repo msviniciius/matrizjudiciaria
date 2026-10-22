@@ -1,5 +1,5 @@
 class DeadlinesController < ApplicationController
-  before_action :set_deadline, only: %i[ show edit update destroy quick_update ]
+  before_action :set_deadline, only: %i[ show edit update destroy quick_update cumprir ]
 
   # GET /deadlines or /deadlines.json
   def index
@@ -7,8 +7,8 @@ class DeadlinesController < ApplicationController
     scope = Deadline
       .joins(:legal_case)
       .where(legal_cases: { office_id: current_office.id })
-      .includes(legal_case: :client)
-      .order(due_date: :asc, created_at: :desc)
+      .includes(:expediente, { expediente: :ciencia }, legal_case: :client)
+      .order(Arel.sql("deadlines.due_date ASC NULLS LAST, deadlines.created_at DESC"))
     scope = scope_by_current_unit(scope, through: :legal_cases)
 
     if @filters[:q].present?
@@ -35,6 +35,8 @@ class DeadlinesController < ApplicationController
     when "without_due_date"
       scope = scope.where(due_date: nil)
     end
+
+    scope = scope_for_legal_state(scope, @filters[:legal_state]) if @filters[:legal_state].present?
 
     @deadlines = scope
     @advanced_filters_open = false
@@ -65,7 +67,7 @@ class DeadlinesController < ApplicationController
   # POST /deadlines or /deadlines.json
   def create
     @deadline = Deadline.new(deadline_params)
-    ensure_deadline_office_scope!
+    ensure_deadline_scope!
 
     respond_to do |format|
       if @deadline.save
@@ -115,6 +117,11 @@ class DeadlinesController < ApplicationController
       )
       notice = "Prazo marcado como suspenso."
     when "extended"
+      if @deadline.expediente.present? && @deadline.deadline_type_judicial?
+        redirect_back fallback_location: deadlines_path, alert: "Prazos jurídicos vinculados a expediente não podem ser prorrogados manualmente."
+        return
+      end
+
       unless Deadline.column_names.include?("extended_at") && Deadline.column_names.include?("extended_from_date")
         redirect_back fallback_location: deadlines_path, alert: "Atualize o banco com as migrations para usar a prorrogação com data."
         return
@@ -154,20 +161,36 @@ class DeadlinesController < ApplicationController
     redirect_back fallback_location: deadlines_path, notice: notice
   end
 
+  def cumprir
+    @deadline.cumprir!(protocolo_ref: params.permit(:protocolo_ref)[:protocolo_ref])
+    refresh_legal_case_next_deadline!(@deadline.legal_case)
+
+    respond_to do |format|
+      format.html { redirect_to @deadline, notice: "Prazo marcado como cumprido." }
+      format.json { render :show, status: :ok, location: @deadline }
+    end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_deadline
-      @deadline = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+      scope = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
+      @deadline = scope_by_current_unit(scope, through: :legal_cases).find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
     def deadline_params
-      params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :due_date, :status, :priority, :delay_reason ])
+      permitted = params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :due_date, :status, :priority, :delay_reason ])
+      if @deadline.present?
+        permitted.delete(:legal_case_id)
+        permitted.delete(:due_date) if @deadline.expediente.present?
+      end
+      permitted
     end
 
-    def ensure_deadline_office_scope!
+    def ensure_deadline_scope!
       return if @deadline.legal_case.blank?
-      return if @deadline.legal_case.office_id == current_office.id
+      return if scope_by_current_unit(current_office.legal_cases).where(id: @deadline.legal_case.id).exists?
 
       raise ActiveRecord::RecordNotFound
     end
@@ -184,6 +207,23 @@ class DeadlinesController < ApplicationController
     end
 
     def deadline_filters
-      params.permit(:q, :status, :priority, :deadline_type, :due_state)
+      params.permit(:q, :status, :priority, :deadline_type, :due_state, :legal_state)
+    end
+
+    def scope_for_legal_state(scope, state)
+      case state
+      when "awaiting_science"
+        scope.left_joins(expediente: :ciencia).where.not(expediente_id: nil).where(ciencias: { id: nil }, status: :pending)
+      when "in_progress"
+        scope.where.not(expediente_id: nil).where(status: :in_progress).where("deadlines.due_date IS NULL OR deadlines.due_date > ?", Date.current + 7.days)
+      when "due_soon"
+        scope.where.not(expediente_id: nil).where(status: %w[pending in_progress extended], due_date: Date.current..(Date.current + 7.days))
+      when "overdue"
+        scope.where.not(expediente_id: nil).where(status: %w[pending in_progress extended overdue]).where("deadlines.due_date < ?", Date.current)
+      when "completed_recent"
+        scope.where.not(expediente_id: nil).where(status: :completed, completed_at: 10.days.ago..Time.current)
+      else
+        scope
+      end
     end
 end
