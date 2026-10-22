@@ -327,12 +327,21 @@ end
 calendar_years = [ Date.current.year, Date.current.year + 1 ]
 
 easter_sunday = lambda do |year|
+  # Algoritmo Gregoriano anônimo (Meeus/Jones/Butcher), válido para o
+  # calendário gregoriano e sem os ajustes incorretos da fórmula anterior.
   golden_number = year % 19
   century = year / 100
-  skipped_leap_years = century - century / 4 - (8 * century + 13) / 25
-  corrected_epact = (19 * golden_number + century - skipped_leap_years + 15) % 30
-  days_to_sunday = (32 + 2 * (century % 4) + 2 * (year % 4) - corrected_epact - (year % 19)) % 7
-  month_day = corrected_epact + days_to_sunday - 7 * ((golden_number + 11 * corrected_epact + 22 * days_to_sunday) / 451) + 114
+  century_remainder = year % 100
+  leap_year_correction = century / 4
+  century_remainder_leap_year = century % 4
+  lunar_correction = (century + 8) / 25
+  solar_correction = (century - lunar_correction + 1) / 3
+  epact = (19 * golden_number + century - leap_year_correction - solar_correction + 15) % 30
+  century_remainder_leap_day = century_remainder / 4
+  century_remainder_remainder = century_remainder % 4
+  weekday_correction = (32 + 2 * century_remainder_leap_year + 2 * century_remainder_leap_day - epact - century_remainder_remainder) % 7
+  march_correction = (golden_number + 11 * epact + 22 * weekday_correction) / 451
+  month_day = epact + weekday_correction - 7 * march_correction + 114
   Date.new(year, month_day / 31, month_day % 31 + 1)
 end
 
