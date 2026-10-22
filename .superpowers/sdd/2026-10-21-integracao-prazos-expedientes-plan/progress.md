@@ -199,3 +199,9 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Corrigido o layout dos rótulos/campos, incluindo descrição em largura total e grade consistente para os demais campos.
 - Teste focado após a revisão: 28/28 passando.
 - O servidor local já estava ativo na porta 3002; a nova inicialização foi impedida pelo PID existente, sem alteração de dados.
+
+## Terceira revisão visual: 2026-10-22
+
+- Rebaixado o agrupamento de ações da lateral para não parecer um card dentro de outro card.
+- O expediente agora é o único painel visual da seção, enquanto as ações administrativas ficam soltas e alinhadas abaixo.
+- Reforçada a hierarquia do título do expediente e mantido o contraste do formulário no tema Aurora.
