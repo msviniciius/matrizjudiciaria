@@ -238,3 +238,9 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - O botão “Novo expediente” passou a usar as classes globais `btn btn-primary`, alinhando cor, altura, tipografia e estados às demais ações do sistema.
 - Screenshot real após a alteração validou a consistência visual do CTA no cabeçalho de “Prazos”.
 - Teste focado permanece em 28/28 passando.
+
+## Revisão de feedback visual: 2026-10-22
+
+- Revalidação confirmou que a captura anexada continua representando a versão antiga da tela, enquanto a renderização atual já usa modal e CTA contextual em “Prazos”.
+- O CTA foi alinhado explicitamente ao botão primário global do projeto.
+- Screenshot atual do card de Prazos foi gerado para comparação visual.
