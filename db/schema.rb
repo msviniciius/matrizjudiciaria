@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_21_020100) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_21_020200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -147,7 +147,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_020100) do
     t.bigint "expediente_id"
     t.index ["deadline_type"], name: "index_deadlines_on_deadline_type"
     t.index ["due_date"], name: "index_deadlines_on_due_date"
-    t.index ["expediente_id"], name: "index_deadlines_on_expediente_id"
+    t.index ["expediente_id"], name: "index_deadlines_on_expediente_id_unique", unique: true
     t.index ["extended_at"], name: "index_deadlines_on_extended_at"
     t.index ["legal_case_id"], name: "index_deadlines_on_legal_case_id"
     t.index ["status"], name: "index_deadlines_on_status"
@@ -173,6 +173,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_020100) do
     t.string "referencia_evento"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["id", "legal_case_id"], name: "index_expedientes_on_id_and_legal_case_id", unique: true
     t.index ["legal_case_id", "referencia_externa"], name: "index_expedientes_on_legal_case_id_and_referencia_externa", unique: true, where: "(referencia_externa IS NOT NULL)"
     t.index ["legal_case_id"], name: "index_expedientes_on_legal_case_id"
   end
@@ -782,7 +783,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_020100) do
   add_foreign_key "clients", "units"
   add_foreign_key "courts", "districts"
   add_foreign_key "deadline_settings", "offices"
-  add_foreign_key "deadlines", "expedientes"
+  add_foreign_key "deadlines", "expedientes", column: ["expediente_id", "legal_case_id"], primary_key: ["id", "legal_case_id"], name: "fk_deadlines_expediente_and_legal_case"
   add_foreign_key "deadlines", "legal_cases"
   add_foreign_key "expedientes", "legal_cases"
   add_foreign_key "feriados", "offices"

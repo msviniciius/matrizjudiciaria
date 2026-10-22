@@ -36,6 +36,8 @@ class Deadline < ApplicationRecord
   validates :status, inclusion: { in: statuses.keys }
   validates :priority, inclusion: { in: priorities.keys }, allow_blank: true
   validates :deadline_type, inclusion: { in: deadline_types.keys }, allow_blank: true
+  validates :expediente, uniqueness: true, allow_nil: true
+  validate :expediente_legal_case_matches
   validate :start_date_cannot_be_after_due_date
 
   before_validation :apply_default_deadline_setting, on: :create
@@ -44,6 +46,12 @@ class Deadline < ApplicationRecord
 
   def awaiting_expediente_ciencia?
     expediente.present? && status_pending?
+  end
+
+  def expediente_legal_case_matches
+    return if expediente.blank? || legal_case_id.blank? || expediente.legal_case_id == legal_case_id
+
+    errors.add(:legal_case, "deve ser o mesmo processo do expediente")
   end
 
   def start_date_cannot_be_after_due_date
@@ -55,6 +63,7 @@ class Deadline < ApplicationRecord
 
   def apply_default_deadline_setting
     return if legal_case.blank? || deadline_type.blank?
+    return if expediente.present? && deadline_type_judicial? && status_pending? && due_date.blank?
 
     setting = legal_case.office&.deadline_settings&.active&.find_by(deadline_type: deadline_type)
     return if setting.blank?

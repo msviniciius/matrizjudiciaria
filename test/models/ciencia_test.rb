@@ -45,6 +45,33 @@ class CienciaTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:expediente], "já está em uso"
   end
 
+  test "rejeita ciencia registrada por usuario de outro escritorio" do
+    other_office = Office.create!(name: "Outro Escritório Ciência", slug: "outro-escritorio-ciencia")
+    other_user = User.create!(
+      office: other_office,
+      name: "Usuário Externo",
+      email: "externo-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+    ciencia = Ciencia.new(
+      expediente: @expediente,
+      user: other_user,
+      tipo: :expressa,
+      data_ciencia: Date.current
+    )
+
+    assert_not ciencia.valid?
+    assert_includes ciencia.errors[:user], "deve pertencer ao mesmo escritório do processo"
+  end
+
+  test "permite ciencia sem usuario responsavel" do
+    ciencia = Ciencia.new(expediente: @expediente, tipo: :tacita, data_ciencia: Date.current)
+
+    assert ciencia.valid?, ciencia.errors.full_messages.join(", ")
+  end
+
   private
 
   def expediente_attributes

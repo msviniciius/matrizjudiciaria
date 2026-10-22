@@ -49,6 +49,63 @@ class ExpedienteTest < ActiveSupport::TestCase
     assert_equal @legal_case, expediente.legal_case
   end
 
+  test "rejeita deadline que mistura processo e expediente de processos diferentes" do
+    other_case = create_full_legal_case
+    expediente = @legal_case.expedientes.create!(valid_attributes)
+    deadline = Deadline.new(
+      legal_case: other_case,
+      expediente: expediente,
+      title: "Prazo inconsistente",
+      deadline_type: :judicial,
+      status: :pending
+    )
+
+    assert_not deadline.valid?
+    assert_includes deadline.errors[:legal_case], "deve ser o mesmo processo do expediente"
+  end
+
+  test "bloqueia divergencia de processo em escrita direta no banco" do
+    other_case = create_full_legal_case
+    deadline = @legal_case.expedientes.create!(valid_attributes).deadline
+
+    assert_raises ActiveRecord::StatementInvalid do
+      deadline.update_columns(legal_case_id: other_case.id)
+    end
+  end
+
+  test "nao aplica configuracao de prazo antes da ciencia" do
+    DeadlineSetting.create!(
+      office: default_office,
+      name: "Prazo judicial padrão",
+      deadline_type: :judicial,
+      days_to_due: 10,
+      default_priority: :high,
+      active: true
+    )
+
+    expediente = @legal_case.expedientes.create!(valid_attributes)
+
+    assert_nil expediente.reload.deadline.due_date
+    assert_nil expediente.deadline.priority
+  end
+
+  test "protege no banco contra dois deadlines para o mesmo expediente" do
+    expediente = @legal_case.expedientes.create!(valid_attributes)
+    timestamp = Time.current
+
+    assert_raises ActiveRecord::RecordNotUnique do
+      Deadline.insert_all!([ {
+        legal_case_id: @legal_case.id,
+        expediente_id: expediente.id,
+        title: "Deadline duplicado",
+        deadline_type: "judicial",
+        status: "pending",
+        created_at: timestamp,
+        updated_at: timestamp
+      } ])
+    end
+  end
+
   private
 
   def valid_attributes
