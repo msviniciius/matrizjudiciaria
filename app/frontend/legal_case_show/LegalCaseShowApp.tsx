@@ -597,7 +597,7 @@ export function LegalCaseShowApp() {
       </ol> : <p>Nenhum andamento cadastrado.</p>}
     </section>
 
-    <OperationalSection title="Prazos" hasAlert={deadlineAlert} action={<button className="react-legal-case-show__operational-create" type="button" onClick={() => setExpedienteModalOpen(true)}>Novo expediente</button>}>
+    <OperationalSection title="Prazos" hasAlert={deadlineAlert} action={<button className="btn btn-primary react-legal-case-show__operational-create" type="button" onClick={() => setExpedienteModalOpen(true)}>Novo expediente</button>}>
       <CollectionEmpty items={snapshot.deadlines} message="Nenhum prazo cadastrado.">
         {snapshot.deadlines.map((deadline) => <article className={`react-legal-case-show__operational-item react-legal-case-show__deadline-item react-legal-case-show__deadline-item--${deadline.status}`} key={deadline.id}>
           <div className="react-legal-case-show__deadline-heading">

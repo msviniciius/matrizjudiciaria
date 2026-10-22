@@ -232,3 +232,9 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Ações do prazo passaram para um rodapé alinhado, com campo e botão na mesma linha em telas largas.
 - Screenshot real validou a redução de camadas visuais.
 - Teste focado: 28/28 passando.
+
+## Consistência do CTA com o padrão global: 2026-10-22
+
+- O botão “Novo expediente” passou a usar as classes globais `btn btn-primary`, alinhando cor, altura, tipografia e estados às demais ações do sistema.
+- Screenshot real após a alteração validou a consistência visual do CTA no cabeçalho de “Prazos”.
+- Teste focado permanece em 28/28 passando.
