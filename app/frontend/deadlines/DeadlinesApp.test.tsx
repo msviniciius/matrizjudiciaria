@@ -9,6 +9,7 @@ const deadlineWith = (title: string, overrides = {}) => ({
   path: "/deadlines/1",
   edit_path: "/deadlines/1/edit",
   delete_path: "/deadlines/1",
+  complete_path: "/deadlines/1/cumprir",
   legal_case_path: "/legal_cases/1",
   process_number: "PROC-001",
   client_name: "Cliente Aurora",
@@ -24,6 +25,8 @@ const deadlineWith = (title: string, overrides = {}) => ({
   extended_at_label: "-",
   responsible_name: "Marina",
   delay_reason: "",
+  expediente_id: null,
+  ciencia_path: null,
   ...overrides
 })
 
@@ -61,6 +64,15 @@ test("loads deadline cards with status and edit/delete actions", async () => {
   expect(screen.getByRole("link", { name: "Prazo inicial" })).toHaveAttribute("href", "/deadlines/1")
   expect(screen.getByRole("link", { name: "Editar prazo Prazo inicial" })).toHaveAttribute("href", "/deadlines/1/edit")
   expect(screen.getByRole("button", { name: "Excluir prazo Prazo inicial" })).toBeVisible()
+})
+
+test("shows the deadline completion action", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith())))
+
+  render(<DeadlinesApp />)
+
+  const button = await screen.findByRole("button", { name: "Cumprir prazo Prazo inicial" })
+  expect(button.closest("form")).toHaveAttribute("action", "/deadlines/1/cumprir")
 })
 
 test("switches to table view and stores the preference", async () => {

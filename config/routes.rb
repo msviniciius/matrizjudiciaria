@@ -22,9 +22,12 @@ Rails.application.routes.draw do
   end
 
   resources :tasks
+  resources :expedientes, only: :create
+  resources :ciencias, only: :create
   resources :deadlines do
     member do
       patch :quick_update
+      patch :cumprir
     end
   end
   resources :deadline_settings, except: :show

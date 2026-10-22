@@ -10,6 +10,7 @@ type Deadline = {
   path: string
   edit_path: string
   delete_path: string
+  complete_path: string
   legal_case_path: string | null
   process_number: string
   client_name: string
@@ -25,6 +26,8 @@ type Deadline = {
   extended_at_label: string
   responsible_name: string
   delay_reason: string
+  expediente_id: number | null
+  ciencia_path: string | null
 }
 type Snapshot = {
   meta: { office_name: string; unit_name?: string | null; total_count: number }
@@ -200,6 +203,19 @@ function DeadlineActions({ deadline, compact = false }: { deadline: Deadline; co
   const className = compact ? "react-deadlines__actions react-deadlines__actions--compact" : "react-deadlines__actions"
   return <div className={className}>
     <a href={deadline.edit_path} aria-label={`Editar prazo ${deadline.title}`}>Editar</a>
+    {deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
+      <input type="hidden" name="_method" value="patch" />
+      {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+      {deadline.expediente_id && <input name="protocolo_ref" placeholder="Protocolo (opcional)" aria-label={`Protocolo ${deadline.title}`} />}
+      <button type="submit" aria-label={`Cumprir prazo ${deadline.title}`}>Cumprir</button>
+    </form>}
+    {deadline.ciencia_path && deadline.expediente_id && <form action={deadline.ciencia_path} method="post">
+      {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+      <input type="hidden" name="ciencia[expediente_id]" value={deadline.expediente_id} />
+      <input type="hidden" name="ciencia[tipo]" value="expressa" />
+      <input type="hidden" name="ciencia[data_ciencia]" value={new Date().toISOString().slice(0, 10)} />
+      <button type="submit" aria-label={`Registrar ciência ${deadline.title}`}>Dar ciência</button>
+    </form>}
     <form action={deadline.delete_path} method="post" onSubmit={(event) => { if (!window.confirm("Excluir este prazo?")) event.preventDefault() }}>
       <input type="hidden" name="_method" value="delete" />
       {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}

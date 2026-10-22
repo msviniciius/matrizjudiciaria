@@ -103,7 +103,10 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     deadline_type_label: "Judicial",
     responsible_name: "Marina",
     delay_reason: "-",
-    path: "/deadlines/1"
+    path: "/deadlines/1",
+    complete_path: "/deadlines/1/cumprir",
+    expediente: null,
+    ciencia_path: null
   }],
   tasks: [{
     id: 1,
@@ -141,6 +144,7 @@ const snapshotWith = (timeline = [timelineItem(1, "Andamento recente")]) => ({
     calendar: "/legal_cases/1/google_calendar",
     new_movement: "/process_movements/new?process_id=1",
     new_deadline: "/deadlines/new?legal_case_id=1",
+    new_expediente: "/expedientes",
     new_task: "/tasks/new?legal_case_id=1",
     new_exam: "/legal_cases/1/process_exams/new",
     sync: { path: "/legal_cases/1/sync", method: "post" },

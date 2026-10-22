@@ -32,6 +32,9 @@ type Deadline = {
   deadline_type_label: string
   responsible_name: string
   delay_reason: string
+  complete_path: string
+  expediente: { id: number; tipo: string; descricao: string; data_disponibilizacao: string | null; ciencia_registrada: boolean } | null
+  ciencia_path: string | null
   path: string
 }
 
@@ -193,6 +196,7 @@ type Snapshot = {
     calendar: string
     new_movement: string
     new_deadline: string
+    new_expediente: string
     new_task: string
     new_exam: string | null
     sync: { path: string; method: string } | null
@@ -262,6 +266,7 @@ export function LegalCaseShowApp() {
   const [aiError, setAiError] = useState<string | null>(null)
   const outcomeButtonRef = useRef<HTMLButtonElement>(null)
   const restoreOutcomeButtonFocus = useRef(false)
+  const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || ""
 
   const loadSnapshot = async () => {
     setError(null)
@@ -578,6 +583,21 @@ export function LegalCaseShowApp() {
           <h3><a href={deadline.path}>{deadline.title}</a></h3>
           <p>{deadline.due_date_label} · {deadline.status_label} · Prioridade {deadline.priority_label}</p>
           <p>Responsável: {deadline.responsible_name}</p>
+          <div className="react-legal-case-show__operational-actions">
+            {deadline.ciencia_path && deadline.expediente && <form action={deadline.ciencia_path} method="post">
+              {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+              <input type="hidden" name="ciencia[expediente_id]" value={deadline.expediente.id} />
+              <input type="hidden" name="ciencia[tipo]" value="expressa" />
+              <input type="hidden" name="ciencia[data_ciencia]" value={new Date().toISOString().slice(0, 10)} />
+              <button type="submit">Dar ciência</button>
+            </form>}
+            {deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
+              <input type="hidden" name="_method" value="patch" />
+              {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+              <input name="protocolo_ref" placeholder="Protocolo (opcional)" aria-label={`Protocolo ${deadline.title}`} />
+              <button type="submit">Cumprir prazo</button>
+            </form>}
+          </div>
         </article>)}
       </CollectionEmpty>
     </OperationalSection>
@@ -622,6 +642,20 @@ export function LegalCaseShowApp() {
     {snapshot.case.outcome !== "undefined" && <OutcomeSummary legalCase={snapshot.case} />}
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
+      <details>
+        <summary>Novo expediente</summary>
+        <form action={snapshot.actions.new_expediente} method="post">
+          {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
+          <input type="hidden" name="expediente[legal_case_id]" value={snapshot.case.id} />
+          <input type="hidden" name="expediente[tipo]" value="intimacao" />
+          <input type="hidden" name="expediente[contagem]" value="uteis" />
+          <input type="hidden" name="expediente[origem]" value="manual" />
+          <label>Descrição<input name="expediente[descricao]" required /></label>
+          <label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label>
+          <label>Dias<input name="expediente[quantidade_dias]" type="number" min="1" required /></label>
+          <button type="submit">Criar expediente</button>
+        </form>
+      </details>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
       <a href={snapshot.actions.edit}>Editar processo</a>
       <button className="react-legal-case-show__actions-button" type="button" onClick={() => setDeleteModalOpen(true)}>Excluir processo</button>

@@ -1,5 +1,5 @@
 class DeadlinesController < ApplicationController
-  before_action :set_deadline, only: %i[ show edit update destroy quick_update ]
+  before_action :set_deadline, only: %i[ show edit update destroy quick_update cumprir ]
 
   # GET /deadlines or /deadlines.json
   def index
@@ -159,10 +159,21 @@ class DeadlinesController < ApplicationController
     redirect_back fallback_location: deadlines_path, notice: notice
   end
 
+  def cumprir
+    @deadline.cumprir!(protocolo_ref: params.permit(:protocolo_ref)[:protocolo_ref])
+    refresh_legal_case_next_deadline!(@deadline.legal_case)
+
+    respond_to do |format|
+      format.html { redirect_to @deadline, notice: "Prazo marcado como cumprido." }
+      format.json { render :show, status: :ok, location: @deadline }
+    end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_deadline
-      @deadline = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id }).find(params.expect(:id))
+      scope = Deadline.joins(:legal_case).where(legal_cases: { office_id: current_office.id })
+      @deadline = scope_by_current_unit(scope, through: :legal_cases).find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.

@@ -19,6 +19,20 @@
 </section>
 
 <div class="case-actions case-actions--footer">
+  <% if @deadline.expediente.present? && @deadline.expediente.ciencia.blank? %>
+    <%= form_with url: ciencias_path, method: :post, local: true, class: "inline-form" do |form| %>
+      <%= hidden_field_tag "ciencia[expediente_id]", @deadline.expediente.id %>
+      <%= hidden_field_tag "ciencia[tipo]", "expressa" %>
+      <%= form.date_field :data_ciencia, name: "ciencia[data_ciencia]", value: Date.current, required: true %>
+      <%= form.submit "Registrar ciência expressa", class: "btn btn-primary" %>
+    <% end %>
+  <% end %>
+  <% unless @deadline.status_completed? %>
+    <%= form_with url: cumprir_deadline_path(@deadline), method: :patch, local: true, class: "inline-form" do |form| %>
+      <%= form.text_field :protocolo_ref, name: "protocolo_ref", placeholder: "Protocolo (opcional)" %>
+      <%= form.submit "Cumprir prazo", class: "btn btn-primary" %>
+    <% end %>
+  <% end %>
   <%= link_to "Editar prazo", edit_deadline_path(@deadline), class: "btn btn-secondary" %>
   <%= link_to "Voltar", deadlines_path, class: "btn btn-secondary" %>
   <%= button_to "Excluir prazo", @deadline, method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: "Tem certeza que deseja excluir este prazo?" } } %>

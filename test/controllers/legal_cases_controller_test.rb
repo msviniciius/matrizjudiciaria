@@ -227,6 +227,7 @@ class LegalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "application/json", response.media_type
     assert_equal @legal_case.id, response.parsed_body.dig("case", "id")
     assert_equal @legal_case.internal_number, response.parsed_body.dig("case", "internal_number")
+    assert_equal expedientes_path, response.parsed_body.dig("actions", "new_expediente")
   end
 
   test "show JSON does not expose a case outside the current unit" do

@@ -39,6 +39,7 @@ class DeadlinesSnapshot
       path: deadline_path(deadline),
       edit_path: edit_deadline_path(deadline),
       delete_path: deadline_path(deadline),
+      complete_path: cumprir_deadline_path(deadline),
       legal_case_path: (legal_case_path(legal_case) if legal_case.present?),
       process_number: legal_case&.internal_number || "-",
       client_name: legal_case&.client&.full_name || "-",
@@ -54,7 +55,9 @@ class DeadlinesSnapshot
       priority_label: deadline.priority.present? ? enum_label(Deadline, :priority, deadline.priority) : "-",
       extended_at_label: date_label(deadline.extended_at),
       responsible_name: deadline.responsible_name.presence || "-",
-      delay_reason: deadline.delay_reason.to_s
+      delay_reason: deadline.delay_reason.to_s,
+      expediente_id: deadline.expediente_id,
+      ciencia_path: (ciencias_path if deadline.expediente.present? && deadline.expediente.ciencia.blank?)
     }
   end
 

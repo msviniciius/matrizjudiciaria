@@ -211,7 +211,10 @@ class LegalCaseShowSnapshot
       deadline_type_label: enum_label(Deadline, :deadline_type, deadline.deadline_type),
       responsible_name: deadline.responsible_name.presence || "-",
       delay_reason: deadline.delay_reason.presence || "-",
-      path: deadline_path(deadline)
+      path: deadline_path(deadline),
+      complete_path: cumprir_deadline_path(deadline),
+      expediente: expediente_entry(deadline.expediente),
+      ciencia_path: (ciencias_path if deadline.expediente.present? && deadline.expediente.ciencia.blank?)
     }
   end
 
@@ -259,12 +262,25 @@ class LegalCaseShowSnapshot
       calendar: google_calendar_legal_case_path(legal_case),
       new_movement: new_process_movement_path(process_id: legal_case.id),
       new_deadline: new_deadline_path(legal_case_id: legal_case.id),
+      new_expediente: expedientes_path,
       new_task: new_task_path(legal_case_id: legal_case.id),
       new_exam: (new_legal_case_process_exam_path(legal_case) if legal_case.tem_pericia?),
       sync: sync_action,
       ai_analysis: ai_analysis_action,
       record_outcome: record_outcome_action,
       financial_contract: financial_contract_action
+    }
+  end
+
+  def expediente_entry(expediente)
+    return nil if expediente.blank?
+
+    {
+      id: expediente.id,
+      tipo: expediente.tipo,
+      descricao: expediente.descricao,
+      data_disponibilizacao: expediente.data_disponibilizacao&.iso8601,
+      ciencia_registrada: expediente.ciencia.present?
     }
   end
 
