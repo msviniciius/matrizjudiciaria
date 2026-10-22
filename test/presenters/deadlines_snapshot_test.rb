@@ -78,4 +78,16 @@ class DeadlinesSnapshotTest < ActiveSupport::TestCase
     assert_equal "Intimação para manifestação", entry.dig(:expediente, :description)
     assert_equal "Intimacao", entry.dig(:expediente, :type_label)
   end
+
+  test "serializes completed legal deadline as completed even without science" do
+    legal_case = create_full_legal_case(internal_number: "PROC-DEAD-SNAP-COMPLETED")
+    expediente = legal_case.expedientes.create!(tipo: :intimacao, descricao: "Sem ciência", data_disponibilizacao: Date.current, quantidade_dias: 2, contagem: :uteis, prazo_em_dobro: false, origem: :manual)
+    deadline = expediente.deadline
+    deadline.update!(due_date: Date.current + 1.day, status: :completed, completed_at: Time.current)
+
+    entry = DeadlinesSnapshot.new(office: default_office, unit: nil, deadlines: [ deadline.reload ], filters: {}).as_json.fetch(:deadlines).sole
+
+    assert_equal "completed", entry.fetch(:legal_state)
+    assert_equal "Concluído", entry.fetch(:legal_state_label)
+  end
 end

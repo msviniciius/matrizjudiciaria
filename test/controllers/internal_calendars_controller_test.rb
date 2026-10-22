@@ -100,6 +100,15 @@ class InternalCalendarsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes events.map { |event| event.fetch("url") }, deadline_path(other_deadline)
   end
 
+  test "calendar preserves manual status without expediente" do
+    manual = Deadline.create!(legal_case: @legal_case, title: "Manual em curso", due_date: Date.current + 1.day, status: :in_progress)
+    get internal_calendar_url(format: :json), params: { month: Date.current.strftime("%Y-%m"), view: "list" }
+
+    assert_response :success
+    events = response.parsed_body.fetch("events")
+    assert_equal "in_progress", events.find { |event| event.fetch("url") == deadline_path(manual) }.fetch("legal_state")
+  end
+
   private
 
   def sign_in_and_select(unit)

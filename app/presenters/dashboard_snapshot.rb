@@ -54,11 +54,11 @@ class DashboardSnapshot
 
   def deadline_boxes
     {
-      awaiting_science: deadline_box("Aguardando ciência", legal_deadlines.left_joins(expediente: :ciencia).where(ciencias: { id: nil }).where(status: :pending), deadlines_path(status: "pending")),
-      in_progress: deadline_box("Em curso", legal_deadlines.where(status: :in_progress).where("due_date IS NULL OR due_date > ?", Date.current + 7.days), deadlines_path(status: "in_progress")),
-      due_soon: deadline_box("Vencendo", legal_deadlines.where(status: %w[pending in_progress extended]).where(due_date: Date.current..(Date.current + 7.days)), deadlines_path(due_state: "upcoming")),
-      overdue: deadline_box("Vencidos", legal_deadlines.where(status: %w[pending in_progress extended overdue]).where("due_date < ?", Date.current), deadlines_path(due_state: "overdue")),
-      completed_recent: deadline_box("Concluídos nos últimos 10 dias", legal_deadlines.where(status: :completed).where(completed_at: 10.days.ago..Time.current), deadlines_path(status: "completed"), completed: true)
+      awaiting_science: deadline_box("Aguardando ciência", legal_deadlines.left_joins(expediente: :ciencia).where(ciencias: { id: nil }).where(status: :pending), deadlines_path(legal_state: "awaiting_science")),
+      in_progress: deadline_box("Em curso", legal_deadlines.where(status: :in_progress).where("due_date IS NULL OR due_date > ?", Date.current + 7.days), deadlines_path(legal_state: "in_progress")),
+      due_soon: deadline_box("Vencendo", legal_deadlines.where(status: %w[pending in_progress extended]).where(due_date: Date.current..(Date.current + 7.days)), deadlines_path(legal_state: "due_soon")),
+      overdue: deadline_box("Vencidos", legal_deadlines.where(status: %w[pending in_progress extended overdue]).where("due_date < ?", Date.current), deadlines_path(legal_state: "overdue")),
+      completed_recent: deadline_box("Concluídos nos últimos 10 dias", legal_deadlines.where(status: :completed).where(completed_at: 10.days.ago..Time.current), deadlines_path(legal_state: "completed_recent"), completed: true)
     }
   end
 
@@ -83,8 +83,8 @@ class DashboardSnapshot
   end
 
   def legal_state(deadline)
-    return "awaiting_science" if deadline.expediente.ciencia.blank?
     return "completed" if deadline.status_completed?
+    return "awaiting_science" if deadline.expediente.ciencia.blank?
     return "overdue" if deadline.due_date.present? && deadline.due_date < Date.current
 
     "in_progress"

@@ -161,8 +161,9 @@ class InternalCalendarsController < ApplicationController
   end
 
   def deadline_legal_state(deadline)
-    return "awaiting_science" if deadline.expediente&.ciencia.blank?
+    return deadline.status if deadline.expediente.blank?
     return "completed" if deadline.status_completed?
+    return "awaiting_science" if deadline.expediente.ciencia.blank?
     return "overdue" if deadline.due_date < Date.current
 
     "in_progress"

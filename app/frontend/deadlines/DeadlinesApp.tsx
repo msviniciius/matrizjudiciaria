@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import "./deadlines.css"
 
 type View = "cards" | "table"
-type FilterKey = "q" | "status" | "priority" | "deadline_type" | "due_state"
+type FilterKey = "q" | "status" | "priority" | "deadline_type" | "due_state" | "legal_state"
 type Filters = Record<FilterKey, string>
 type Option = { value: string; label: string }
 type Deadline = {
@@ -44,13 +44,14 @@ type Snapshot = {
     priorities: Option[]
     deadline_types: Option[]
     due_states: Option[]
+    legal_states?: Option[]
   }
   deadlines: Deadline[]
   actions: { index: string; new: string }
 }
 
 const VIEW_KEY = "deadlines-view"
-const FILTER_KEYS: FilterKey[] = ["q", "status", "priority", "deadline_type", "due_state"]
+const FILTER_KEYS: FilterKey[] = ["q", "status", "priority", "deadline_type", "due_state", "legal_state"]
 
 function emptyFilters(): Filters {
   return FILTER_KEYS.reduce((filters, key) => ({ ...filters, [key]: "" }), {} as Filters)
@@ -178,6 +179,7 @@ function FiltersForm({ filters, options, query, onChange, onQueryChange, onSearc
       <SelectFilter label="Prioridade" value={filters.priority} options={options.priorities} blank="Todas" onChange={(value) => onChange("priority", value)} />
       <SelectFilter label="Tipo de prazo" value={filters.deadline_type} options={options.deadline_types} blank="Todos" onChange={(value) => onChange("deadline_type", value)} />
       <SelectFilter label="Situação da data" value={filters.due_state} options={options.due_states} blank="Todas" onChange={(value) => onChange("due_state", value)} />
+      <SelectFilter label="Estado jurídico" value={filters.legal_state} options={options.legal_states || []} blank="Todos" onChange={(value) => onChange("legal_state", value)} />
     </div>
   </form>
 }

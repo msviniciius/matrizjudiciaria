@@ -1,7 +1,7 @@
 class DeadlinesSnapshot
   include Rails.application.routes.url_helpers
 
-  FILTER_KEYS = %i[q status priority deadline_type due_state].freeze
+  FILTER_KEYS = %i[q status priority deadline_type due_state legal_state].freeze
 
   def initialize(office:, unit:, deadlines:, filters:)
     @office = office
@@ -82,6 +82,13 @@ class DeadlinesSnapshot
         option("today", "Hoje"),
         option("upcoming", "Próximos 7 dias"),
         option("without_due_date", "Sem data")
+      ],
+      legal_states: [
+        option("awaiting_science", "Aguardando ciência"),
+        option("in_progress", "Em curso"),
+        option("due_soon", "Vencendo"),
+        option("overdue", "Vencido"),
+        option("completed_recent", "Concluído recentemente")
       ]
     }
   end
@@ -107,8 +114,8 @@ class DeadlinesSnapshot
 
   def legal_state(deadline)
     return if deadline.expediente.blank?
-    return "awaiting_science" if deadline.expediente.ciencia.blank?
     return "completed" if deadline.status_completed?
+    return "awaiting_science" if deadline.expediente.ciencia.blank?
     return "overdue" if deadline.due_date.present? && deadline.due_date < Date.current
 
     "in_progress"

@@ -36,6 +36,8 @@ class DeadlinesController < ApplicationController
       scope = scope.where(due_date: nil)
     end
 
+    scope = scope_for_legal_state(scope, @filters[:legal_state]) if @filters[:legal_state].present?
+
     @deadlines = scope
     @advanced_filters_open = false
 
@@ -205,6 +207,23 @@ class DeadlinesController < ApplicationController
     end
 
     def deadline_filters
-      params.permit(:q, :status, :priority, :deadline_type, :due_state)
+      params.permit(:q, :status, :priority, :deadline_type, :due_state, :legal_state)
+    end
+
+    def scope_for_legal_state(scope, state)
+      case state
+      when "awaiting_science"
+        scope.left_joins(expediente: :ciencia).where.not(expediente_id: nil).where(ciencias: { id: nil }, status: :pending)
+      when "in_progress"
+        scope.where.not(expediente_id: nil).where(status: :in_progress).where("deadlines.due_date IS NULL OR deadlines.due_date > ?", Date.current + 7.days)
+      when "due_soon"
+        scope.where.not(expediente_id: nil).where(status: %w[pending in_progress extended], due_date: Date.current..(Date.current + 7.days))
+      when "overdue"
+        scope.where.not(expediente_id: nil).where(status: %w[pending in_progress extended overdue]).where("deadlines.due_date < ?", Date.current)
+      when "completed_recent"
+        scope.where.not(expediente_id: nil).where(status: :completed, completed_at: 10.days.ago..Time.current)
+      else
+        scope
+      end
     end
 end

@@ -108,6 +108,11 @@ class DashboardSnapshotTest < ActiveSupport::TestCase
     assert_equal 1, boxes.dig(:completed_recent, :count)
     assert_equal 1, snapshot.dig(:deadline_boxes, :in_progress, :items).size
     assert_equal 1, snapshot.dig(:kpis, :deadline_soon, :count)
+    assert_equal "/deadlines?legal_state=awaiting_science", boxes.dig(:awaiting_science, :path)
+    assert_equal "/deadlines?legal_state=in_progress", boxes.dig(:in_progress, :path)
+    assert_equal "/deadlines?legal_state=due_soon", boxes.dig(:due_soon, :path)
+    assert_equal "/deadlines?legal_state=overdue", boxes.dig(:overdue, :path)
+    assert_equal "/deadlines?legal_state=completed_recent", boxes.dig(:completed_recent, :path)
   end
 
   test "serializes filtered context items with Rails quick-action paths" do
