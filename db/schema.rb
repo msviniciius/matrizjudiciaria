@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_21_010100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,6 +145,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_districts_on_name", unique: true
+  end
+
+  create_table "feriados", force: :cascade do |t|
+    t.date "data", null: false
+    t.string "descricao", null: false
+    t.string "ambito", null: false
+    t.bigint "office_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["data"], name: "index_feriados_on_data"
+    t.index ["office_id", "data"], name: "index_feriados_on_office_id_and_data"
+    t.index ["office_id"], name: "index_feriados_on_office_id"
   end
 
   create_table "financial_contracts", force: :cascade do |t|
@@ -652,6 +664,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "suspensoes", force: :cascade do |t|
+    t.date "inicio", null: false
+    t.date "fim", null: false
+    t.string "descricao", null: false
+    t.bigint "office_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["inicio", "fim"], name: "index_suspensoes_on_inicio_and_fim"
+    t.index ["office_id", "inicio", "fim"], name: "index_suspensoes_on_office_id_and_inicio_and_fim"
+    t.index ["office_id"], name: "index_suspensoes_on_office_id"
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -727,6 +751,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
   add_foreign_key "courts", "districts"
   add_foreign_key "deadline_settings", "offices"
   add_foreign_key "deadlines", "legal_cases"
+  add_foreign_key "feriados", "offices"
   add_foreign_key "financial_contracts", "legal_cases"
   add_foreign_key "financial_contracts", "offices"
   add_foreign_key "financial_installments", "financial_contracts"
@@ -770,6 +795,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_123000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "suspensoes", "offices"
   add_foreign_key "tasks", "legal_cases"
   add_foreign_key "units", "offices"
   add_foreign_key "user_units", "units"
