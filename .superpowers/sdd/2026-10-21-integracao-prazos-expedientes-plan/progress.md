@@ -276,3 +276,44 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - A criação passa a ficar contextualizada no processo, através de “Novo expediente”, evitando dois caminhos concorrentes para o mesmo fluxo.
 - Adicionado teste garantindo que a listagem não exiba mais o link de criação direta.
 - Testes focados de prazos e processo: 36/36 passando.
+
+## Tema claro opcional: 2026-10-22
+
+- Adicionado seletor global de tema no navbar, mantendo o modo escuro atual como padrão.
+- A preferência é salva em `localStorage` e reaplicada em novas páginas/navegações Turbo.
+- Criados tokens e overrides de modo claro para shell, sidebar, navbar, formulários, cards, tabelas, filtros, modais e componentes React de prazos/processos.
+- O botão alterna entre “Modo claro” e “Modo escuro”, com estado acessível e adaptação mobile por ícone.
+- Correção de processo: as alterações foram inicialmente aplicadas no checkout principal por engano, movidas para o worktree `legal-deadline-expediente`, e o checkout principal foi restaurado sem tocar nas alterações preexistentes do usuário.
+- Validação no worktree correto: `node --check` aprovado, `git diff --check` aprovado e testes focados 36/36 passando.
+
+## Correção visual do tema claro: 2026-10-22
+
+- A primeira versão deixou componentes com gradientes escuros e texto escuro sobre fundos escuros na tela do processo.
+- Removida a regra ampla que forçava texto branco em todo `button` no modo claro.
+- Ajustados navbar, sidebar, botões de ação, inteligência do processo, métricas, próxima providência, timeline, dados financeiros e modais para fundos e contraste claros coerentes.
+- Testes focados: 36/36 passando; `node --check` e `git diff --check` aprovados.
+
+## Produção: 2026-10-22
+
+- PR #34 foi mesclado na `main` e a entrega foi confirmada em produção pelo usuário.
+- Integração de expedientes, ciência, cálculo de prazos, melhorias de UX/UI e tema claro estão disponíveis em produção.
+- Os 14 PRs antigos permanecem como tarefa separada de auditoria/limpeza e não bloqueiam esta entrega.
+
+## Auditoria dos PRs abertos: 2026-10-22
+
+- O PR #33 (`Fix/add first maestri`) está em conflito e suas alterações relevantes já estão presentes na `main`; será encerrado como superseded.
+- Os PRs #3, #11, #12, #15, #16, #17, #18, #19, #20, #21, #22 e #23 são atualizações Dependabot antigas, com conflitos e/ou checks quebrados; não serão mesclados cegamente.
+- O PR #2 (`actions/upload-artifact` v4→v7) é isolado, sem conflito e com todos os checks aprovados; será mesclado como manutenção segura.
+
+## Limpeza dos PRs: 2026-10-22
+
+- PR #2 foi mesclado com sucesso via squash; commit resultante: `aff1a868f04b97ebd4c9067c87229185b37993d3`.
+- PRs #3, #11, #12, #15, #16, #17, #18, #19, #20, #21, #22, #23 e #33 foram encerrados com comentário de auditoria.
+- A lista de PRs abertos ficou zerada. Nenhuma alteração local de configuração foi incluída nessa operação.
+
+## Ajuste de posicionamento do CTA de expediente: 2026-10-22
+
+- O botão “Novo expediente” foi movido para a navegação lateral “Atalhos do processo”, junto das demais ações.
+- A seção “Prazos” deixou de receber uma ação própria no cabeçalho; permanece focada na consulta e no acompanhamento dos prazos.
+- Teste da tela: 29/29 passando.
+- `git diff --check`: aprovado.

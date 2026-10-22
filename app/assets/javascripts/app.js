@@ -1,4 +1,37 @@
 (() => {
+  const THEME_STORAGE_KEY = "matrizjuridica-theme";
+
+  const applyTheme = (theme) => {
+    const normalizedTheme = theme === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = normalizedTheme;
+    document.querySelectorAll("[data-theme-toggle]").forEach((toggle) => {
+      const lightMode = normalizedTheme === "light";
+      toggle.setAttribute("aria-label", lightMode ? "Ativar modo escuro" : "Ativar modo claro");
+      toggle.setAttribute("title", lightMode ? "Ativar modo escuro" : "Ativar modo claro");
+      const icon = toggle.querySelector("[data-theme-toggle-icon]");
+      const text = toggle.querySelector("[data-theme-toggle-text]");
+      if (icon) icon.textContent = lightMode ? "☾" : "☀";
+      if (text) text.textContent = lightMode ? "Modo escuro" : "Modo claro";
+    });
+  };
+
+  const initThemeToggle = () => {
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY) || "dark";
+    applyTheme(savedTheme);
+    document.querySelectorAll("[data-theme-toggle]").forEach((toggle) => {
+      if (toggle.dataset.themeToggleBound === "true") return;
+      toggle.dataset.themeToggleBound = "true";
+      toggle.addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        applyTheme(nextTheme);
+      });
+    });
+  };
+
+  document.addEventListener("turbo:load", initThemeToggle);
+  document.addEventListener("DOMContentLoaded", initThemeToggle);
+
   const initUnitChecklist = () => {
     const checklist = document.querySelector("[data-unit-checklist]");
     if (!checklist || checklist.dataset.unitChecklistBound === "true") return;

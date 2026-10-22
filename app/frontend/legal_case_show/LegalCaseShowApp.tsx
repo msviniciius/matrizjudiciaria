@@ -597,7 +597,7 @@ export function LegalCaseShowApp() {
       </ol> : <p>Nenhum andamento cadastrado.</p>}
     </section>
 
-    <OperationalSection title="Prazos" hasAlert={deadlineAlert} action={<button className="btn btn-primary react-legal-case-show__operational-create" type="button" onClick={() => setExpedienteModalOpen(true)}>Novo expediente</button>}>
+    <OperationalSection title="Prazos" hasAlert={deadlineAlert}>
       <CollectionEmpty items={snapshot.deadlines} message="Nenhum prazo cadastrado.">
         {snapshot.deadlines.map((deadline) => <article className={`react-legal-case-show__operational-item react-legal-case-show__deadline-item react-legal-case-show__deadline-item--${deadline.status}`} key={deadline.id}>
           <div className="react-legal-case-show__deadline-heading">
@@ -677,6 +677,7 @@ export function LegalCaseShowApp() {
     {snapshot.case.outcome !== "undefined" && <OutcomeSummary legalCase={snapshot.case} />}
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
+      <button className="react-legal-case-show__actions-button" type="button" onClick={() => setExpedienteModalOpen(true)}>Novo expediente</button>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
       <a href={snapshot.actions.edit}>Editar processo</a>
       <button className="react-legal-case-show__actions-button" type="button" onClick={() => setDeleteModalOpen(true)}>Excluir processo</button>
