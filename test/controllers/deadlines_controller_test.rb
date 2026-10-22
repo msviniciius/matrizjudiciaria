@@ -130,6 +130,58 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     assert_equal Date.current + 5.days, deadline.due_date
   end
 
+  test "rejeita extensao manual de deadline juridico originado por expediente" do
+    expediente = @legal_case.expedientes.create!(
+      tipo: :intimacao,
+      descricao: "Intimação judicial",
+      data_disponibilizacao: Date.current,
+      quantidade_dias: 5,
+      contagem: :uteis,
+      prazo_em_dobro: false,
+      origem: :manual
+    )
+    deadline = expediente.deadline
+    original_due_date = Date.current + 5.days
+    deadline.update!(start_date: Date.current, due_date: original_due_date)
+
+    patch quick_update_deadline_path(deadline), params: { action_kind: "extended", extended_to: Date.current + 30.days }
+
+    assert_redirected_to deadlines_path
+    assert_equal original_due_date, deadline.reload.due_date
+    assert_equal "pending", deadline.status
+  end
+
+  test "mantem extensao manual para deadline sem expediente" do
+    extended_to = Date.current + 30.days
+
+    patch quick_update_deadline_path(@deadline), params: { action_kind: "extended", extended_to: extended_to }
+
+    assert_redirected_to deadlines_path
+    assert_equal "extended", @deadline.reload.status
+    assert_equal extended_to, @deadline.due_date
+    assert_equal Date.current + 5.days, @deadline.extended_from_date
+  end
+
+  test "nao permite reatribuir deadline a processo de outro escritorio" do
+    other_office = Office.create!(
+      name: "Other Office", slug: "other-office", default_phase: "atendimento_inicial",
+      default_status: "em_analise", default_priority: "medium"
+    )
+    other_client = Client.create!(full_name: "Outro cliente", cpf_cnpj: SecureRandom.hex(6), office: other_office)
+    other_case = LegalCase.create!(
+      internal_number: "PROC-OTHER-001", phase: "analise_juridica", status: "em_analise",
+      responsible_name: "Outro advogado", next_action: "Acompanhar", next_deadline_on: Date.current + 3.days,
+      client: other_client, office: other_office, legal_area: @legal_case.legal_area,
+      process_type: @legal_case.process_type, district: @legal_case.district, court: @legal_case.court
+    )
+
+    patch deadline_url(@deadline), params: { deadline: { legal_case_id: other_case.id, title: "Atualizado" } }
+
+    assert_redirected_to deadline_url(@deadline)
+    assert_equal @legal_case.id, @deadline.reload.legal_case_id
+    assert_equal "Atualizado", @deadline.title
+  end
+
   test "should destroy deadline" do
     assert_difference("Deadline.count", -1) do
       delete deadline_url(@deadline)

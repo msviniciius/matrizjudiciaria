@@ -9,7 +9,9 @@ class DeadlineCalculator
 
     ciencia = @deadline.expediente.ciencia
     unless ciencia.present?
-      @deadline.update!(start_date: nil, due_date: nil, status: :pending)
+      unless @deadline.status_completed? || @deadline.status_suspended?
+        @deadline.update!(start_date: nil, due_date: nil, status: :pending)
+      end
       refresh_case_deadline!
       return @deadline
     end

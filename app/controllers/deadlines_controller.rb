@@ -115,6 +115,11 @@ class DeadlinesController < ApplicationController
       )
       notice = "Prazo marcado como suspenso."
     when "extended"
+      if @deadline.expediente.present? && @deadline.deadline_type_judicial?
+        redirect_back fallback_location: deadlines_path, alert: "Prazos jurídicos vinculados a expediente não podem ser prorrogados manualmente."
+        return
+      end
+
       unless Deadline.column_names.include?("extended_at") && Deadline.column_names.include?("extended_from_date")
         redirect_back fallback_location: deadlines_path, alert: "Atualize o banco com as migrations para usar a prorrogação com data."
         return
@@ -163,7 +168,10 @@ class DeadlinesController < ApplicationController
     # Only allow a list of trusted parameters through.
     def deadline_params
       permitted = params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :due_date, :status, :priority, :delay_reason ])
-      permitted.delete(:due_date) if @deadline&.expediente.present?
+      if @deadline.present?
+        permitted.delete(:legal_case_id)
+        permitted.delete(:due_date) if @deadline.expediente.present?
+      end
       permitted
     end
 

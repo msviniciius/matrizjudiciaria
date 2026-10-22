@@ -57,6 +57,30 @@ class DeadlineCalculatorTest < ActiveSupport::TestCase
     assert_nil deadline.due_date
   end
 
+  test "nao limpa prazo concluido sem ciencia" do
+    expediente = create_expediente
+    deadline = expediente.deadline
+    deadline.update!(status: :completed, start_date: Date.new(2026, 10, 20), due_date: Date.new(2026, 10, 22))
+
+    DeadlineCalculator.new(deadline, today: Date.new(2026, 10, 21)).recalcular!
+
+    assert_equal "completed", deadline.reload.status
+    assert_equal Date.new(2026, 10, 20), deadline.start_date
+    assert_equal Date.new(2026, 10, 22), deadline.due_date
+  end
+
+  test "nao limpa prazo suspenso sem ciencia" do
+    expediente = create_expediente
+    deadline = expediente.deadline
+    deadline.update!(status: :suspended, start_date: Date.new(2026, 10, 20), due_date: Date.new(2026, 10, 22))
+
+    DeadlineCalculator.new(deadline, today: Date.new(2026, 10, 21)).recalcular!
+
+    assert_equal "suspended", deadline.reload.status
+    assert_equal Date.new(2026, 10, 20), deadline.start_date
+    assert_equal Date.new(2026, 10, 22), deadline.due_date
+  end
+
   test "marca prazo em curso ou vencido conforme a data de referencia" do
     expediente = create_expediente(quantidade_dias: 2)
     expediente.create_ciencia!(tipo: :expressa, data_ciencia: Date.new(2026, 10, 19))
