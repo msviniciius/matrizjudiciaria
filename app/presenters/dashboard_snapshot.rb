@@ -19,6 +19,7 @@ class DashboardSnapshot
         new_imported_events_count: legal_cases.with_new_imported_events.count
       },
       kpis: kpis,
+      deadline_boxes: deadline_boxes,
       critical_queues: critical_queues,
       risk_queue: risk_queue,
       feed: feed,
@@ -44,7 +45,49 @@ class DashboardSnapshot
   end
 
   def deadlines
-    @deadlines ||= Deadline.joins(:legal_case).where(legal_cases: { office_id: office.id }).then { |scope| apply_unit_scope(scope) }
+    @deadlines ||= Deadline.joins(:legal_case).where(legal_cases: { office_id: office.id }).includes(:expediente, { expediente: :ciencia }, :legal_case).then { |scope| apply_unit_scope(scope) }
+  end
+
+  def legal_deadlines
+    @legal_deadlines ||= deadlines.where.not(expediente_id: nil)
+  end
+
+  def deadline_boxes
+    {
+      awaiting_science: deadline_box("Aguardando ciência", legal_deadlines.left_joins(expediente: :ciencia).where(ciencias: { id: nil }).where(status: :pending), deadlines_path(status: "pending")),
+      in_progress: deadline_box("Em curso", legal_deadlines.where(status: :in_progress).where("due_date IS NULL OR due_date > ?", Date.current + 7.days), deadlines_path(status: "in_progress")),
+      due_soon: deadline_box("Vencendo", legal_deadlines.where(status: %w[pending in_progress extended]).where(due_date: Date.current..(Date.current + 7.days)), deadlines_path(due_state: "upcoming")),
+      overdue: deadline_box("Vencidos", legal_deadlines.where(status: %w[pending in_progress extended overdue]).where("due_date < ?", Date.current), deadlines_path(due_state: "overdue")),
+      completed_recent: deadline_box("Concluídos nos últimos 10 dias", legal_deadlines.where(status: :completed).where(completed_at: 10.days.ago..Time.current), deadlines_path(status: "completed"), completed: true)
+    }
+  end
+
+  def deadline_box(label, relation, path, completed: false)
+    ordered = relation.order(Arel.sql(completed ? "deadlines.completed_at DESC NULLS LAST, deadlines.due_date ASC NULLS LAST" : "deadlines.due_date ASC NULLS LAST, deadlines.created_at DESC"))
+    { label: label, count: ordered.count, path: path, items: ordered.limit(CONTEXT_ITEMS_LIMIT).map { |deadline| dashboard_deadline_entry(deadline) } }
+  end
+
+  def dashboard_deadline_entry(deadline)
+    legal_case = deadline.legal_case
+    {
+      id: deadline.id,
+      title: deadline.title,
+      due_date: deadline.due_date&.iso8601,
+      legal_case_number: legal_case.internal_number,
+      path: deadline_path(deadline),
+      legal_state: legal_state(deadline),
+      origin: deadline.expediente&.origem || "manual",
+      science_date: deadline.expediente&.ciencia&.data_ciencia&.iso8601,
+      expediente_id: deadline.expediente_id
+    }
+  end
+
+  def legal_state(deadline)
+    return "awaiting_science" if deadline.expediente.ciencia.blank?
+    return "completed" if deadline.status_completed?
+    return "overdue" if deadline.due_date.present? && deadline.due_date < Date.current
+
+    "in_progress"
   end
 
   def tasks

@@ -27,6 +27,13 @@ const deadlineWith = (title: string, overrides = {}) => ({
   delay_reason: "",
   expediente_id: null,
   ciencia_path: null,
+  legal_state: null,
+  legal_state_label: "-",
+  origin: "manual",
+  origin_label: "Manual",
+  science_date: null,
+  science_date_label: "-",
+  expediente: null,
   ...overrides
 })
 
@@ -73,6 +80,27 @@ test("shows the deadline completion action", async () => {
 
   const button = await screen.findByRole("button", { name: "Cumprir prazo Prazo inicial" })
   expect(button.closest("form")).toHaveAttribute("action", "/deadlines/1/cumprir")
+})
+
+test("shows legal state, origin, science and expediente data", async () => {
+  const deadline = deadlineWith("Prazo jurídico", {
+    legal_state: "in_progress",
+    legal_state_label: "Em curso",
+    origin: "pje",
+    origin_label: "Pje",
+    science_date: "2026-07-29",
+    science_date_label: "29/07/2026",
+    expediente: { id: 7, description: "Intimação eletrônica", type_label: "Intimação", availability_date_label: "28/07/2026", days: 5, counting: "uteis", origin: "pje", reference: "PJE-7" }
+  })
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshotWith([deadline]))))
+
+  render(<DeadlinesApp />)
+
+  const card = await screen.findByRole("article", { name: /Prazo jurídico/ })
+  expect(card).toHaveTextContent("Em curso")
+  expect(card).toHaveTextContent("Pje")
+  expect(card).toHaveTextContent("29/07/2026")
+  expect(card).toHaveTextContent("Intimação eletrônica")
 })
 
 test("switches to table view and stores the preference", async () => {

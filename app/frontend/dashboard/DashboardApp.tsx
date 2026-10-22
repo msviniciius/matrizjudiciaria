@@ -6,10 +6,12 @@ import "./dashboard.css"
 
 type QueueCase = { id: number; internal_number: string; path: string; responsible_name: string; update_responsible_path: string }
 type Deadline = { id: number; title: string; legal_case_number: string; path: string }
+type DeadlineBox = { label: string; count: number; path: string; items: Array<Deadline & { due_date: string | null; legal_state: string; origin: string; science_date: string | null; expediente_id: number | null }> }
 type FinancialSummary = { expected: string | number; received: string | number; open_balance: string | number; overdue: string | number; path: string }
 type Snapshot = {
   meta: { office_name: string; unit_name?: string; syncable_count: number; new_imported_events_count: number }
   kpis: Record<string, DistributionItem & { tone: string }>
+  deadline_boxes?: Record<string, DeadlineBox>
   critical_queues: { without_responsible: QueueCase[]; without_next_action: QueueCase[]; overdue_deadlines_without_reason: Deadline[] }
   risk_queue: Record<string, { label: string; count: number; path: string }>
   feed: { title: string; origin: string; internal_number: string; date?: string; highlight: boolean; path: string }[]
@@ -100,6 +102,14 @@ export function DashboardApp() {
       <section className="react-dashboard__kpis" aria-label="Indicadores operacionais">
         {Object.values(snapshot.kpis).map((kpi) => <a className={`react-dashboard__kpi react-dashboard__kpi--${kpi.tone}`} href={kpi.path} key={kpi.label} onClick={(event) => { event.preventDefault(); selectFilter(kpi) }}><span>{kpi.label}</span><strong>{kpi.count}</strong></a>)}
       </section>
+      {snapshot.deadline_boxes && <section className="react-dashboard__section" aria-label="Prazos jurídicos">
+        <h3>Prazos jurídicos</h3>
+        <div className="react-dashboard__deadline-boxes">{Object.values(snapshot.deadline_boxes).map((box) => <article className="react-dashboard__card react-dashboard__deadline-box" key={box.label}>
+          <div className="react-dashboard__deadline-box-head"><h4>{box.label}</h4><strong>{box.count}</strong></div>
+          {box.items.length ? box.items.map((item) => <a href={item.path} key={item.id}>{item.title}<small>{item.legal_case_number} · {item.due_date || "Aguardando ciência"}</small></a>) : <p>Nenhum prazo nesta caixa.</p>}
+          <a className="react-dashboard__deadline-box-link" href={box.path}>Ver todos</a>
+        </article>)}</div>
+      </section>}
       {snapshot.financial_summary && <FinancialSummaryPanel summary={snapshot.financial_summary} />}
       {selectedFilter && <p className="react-dashboard__filter-status" role="status">Filtro selecionado: {selectedFilter.label} ({selectedFilter.count} processos) <a href={selectedFilter.path}>Abrir processos filtrados</a></p>}
       {nextAction && <section className="react-dashboard__next-action" aria-labelledby="next-action-title">

@@ -74,6 +74,32 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes deadline_titles, other_deadline.title
   end
 
+  test "index JSON sorts manual and legal deadlines by due date and exposes legal metadata" do
+    expediente = @legal_case.expedientes.create!(
+      tipo: :intimacao,
+      descricao: "Intimação controller",
+      data_disponibilizacao: Date.current,
+      quantidade_dias: 3,
+      contagem: :uteis,
+      prazo_em_dobro: false,
+      origem: :djma
+    )
+    expediente.create_ciencia!(tipo: :expressa, data_ciencia: Date.current)
+    expediente.deadline.update!(start_date: Date.current + 1.day, due_date: Date.current + 2.days, status: :in_progress)
+    @deadline.update!(due_date: Date.current + 5.days)
+
+    get deadlines_url(format: :json)
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal [ expediente.deadline.id, @deadline.id ], body.fetch("deadlines").first(2).map { |entry| entry.fetch("id") }
+    legal_entry = body.fetch("deadlines").first
+    assert_equal "djma", legal_entry.fetch("origin")
+    assert_equal "in_progress", legal_entry.fetch("legal_state")
+    assert_equal Date.current.iso8601, legal_entry.fetch("science_date")
+    assert_equal expediente.id, legal_entry.dig("expediente", "id")
+  end
+
   test "should get new" do
     get new_deadline_url
     assert_response :success

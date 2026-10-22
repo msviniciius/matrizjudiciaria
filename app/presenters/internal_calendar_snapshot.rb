@@ -66,8 +66,25 @@ class InternalCalendarSnapshot
       title: event.fetch(:title),
       process_label: event[:process_label].presence || "-",
       detail: event[:detail].presence || "-",
+      legal_state: event[:legal_state],
+      origin: event[:origin],
+      origin_label: event[:origin_label],
+      science_date: event[:science_date]&.iso8601,
+      expediente: expediente_entry(event[:expediente]),
       url: event.fetch(:url),
       display_title: [ event.fetch(:title), event[:process_label].presence ].compact.join(" - ")
+    }
+  end
+
+  def expediente_entry(expediente)
+    return nil if expediente.blank?
+
+    {
+      id: expediente.id,
+      description: expediente.descricao,
+      origin: expediente.origem,
+      type: expediente.tipo,
+      availability_date: expediente.data_disponibilizacao&.iso8601
     }
   end
 end

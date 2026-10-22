@@ -73,8 +73,10 @@ class InternalCalendarsController < ApplicationController
 
     deadlines = Deadline
       .joins(:legal_case)
-      .includes(:legal_case)
+      .includes(:legal_case, { expediente: :ciencia })
       .where(legal_cases: { office_id: office_id })
+    deadlines = scope_by_current_unit(deadlines, through: :legal_cases)
+    deadlines = deadlines
       .where(status: VISIBLE_DEADLINE_STATUSES)
       .where(due_date: range_start..range_end)
       .order(:due_date)
@@ -107,6 +109,11 @@ class InternalCalendarsController < ApplicationController
         title: compact_event_title(deadline.title, process_label),
         process_label: process_label,
         detail: deadline.deadline_type.present? ? translate_deadline_type(deadline.deadline_type) : "-",
+        legal_state: deadline_legal_state(deadline),
+        origin: deadline.expediente&.origem || "manual",
+        origin_label: deadline.expediente.present? ? enum_label(Expediente, :origem, deadline.expediente.origem) : "Manual",
+        science_date: deadline.expediente&.ciencia&.data_ciencia,
+        expediente: deadline.expediente,
         url: deadline_path(deadline)
       }
     end
@@ -149,6 +156,21 @@ class InternalCalendarsController < ApplicationController
   def translate_deadline_type(value)
     I18n.t(
       "activerecord.attributes.deadline.deadline_types.#{value}",
+      default: value.to_s.humanize
+    )
+  end
+
+  def deadline_legal_state(deadline)
+    return "awaiting_science" if deadline.expediente&.ciencia.blank?
+    return "completed" if deadline.status_completed?
+    return "overdue" if deadline.due_date < Date.current
+
+    "in_progress"
+  end
+
+  def enum_label(model_class, enum_name, value)
+    I18n.t(
+      "activerecord.attributes.#{model_class.model_name.i18n_key}.#{enum_name.to_s.pluralize}.#{value}",
       default: value.to_s.humanize
     )
   end

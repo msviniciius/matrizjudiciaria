@@ -77,4 +77,34 @@ class InternalCalendarsControllerTest < ActionDispatch::IntegrationTest
     assert_includes body.fetch("events").map { |event| event.fetch("title") }, "Tarefa de teste"
     assert_includes body.fetch("events").map { |event| event.fetch("type_label") }, "Perícia"
   end
+
+  test "calendar deadline event exposes legal metadata and respects the active unit" do
+    unit = Unit.create!(office: @office, name: "Contencioso calendário")
+    other_unit = Unit.create!(office: @office, name: "Consultivo calendário")
+    @legal_case.update!(unit: unit)
+    other_case = LegalCase.create!(@legal_case.attributes.slice(*LegalCase.column_names).except("id", "created_at", "updated_at").merge(internal_number: "PROC-CAL-OTHER", unit_id: other_unit.id))
+    other_deadline = Deadline.create!(legal_case: other_case, title: "Fora da unidade", due_date: Date.current + 1.day, status: :pending)
+    expediente = @legal_case.expedientes.create!(tipo: :intimacao, descricao: "Expediente calendário", data_disponibilizacao: Date.current, quantidade_dias: 2, contagem: :uteis, prazo_em_dobro: false, origem: :pje)
+    expediente.create_ciencia!(tipo: :expressa, data_ciencia: Date.current)
+    expediente.deadline.update!(start_date: Date.current + 1.day, due_date: Date.current + 1.day, status: :in_progress)
+    sign_in_and_select(unit)
+
+    get internal_calendar_url(format: :json), params: { month: Date.current.strftime("%Y-%m"), view: "list" }
+
+    assert_response :success
+    events = response.parsed_body.fetch("events")
+    legal_event = events.find { |event| event.fetch("url") == deadline_path(expediente.deadline) }
+    assert_equal "pje", legal_event.fetch("origin")
+    assert_equal "in_progress", legal_event.fetch("legal_state")
+    assert_equal expediente.id, legal_event.dig("expediente", "id")
+    assert_not_includes events.map { |event| event.fetch("url") }, deadline_path(other_deadline)
+  end
+
+  private
+
+  def sign_in_and_select(unit)
+    admin = User.create!(office: @office, name: "Admin calendário", email: "admin-cal-#{SecureRandom.hex(4)}@example.com", role: "admin", password: "segredo123", password_confirmation: "segredo123")
+    post login_path, params: { email: admin.email, password: "segredo123" }
+    post unit_session_path, params: { unit_id: unit.id }
+  end
 end

@@ -26,6 +26,13 @@ type Deadline = {
   extended_at_label: string
   responsible_name: string
   delay_reason: string
+  legal_state?: string | null
+  legal_state_label?: string
+  origin?: string
+  origin_label?: string
+  science_date?: string | null
+  science_date_label?: string
+  expediente: { id: number; description: string; type_label: string; availability_date_label: string; days: number; counting: string; origin: string; reference: string | null } | null
   expediente_id: number | null
   ciencia_path: string | null
 }
@@ -184,7 +191,8 @@ function Cards({ deadlines }: { deadlines: Deadline[] }) {
   return <section className="react-deadlines__cards" aria-label="Listagem de prazos">{deadlines.map((deadline) => <article className="react-deadlines__card" aria-label={deadline.title} key={deadline.id}>
     <div className="react-deadlines__card-head"><h2><a href={deadline.path}>{deadline.title}</a></h2><span className={`react-deadlines__badge react-deadlines__badge--${deadline.due_state}`}>{deadline.due_state_label}</span></div>
     <p className="react-deadlines__document">{deadline.legal_case_path ? <a href={deadline.legal_case_path}>{deadline.process_number}</a> : deadline.process_number} · {deadline.client_name}</p>
-    <dl><div><dt>Data limite</dt><dd>{deadline.due_date_label}</dd></div><div><dt>Status</dt><dd>{deadline.status_label}</dd></div><div><dt>Tipo</dt><dd>{deadline.deadline_type_label}</dd></div><div><dt>Prioridade</dt><dd>{deadline.priority_label}</dd></div><div><dt>Responsável</dt><dd>{deadline.responsible_name}</dd></div><div><dt>Prorrogado em</dt><dd>{deadline.extended_at_label}</dd></div></dl>
+    <dl><div><dt>Data limite</dt><dd>{deadline.due_date_label}</dd></div><div><dt>Status</dt><dd>{deadline.status_label}</dd></div><div><dt>Estado jurídico</dt><dd>{deadline.legal_state_label || "-"}</dd></div><div><dt>Origem</dt><dd>{deadline.origin_label || "Manual"}</dd></div><div><dt>Ciência</dt><dd>{deadline.science_date_label || "-"}</dd></div><div><dt>Tipo</dt><dd>{deadline.deadline_type_label}</dd></div><div><dt>Prioridade</dt><dd>{deadline.priority_label}</dd></div><div><dt>Responsável</dt><dd>{deadline.responsible_name}</dd></div><div><dt>Prorrogado em</dt><dd>{deadline.extended_at_label}</dd></div></dl>
+    {deadline.expediente && <p className="react-deadlines__expediente"><strong>Expediente:</strong> {deadline.expediente.description} · {deadline.expediente.type_label} · disponibilizado em {deadline.expediente.availability_date_label}</p>}
     {deadline.delay_reason && <p className="react-deadlines__reason">{deadline.delay_reason}</p>}
     <DeadlineActions deadline={deadline} />
   </article>)}</section>
@@ -193,8 +201,8 @@ function Cards({ deadlines }: { deadlines: Deadline[] }) {
 function DeadlinesTable({ deadlines }: { deadlines: Deadline[] }) {
   if (!deadlines.length) return <EmptyState />
   return <div className="react-deadlines__table-wrap"><table className="react-deadlines__table" aria-label="Listagem de prazos">
-    <thead><tr><th>Processo</th><th>Título</th><th>Tipo</th><th>Data limite</th><th>Status</th><th>Prorrogado em</th><th>Prioridade</th><th>Responsável</th><th>Ações</th></tr></thead>
-    <tbody>{deadlines.map((deadline) => <tr key={deadline.id}><td>{deadline.legal_case_path ? <a href={deadline.legal_case_path}>{deadline.process_number}</a> : deadline.process_number}</td><td><a href={deadline.path}>{deadline.title}</a></td><td>{deadline.deadline_type_label}</td><td>{deadline.due_date_label}</td><td><span className={`react-deadlines__badge react-deadlines__badge--${deadline.due_state}`}>{deadline.status_label}</span></td><td>{deadline.extended_at_label}</td><td>{deadline.priority_label}</td><td>{deadline.responsible_name}</td><td><DeadlineActions deadline={deadline} compact /></td></tr>)}</tbody>
+    <thead><tr><th>Processo</th><th>Título</th><th>Tipo</th><th>Data limite</th><th>Status</th><th>Estado jurídico</th><th>Origem</th><th>Ciência</th><th>Prorrogado em</th><th>Prioridade</th><th>Responsável</th><th>Ações</th></tr></thead>
+    <tbody>{deadlines.map((deadline) => <tr key={deadline.id}><td>{deadline.legal_case_path ? <a href={deadline.legal_case_path}>{deadline.process_number}</a> : deadline.process_number}</td><td><a href={deadline.path}>{deadline.title}</a></td><td>{deadline.deadline_type_label}</td><td>{deadline.due_date_label}</td><td><span className={`react-deadlines__badge react-deadlines__badge--${deadline.due_state}`}>{deadline.status_label}</span></td><td>{deadline.legal_state_label || "-"}</td><td>{deadline.origin_label || "Manual"}</td><td>{deadline.science_date_label || "-"}</td><td>{deadline.extended_at_label}</td><td>{deadline.priority_label}</td><td>{deadline.responsible_name}</td><td><DeadlineActions deadline={deadline} compact /></td></tr>)}</tbody>
   </table></div>
 }
 

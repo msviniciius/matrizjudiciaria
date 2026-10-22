@@ -19,7 +19,7 @@ class DeadlinesSnapshot
       },
       filters: FILTER_KEYS.index_with { |key| filters[key].to_s },
       filter_options: filter_options,
-      deadlines: deadlines.map { |deadline| deadline_entry(deadline) },
+      deadlines: ordered_deadlines.map { |deadline| deadline_entry(deadline) },
       actions: {
         index: deadlines_path,
         new: new_deadline_path
@@ -30,6 +30,10 @@ class DeadlinesSnapshot
   private
 
   attr_reader :office, :unit, :deadlines, :filters
+
+  def ordered_deadlines
+    deadlines.sort_by { |deadline| [ deadline.due_date.present? ? 0 : 1, deadline.due_date || Date.new(9999, 12, 31), -deadline.created_at.to_i ] }
+  end
 
   def deadline_entry(deadline)
     legal_case = deadline.legal_case
@@ -56,6 +60,13 @@ class DeadlinesSnapshot
       extended_at_label: date_label(deadline.extended_at),
       responsible_name: deadline.responsible_name.presence || "-",
       delay_reason: deadline.delay_reason.to_s,
+      legal_state: legal_state(deadline),
+      legal_state_label: legal_state_label(deadline),
+      origin: origin(deadline),
+      origin_label: origin_label(deadline),
+      science_date: science_date(deadline)&.iso8601,
+      science_date_label: date_label(science_date(deadline)),
+      expediente: expediente_entry(deadline.expediente),
       expediente_id: deadline.expediente_id,
       ciencia_path: (ciencias_path if deadline.expediente.present? && deadline.expediente.ciencia.blank?)
     }
@@ -92,6 +103,55 @@ class DeadlinesSnapshot
     when "upcoming" then "Próximos 7 dias"
     else "Futuro"
     end
+  end
+
+  def legal_state(deadline)
+    return if deadline.expediente.blank?
+    return "awaiting_science" if deadline.expediente.ciencia.blank?
+    return "completed" if deadline.status_completed?
+    return "overdue" if deadline.due_date.present? && deadline.due_date < Date.current
+
+    "in_progress"
+  end
+
+  def legal_state_label(deadline)
+    {
+      "awaiting_science" => "Aguardando ciência",
+      "in_progress" => "Em curso",
+      "overdue" => "Vencido",
+      "completed" => "Concluído"
+    }.fetch(legal_state(deadline), "-")
+  end
+
+  def origin(deadline)
+    deadline.expediente&.origem || "manual"
+  end
+
+  def origin_label(deadline)
+    return "Manual" if deadline.expediente.blank?
+
+    enum_label(Expediente, :origem, deadline.expediente.origem)
+  end
+
+  def science_date(deadline)
+    deadline.expediente&.ciencia&.data_ciencia
+  end
+
+  def expediente_entry(expediente)
+    return nil if expediente.blank?
+
+    {
+      id: expediente.id,
+      description: expediente.descricao,
+      type: expediente.tipo,
+      type_label: enum_label(Expediente, :tipo, expediente.tipo),
+      availability_date: expediente.data_disponibilizacao&.iso8601,
+      availability_date_label: date_label(expediente.data_disponibilizacao),
+      days: expediente.quantidade_dias,
+      counting: expediente.contagem,
+      origin: expediente.origem,
+      reference: expediente.referencia_externa
+    }
   end
 
   def enum_options(model_class, enum_name)

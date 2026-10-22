@@ -14,6 +14,10 @@ type CalendarEvent = {
   detail: string
   url: string
   display_title: string
+  legal_state?: string | null
+  origin?: string | null
+  science_date?: string | null
+  expediente?: { id: number; description: string; origin: string; type: string; availability_date: string } | null
 }
 type CalendarDay = {
   date: string

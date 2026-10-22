@@ -7,8 +7,8 @@ class DeadlinesController < ApplicationController
     scope = Deadline
       .joins(:legal_case)
       .where(legal_cases: { office_id: current_office.id })
-      .includes(legal_case: :client)
-      .order(due_date: :asc, created_at: :desc)
+      .includes(:expediente, { expediente: :ciencia }, legal_case: :client)
+      .order(Arel.sql("deadlines.due_date ASC NULLS LAST, deadlines.created_at DESC"))
     scope = scope_by_current_unit(scope, through: :legal_cases)
 
     if @filters[:q].present?
