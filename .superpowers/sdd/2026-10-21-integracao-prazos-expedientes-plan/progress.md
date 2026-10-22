@@ -224,3 +224,11 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - O CTA “Novo expediente” foi removido da lateral administrativa e passou para o cabeçalho da seção “Prazos”.
 - A ação agora aparece exatamente no contexto em que o prazo será criado, reduzindo ruído na lateral.
 - Screenshot real validou o resultado: cabeçalho “Prazos” com CTA compacto e card de prazo separado das ações administrativas.
+
+## Simplificação visual do card de prazo: 2026-10-22
+
+- Removidos fundos e bordas dos metadados internos, mantendo apenas divisores leves.
+- A origem do expediente passou a ser uma faixa contextual simples, sem um segundo card.
+- Ações do prazo passaram para um rodapé alinhado, com campo e botão na mesma linha em telas largas.
+- Screenshot real validou a redução de camadas visuais.
+- Teste focado: 28/28 passando.

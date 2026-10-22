@@ -63,7 +63,7 @@
 .react-legal-case-show__deadline-item .form-actions { margin-top: .1rem; }
 .react-legal-case-show__deadline-item .form-actions .btn { width: 100%; }
 .react-legal-case-show__form-help { color: var(--aurora-muted); font-size: .82rem; line-height: 1.45; margin: 0; }
-.react-legal-case-show__deadline-item { background: rgba(4, 19, 43, .24); border-left-width: 3px; border-radius: 0 12px 12px 0; padding: .85rem 1rem; }
+.react-legal-case-show__deadline-item { background: transparent; border-bottom: 1px solid var(--aurora-border); border-left-width: 3px; border-radius: 0; padding: .45rem .25rem .9rem .85rem; }
 .react-legal-case-show__deadline-item--pending { border-left-color: var(--aurora-warning); }
 .react-legal-case-show__deadline-item--in_progress { border-left-color: var(--aurora-mint); }
 .react-legal-case-show__deadline-item--overdue { border-left-color: var(--aurora-danger); }
@@ -75,15 +75,19 @@
 .react-legal-case-show__deadline-item--in_progress .react-legal-case-show__deadline-status { background: rgba(120, 239, 208, .1); border-color: rgba(120, 239, 208, .5); color: var(--aurora-mint); }
 .react-legal-case-show__deadline-item--overdue .react-legal-case-show__deadline-status { background: rgba(255, 152, 174, .1); border-color: rgba(255, 152, 174, .6); color: var(--aurora-danger); }
 .react-legal-case-show__deadline-meta { display: grid; gap: .55rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: .75rem 0; }
-.react-legal-case-show__deadline-meta div { background: rgba(151, 196, 255, .06); border-radius: 8px; padding: .5rem .6rem; }
+.react-legal-case-show__deadline-meta div { background: transparent; border-right: 1px solid rgba(151, 196, 255, .18); padding: .35rem .65rem .35rem 0; }
+.react-legal-case-show__deadline-meta div:last-child { border-right: 0; }
 .react-legal-case-show__deadline-meta dt { color: var(--aurora-muted); font-size: .68rem; }
 .react-legal-case-show__deadline-meta dd { margin: .15rem 0 0; overflow-wrap: anywhere; }
-.react-legal-case-show__expediente-summary { background: rgba(120, 239, 208, .07); border: 1px solid rgba(120, 239, 208, .22); border-radius: 9px; margin: .7rem 0; padding: .65rem .75rem; }
+.react-legal-case-show__expediente-summary { background: transparent; border: 0; border-left: 2px solid rgba(120, 239, 208, .5); border-radius: 0; margin: .7rem 0; padding: .15rem 0 .15rem .75rem; }
 .react-legal-case-show__expediente-summary strong { display: block; overflow-wrap: anywhere; }
 .react-legal-case-show__expediente-summary p:last-child { margin: .25rem 0 0; }
 .react-legal-case-show__deadline-item .react-legal-case-show__operational-actions { display: grid; gap: .6rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: .75rem; }
-.react-legal-case-show__deadline-item .react-legal-case-show__operational-actions form { display: grid; gap: .4rem; margin: 0; }
-@media (max-width: 520px) { .react-legal-case-show__deadline-heading { flex-direction: column; }.react-legal-case-show__deadline-meta { grid-template-columns: 1fr; }.react-legal-case-show__deadline-item .react-legal-case-show__operational-actions { grid-template-columns: 1fr; } }
+.react-legal-case-show__deadline-item .react-legal-case-show__operational-actions { border-top: 1px solid rgba(151, 196, 255, .18); padding-top: .75rem; }
+.react-legal-case-show__deadline-item .react-legal-case-show__operational-actions form { align-items: end; display: grid; gap: .55rem; grid-template-columns: minmax(0, 1fr) auto; margin: 0; }
+.react-legal-case-show__deadline-item .form-actions { margin: 0; }
+.react-legal-case-show__deadline-item .form-actions .btn { width: auto; white-space: nowrap; }
+@media (max-width: 620px) { .react-legal-case-show__deadline-heading { flex-direction: column; }.react-legal-case-show__deadline-meta { grid-template-columns: 1fr; }.react-legal-case-show__deadline-meta div { border-bottom: 1px solid rgba(151, 196, 255, .14); border-right: 0; padding-right: 0; }.react-legal-case-show__deadline-meta div:last-child { border-bottom: 0; }.react-legal-case-show__deadline-item .react-legal-case-show__operational-actions { grid-template-columns: 1fr; }.react-legal-case-show__deadline-item .react-legal-case-show__operational-actions form { grid-template-columns: 1fr; }.react-legal-case-show__deadline-item .form-actions .btn { width: 100%; } }
 
 /* A lateral action group should not compete with the process data card. */
 .react-legal-case-show__shortcuts { background: transparent; border: 0; box-shadow: none; padding: 0; }
