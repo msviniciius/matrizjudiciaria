@@ -62,7 +62,7 @@ class BusinessDaysCalculator
     return if start_date > end_date
 
     ranges_to_load = if @calendar_loaded_from.nil?
-      [[ start_date, end_date ]]
+      [ [ start_date, end_date ] ]
     else
       [].tap do |ranges|
         ranges << [ start_date, @calendar_loaded_from - 1.day ] if start_date < @calendar_loaded_from
