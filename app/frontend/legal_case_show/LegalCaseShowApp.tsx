@@ -597,7 +597,7 @@ export function LegalCaseShowApp() {
       </ol> : <p>Nenhum andamento cadastrado.</p>}
     </section>
 
-    <OperationalSection title="Prazos" hasAlert={deadlineAlert}>
+    <OperationalSection title="Prazos" hasAlert={deadlineAlert} action={<button className="react-legal-case-show__operational-create" type="button" onClick={() => setExpedienteModalOpen(true)}>Novo expediente</button>}>
       <CollectionEmpty items={snapshot.deadlines} message="Nenhum prazo cadastrado.">
         {snapshot.deadlines.map((deadline) => <article className={`react-legal-case-show__operational-item react-legal-case-show__deadline-item react-legal-case-show__deadline-item--${deadline.status}`} key={deadline.id}>
           <div className="react-legal-case-show__deadline-heading">
@@ -676,10 +676,6 @@ export function LegalCaseShowApp() {
     {snapshot.case.outcome !== "undefined" && <OutcomeSummary legalCase={snapshot.case} />}
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
-      <button className="react-legal-case-show__expediente-action" type="button" onClick={() => setExpedienteModalOpen(true)}>
-        <span>Novo expediente</span>
-        <small>Transforme uma intimação em prazo controlado</small>
-      </button>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
       <a href={snapshot.actions.edit}>Editar processo</a>
       <button className="react-legal-case-show__actions-button" type="button" onClick={() => setDeleteModalOpen(true)}>Excluir processo</button>
@@ -1350,12 +1346,15 @@ function AlertSummary({ alerts }: { alerts: Snapshot["alerts"] }) {
   </>
 }
 
-function OperationalSection({ title, hasAlert, children }: { title: string; hasAlert: boolean; children: React.ReactNode }) {
+function OperationalSection({ title, hasAlert, action, children }: { title: string; hasAlert: boolean; action?: React.ReactNode; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(hasAlert)
   const contentId = `legal-case-show-${title.toLocaleLowerCase("pt-BR")}`
 
   return <section className="react-legal-case-show__operational-section">
-    <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
+    <div className="react-legal-case-show__operational-heading">
+      <h2><button type="button" data-testid={contentId} aria-expanded={isOpen} aria-controls={contentId} onClick={() => setIsOpen((open) => !open)}><span>{title}</span><span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></h2>
+      {action && <div className="react-legal-case-show__operational-heading-action">{action}</div>}
+    </div>
     <div className="react-legal-case-show__operational-content" id={contentId} hidden={!isOpen}>{children}</div>
   </section>
 }

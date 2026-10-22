@@ -218,3 +218,9 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Screenshot real do ambiente local revelou que o modal estava dentro de `content-surface`, cujo `backdrop-filter` criava um containing block para elementos `position: fixed`.
 - O modal foi movido para um portal em `document.body`, eliminando o deslocamento vertical e o corte na viewport.
 - Screenshot após a correção: modal centralizado, com largura de 736px, altura de 719px e todos os campos/ações visíveis.
+
+## Ajuste de contexto da ação: 2026-10-22
+
+- O CTA “Novo expediente” foi removido da lateral administrativa e passou para o cabeçalho da seção “Prazos”.
+- A ação agora aparece exatamente no contexto em que o prazo será criado, reduzindo ruído na lateral.
+- Screenshot real validou o resultado: cabeçalho “Prazos” com CTA compacto e card de prazo separado das ações administrativas.
