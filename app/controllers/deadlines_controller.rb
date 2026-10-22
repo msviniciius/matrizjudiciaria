@@ -65,7 +65,7 @@ class DeadlinesController < ApplicationController
   # POST /deadlines or /deadlines.json
   def create
     @deadline = Deadline.new(deadline_params)
-    ensure_deadline_office_scope!
+    ensure_deadline_scope!
 
     respond_to do |format|
       if @deadline.save
@@ -186,9 +186,9 @@ class DeadlinesController < ApplicationController
       permitted
     end
 
-    def ensure_deadline_office_scope!
+    def ensure_deadline_scope!
       return if @deadline.legal_case.blank?
-      return if @deadline.legal_case.office_id == current_office.id
+      return if scope_by_current_unit(current_office.legal_cases).where(id: @deadline.legal_case.id).exists?
 
       raise ActiveRecord::RecordNotFound
     end

@@ -96,6 +96,45 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to deadline_url(Deadline.last)
   end
 
+  test "nao cria deadline para processo de outra unidade ativa" do
+    current_unit = Unit.create!(office: default_office, name: "Unidade atual criação prazo")
+    other_unit = Unit.create!(office: default_office, name: "Outra unidade criação prazo")
+    other_case = create_full_legal_case(unit: other_unit)
+    sign_in_and_select(current_unit)
+
+    assert_no_difference "Deadline.count" do
+      post deadlines_url, params: { deadline: {
+        legal_case_id: other_case.id,
+        title: "Prazo indevido",
+        deadline_type: "internal",
+        due_date: Date.current + 3.days,
+        status: "pending",
+        priority: "medium"
+      } }
+    end
+
+    assert_response :not_found
+  end
+
+  test "permite criar deadline de outra unidade na visao consolidada" do
+    other_unit = Unit.create!(office: default_office, name: "Outra unidade visão consolidada")
+    other_case = create_full_legal_case(unit: other_unit)
+    sign_in_and_select_all_units
+
+    assert_difference "Deadline.count", 1 do
+      post deadlines_url, params: { deadline: {
+        legal_case_id: other_case.id,
+        title: "Prazo consolidado",
+        deadline_type: "internal",
+        due_date: Date.current + 3.days,
+        status: "pending",
+        priority: "medium"
+      } }
+    end
+
+    assert_redirected_to deadline_path(Deadline.order(:id).last)
+  end
+
   test "should show deadline" do
     get deadline_url(@deadline)
     assert_response :success
@@ -286,5 +325,18 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     )
     post login_path, params: { email: admin.email, password: "segredo123" }
     post unit_session_path, params: { unit_id: unit.id }
+  end
+
+  def sign_in_and_select_all_units
+    admin = User.create!(
+      office: default_office,
+      name: "Admin visão consolidada",
+      email: "admin-consolidado-#{SecureRandom.hex(4)}@example.com",
+      role: "admin",
+      password: "segredo123",
+      password_confirmation: "segredo123"
+    )
+    post login_path, params: { email: admin.email, password: "segredo123" }
+    post unit_session_path, params: { all_units: "1" }
   end
 end
