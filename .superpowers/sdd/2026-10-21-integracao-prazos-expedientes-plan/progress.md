@@ -205,3 +205,10 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - Rebaixado o agrupamento de ações da lateral para não parecer um card dentro de outro card.
 - O expediente agora é o único painel visual da seção, enquanto as ações administrativas ficam soltas e alinhadas abaixo.
 - Reforçada a hierarquia do título do expediente e mantido o contraste do formulário no tema Aurora.
+
+## Refação de interação do expediente: 2026-10-22
+
+- Removido o formulário complexo da coluna lateral; a lateral agora exibe apenas uma ação primária compacta.
+- Criado modal próprio de cadastro de expediente, seguindo o padrão já usado para desfecho e financeiro.
+- O modal tem fechamento por botão, clique fora e tecla Escape, além de largura adequada para a grade de campos.
+- Teste atualizado para abrir o modal e validar os campos do fluxo: 28/28 passando.

@@ -272,6 +272,7 @@ export function LegalCaseShowApp() {
   const [outcomeError, setOutcomeError] = useState<string | null>(null)
   const [outcomeMessage, setOutcomeMessage] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [expedienteModalOpen, setExpedienteModalOpen] = useState(false)
   const [financialModalOpen, setFinancialModalOpen] = useState(false)
   const [financialPending, setFinancialPending] = useState(false)
   const [financialError, setFinancialError] = useState<string | null>(null)
@@ -304,7 +305,7 @@ export function LegalCaseShowApp() {
     loadSnapshot()
   }, [])
 
-  const interactionLocked = syncPending || outcomeModalOpen || financialModalOpen || Boolean(paymentInstallment)
+  const interactionLocked = syncPending || outcomeModalOpen || expedienteModalOpen || financialModalOpen || Boolean(paymentInstallment)
 
   useEffect(() => {
     if (!interactionLocked) return
@@ -674,34 +675,10 @@ export function LegalCaseShowApp() {
     {snapshot.case.outcome !== "undefined" && <OutcomeSummary legalCase={snapshot.case} />}
 
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
-      <details>
-        <summary><span>Novo expediente</span><small>Transforme uma intimação em prazo controlado</small></summary>
-        <form className="app-form aurora-form react-legal-case-show__expediente-form" action={snapshot.actions.new_expediente} method="post">
-          {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
-          <input type="hidden" name="expediente[legal_case_id]" value={snapshot.case.id} />
-          <div className="react-legal-case-show__expediente-content">
-            <div className="dashboard-section__head">
-              <div>
-                <h3>Dados do expediente</h3>
-                <p>Cadastre a publicação recebida para iniciar o controle do prazo.</p>
-              </div>
-            </div>
-            <p className="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
-            <div className="form-grid">
-              <div className="field-full"><label>Descrição<input name="expediente[descricao]" placeholder="Ex.: Intimação para manifestação" required /></label></div>
-              <div><label>Tipo<select name="expediente[tipo]" defaultValue="intimacao">{expedienteTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
-              <div><label>Origem<select name="expediente[origem]" defaultValue="manual">{expedienteOriginOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
-              <div><label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label></div>
-              <div><label>Dias do prazo<input name="expediente[quantidade_dias]" type="number" min="1" placeholder="Ex.: 5" required /></label></div>
-              <div><label>Contagem<select name="expediente[contagem]" defaultValue="uteis">{expedienteCountOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
-            </div>
-            <p className="field-help">Depois de criar, registre a ciência no prazo para iniciar a contagem conforme os dias úteis ou corridos selecionados.</p>
-            <div className="form-actions aurora-form__actions">
-              <button className="btn btn-primary" type="submit">Criar prazo a partir do expediente</button>
-            </div>
-          </div>
-        </form>
-      </details>
+      <button className="react-legal-case-show__expediente-action" type="button" onClick={() => setExpedienteModalOpen(true)}>
+        <span>Novo expediente</span>
+        <small>Transforme uma intimação em prazo controlado</small>
+      </button>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
       <a href={snapshot.actions.edit}>Editar processo</a>
       <button className="react-legal-case-show__actions-button" type="button" onClick={() => setDeleteModalOpen(true)}>Excluir processo</button>
@@ -713,6 +690,7 @@ export function LegalCaseShowApp() {
     </aside>
     </div>
     </div>
+    {expedienteModalOpen && <NewExpedienteModal action={snapshot.actions.new_expediente} legalCaseId={snapshot.case.id} token={csrfToken} onClose={() => setExpedienteModalOpen(false)} />}
     {outcomeModalOpen && snapshot.actions.record_outcome && <OutcomeModal
       legalCase={snapshot.case}
       pending={outcomePending}
@@ -750,6 +728,50 @@ function CaseDeleteModal({ action, internalNumber, onClose }: { action: string; 
         <input type="hidden" name="_method" value="delete" />
         {token && <input type="hidden" name="authenticity_token" value={token} />}
         <div className="react-legal-case-show__outcome-modal-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="submit">Excluir processo e registros</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+function NewExpedienteModal({ action, legalCaseId, token, onClose }: { action: string; legalCaseId: number; token: string; onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+
+    document.addEventListener("keydown", closeOnEscape)
+    return () => document.removeEventListener("keydown", closeOnEscape)
+  }, [onClose])
+
+  return <div className="react-legal-case-show__outcome-overlay" role="presentation" onMouseDown={(event) => {
+    if (event.target === event.currentTarget) onClose()
+  }}>
+    <section className="react-legal-case-show__outcome-modal react-legal-case-show__expediente-modal" role="dialog" aria-modal="true" aria-labelledby="expediente-modal-heading" aria-describedby="expediente-modal-description">
+      <div className="react-legal-case-show__outcome-modal-header">
+        <div>
+          <p className="react-legal-case-show__eyebrow">Novo registro</p>
+          <h2 id="expediente-modal-heading">Cadastrar expediente</h2>
+        </div>
+        <button type="button" className="react-legal-case-show__outcome-close" onClick={onClose} aria-label="Fechar cadastro de expediente">×</button>
+      </div>
+      <p id="expediente-modal-description">Informe os dados da publicação para criar o prazo jurídico. A contagem começa quando a ciência for registrada.</p>
+      <form className="app-form aurora-form" action={action} method="post">
+        {token && <input type="hidden" name="authenticity_token" value={token} />}
+        <input type="hidden" name="expediente[legal_case_id]" value={legalCaseId} />
+        <p className="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
+        <div className="form-grid">
+          <div className="field-full"><label>Descrição<input name="expediente[descricao]" placeholder="Ex.: Intimação para manifestação" required /></label></div>
+          <div><label>Tipo<select name="expediente[tipo]" defaultValue="intimacao">{expedienteTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+          <div><label>Origem<select name="expediente[origem]" defaultValue="manual">{expedienteOriginOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+          <div><label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label></div>
+          <div><label>Dias do prazo<input name="expediente[quantidade_dias]" type="number" min="1" placeholder="Ex.: 5" required /></label></div>
+          <div><label>Contagem<select name="expediente[contagem]" defaultValue="uteis">{expedienteCountOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+        </div>
+        <p className="field-help">Escolha dias úteis para a contagem conforme o calendário jurídico; dias corridos incluem finais de semana e feriados.</p>
+        <div className="react-legal-case-show__outcome-modal-actions">
+          <button className="btn btn-secondary" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" type="submit">Criar prazo</button>
+        </div>
       </form>
     </section>
   </div>

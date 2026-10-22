@@ -218,7 +218,10 @@ test("guides the legal deadline workflow with visible expediente fields and scie
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse(snapshot)))
   render(<LegalCaseShowApp />)
 
-  expect(await screen.findByText("Transforme uma intimação em prazo controlado")).toBeVisible()
+  const newExpedienteButton = await screen.findByRole("button", { name: /Novo expediente/ })
+  expect(newExpedienteButton).toBeVisible()
+  await userEvent.click(newExpedienteButton)
+  expect(await screen.findByRole("heading", { name: "Cadastrar expediente" })).toBeVisible()
   expect(screen.getByLabelText("Tipo")).toHaveValue("intimacao")
   expect(screen.getByLabelText("Contagem")).toHaveValue("uteis")
   expect(screen.getByLabelText("Dias do prazo")).toBeRequired()
