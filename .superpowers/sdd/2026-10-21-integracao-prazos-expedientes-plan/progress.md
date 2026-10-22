@@ -285,3 +285,10 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - O botão alterna entre “Modo claro” e “Modo escuro”, com estado acessível e adaptação mobile por ícone.
 - Correção de processo: as alterações foram inicialmente aplicadas no checkout principal por engano, movidas para o worktree `legal-deadline-expediente`, e o checkout principal foi restaurado sem tocar nas alterações preexistentes do usuário.
 - Validação no worktree correto: `node --check` aprovado, `git diff --check` aprovado e testes focados 36/36 passando.
+
+## Correção visual do tema claro: 2026-10-22
+
+- A primeira versão deixou componentes com gradientes escuros e texto escuro sobre fundos escuros na tela do processo.
+- Removida a regra ampla que forçava texto branco em todo `button` no modo claro.
+- Ajustados navbar, sidebar, botões de ação, inteligência do processo, métricas, próxima providência, timeline, dados financeiros e modais para fundos e contraste claros coerentes.
+- Testes focados: 36/36 passando; `node --check` e `git diff --check` aprovados.

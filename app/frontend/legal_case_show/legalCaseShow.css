@@ -41,6 +41,22 @@
 @media (max-width: 520px) { .react-legal-case-show__timeline-tree::before { left: .43rem; }.react-legal-case-show__timeline-events { padding-left: 1.55rem; }.react-legal-case-show__timeline-item { gap: .45rem; }.react-legal-case-show__timeline-item-marker { margin-left: -1.45rem; }.react-legal-case-show__timeline-card { padding: .7rem; } }
 .react-legal-case-show__operational-create.btn-primary { background: linear-gradient(135deg, #5b8cff 0%, #4a7ae8 100%); border-color: rgba(255, 255, 255, .08); color: #fff; box-shadow: 0 4px 14px rgba(91, 140, 255, .2); font-size: .8rem; min-height: 2.4rem; padding: .5rem .75rem; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .react-legal-case-show__sync-spinner { animation: none; }.react-legal-case-show *, .react-legal-case-show *::before, .react-legal-case-show *::after { animation: none !important; scroll-behavior: auto; transition: none !important; } }
+
+html[data-theme="light"] .react-legal-case-show__intelligence { background: linear-gradient(145deg, #f4fbfb, #ffffff); border-color: rgba(8, 127, 108, .28); box-shadow: 0 18px 42px rgba(36, 67, 110, .12); }
+html[data-theme="light"] .react-legal-case-show__intelligence-action,
+html[data-theme="light"] .react-legal-case-show__ai-analysis { background: rgba(53, 105, 212, .06); border-color: rgba(53, 105, 212, .2); }
+html[data-theme="light"] .react-legal-case-show__intelligence-point { background: #ffffff; border-color: rgba(29, 67, 116, .16); border-left-color: var(--aurora-warning); }
+html[data-theme="light"] .react-legal-case-show__intelligence-metrics div { background: #eef4fa; border-color: rgba(29, 67, 116, .12); }
+html[data-theme="light"] .react-legal-case-show__header { background: linear-gradient(135deg, #ffffff 0%, #eef5fb 58%, #e6f4f1 100%); }
+html[data-theme="light"] .react-legal-case-show__next-action { background: linear-gradient(115deg, #eef0ff, #e7f6f3); }
+html[data-theme="light"] .react-legal-case-show__metrics div { background: rgba(53, 105, 212, .08); }
+html[data-theme="light"] .react-legal-case-show__timeline-card { background: #ffffff; border-color: rgba(29, 67, 116, .16); }
+html[data-theme="light"] .react-legal-case-show__actions-button,
+html[data-theme="light"] .react-legal-case-show__shortcuts a,
+html[data-theme="light"] .react-legal-case-show__shortcuts button,
+html[data-theme="light"] .react-legal-case-show__sync-form button { background: rgba(53, 105, 212, .06); color: var(--aurora-ink); border-color: rgba(53, 105, 212, .32); }
+html[data-theme="light"] .react-legal-case-show__operational-create.btn-primary { color: #fff; }
+html[data-theme="light"] .react-legal-case-show__financial { background: linear-gradient(145deg, #f4fbfb, #ffffff); }
 .react-legal-case-show__outcome-modal .custom-select { width: 100%; }.react-legal-case-show__outcome-modal .custom-select__trigger { min-height: 46px; }
 .react-legal-case-show__actions-button { background: rgba(7, 23, 51, .38); border: 1px solid rgba(120, 239, 208, .5); border-radius: 8px; color: var(--aurora-ink); cursor: pointer; font: inherit; padding: .55rem .7rem; }.react-legal-case-show__actions-button:hover { background: rgba(120, 239, 208, .12); }
 .react-legal-case-show__outcome-close { align-items: center; display: inline-flex; flex: 0 0 2rem; justify-content: center; margin: 0; padding: 0; }

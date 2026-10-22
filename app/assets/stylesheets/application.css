@@ -2796,8 +2796,7 @@ html[data-theme="light"] .sidebar-section__toggle:hover { background: rgba(53, 1
 html[data-theme="light"] .nav-link.is-active { background: linear-gradient(90deg, rgba(53, 105, 212, .14), rgba(8, 127, 108, .08)); border-color: rgba(53, 105, 212, .28); box-shadow: inset 3px 0 0 var(--brand), 0 8px 18px rgba(36, 67, 110, .08); }
 
 html[data-theme="light"] .btn-primary,
-html[data-theme="light"] input[type="submit"],
-html[data-theme="light"] button { color: #fff; }
+html[data-theme="light"] input[type="submit"] { color: #fff; }
 html[data-theme="light"] .btn-secondary { background: rgba(53, 105, 212, .06); color: var(--text); }
 html[data-theme="light"] .btn-secondary:hover { background: rgba(53, 105, 212, .12); }
 html[data-theme="light"] input[type="text"],
@@ -2860,6 +2859,14 @@ html[data-theme="light"] .navbar-notifications__panel,
 html[data-theme="light"] .navbar-unit-menu__panel { background: #ffffff; border-color: var(--line-strong); box-shadow: var(--shadow-lg); color: var(--text); }
 html[data-theme="light"] .navbar-notifications__item:hover,
 html[data-theme="light"] .navbar-unit-menu__option:hover { background: rgba(53, 105, 212, .08); }
+
+html[data-theme="light"] .app-navbar__tool { background: rgba(53, 105, 212, .06); color: var(--text); border-color: var(--line-strong); }
+html[data-theme="light"] .app-sidebar__brand-name,
+html[data-theme="light"] .sidebar-section__toggle,
+html[data-theme="light"] .nav-link,
+html[data-theme="light"] .brand h1 { color: var(--text); }
+html[data-theme="light"] .sidebar-section__icon,
+html[data-theme="light"] .nav-link__icon { color: var(--brand); }
 
 @media (max-width: 700px) {
   .theme-toggle { padding: 0; width: 36px; }
