@@ -276,3 +276,12 @@ Final review: self-review (no subagent tool); no Critical or Important findings 
 - A criação passa a ficar contextualizada no processo, através de “Novo expediente”, evitando dois caminhos concorrentes para o mesmo fluxo.
 - Adicionado teste garantindo que a listagem não exiba mais o link de criação direta.
 - Testes focados de prazos e processo: 36/36 passando.
+
+## Tema claro opcional: 2026-10-22
+
+- Adicionado seletor global de tema no navbar, mantendo o modo escuro atual como padrão.
+- A preferência é salva em `localStorage` e reaplicada em novas páginas/navegações Turbo.
+- Criados tokens e overrides de modo claro para shell, sidebar, navbar, formulários, cards, tabelas, filtros, modais e componentes React de prazos/processos.
+- O botão alterna entre “Modo claro” e “Modo escuro”, com estado acessível e adaptação mobile por ícone.
+- Correção de processo: as alterações foram inicialmente aplicadas no checkout principal por engano, movidas para o worktree `legal-deadline-expediente`, e o checkout principal foi restaurado sem tocar nas alterações preexistentes do usuário.
+- Validação no worktree correto: `node --check` aprovado, `git diff --check` aprovado e testes focados 36/36 passando.
