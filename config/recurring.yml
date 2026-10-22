@@ -5,6 +5,11 @@
 # Em producao, o Solid Queue roda como processo separado via Docker/Kamal.
 
 production:
+  refresh_prazos:
+    class: RefreshPrazosJob
+    schedule: "0 2 * * *"
+    description: "Atualiza prazos jurídicos e registra ciências tácitas"
+
   # Sincronizacao automatica de andamentos do CNJ DataJud.
   # Itera todos os escritorios e seus tribunais habilitados.
   pje_cnj_sync_case_events:
@@ -22,6 +27,11 @@ production:
     schedule: every hour at minute 12
 
 development:
+  refresh_prazos:
+    class: RefreshPrazosJob
+    schedule: "0 2 * * *"
+    description: "Atualiza prazos jurídicos e registra ciências tácitas"
+
   # Em desenvolvimento, rodar a cada 2 horas para nao sobrecarregar.
   pje_cnj_sync_case_events:
     class: Pje::Ma::ImportCaseEventsJob
