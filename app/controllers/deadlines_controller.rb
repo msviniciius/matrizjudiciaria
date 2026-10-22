@@ -162,7 +162,9 @@ class DeadlinesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def deadline_params
-      params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :due_date, :status, :priority, :delay_reason ])
+      permitted = params.expect(deadline: [ :legal_case_id, :title, :deadline_type, :due_date, :status, :priority, :delay_reason ])
+      permitted.delete(:due_date) if @deadline&.expediente.present?
+      permitted
     end
 
     def ensure_deadline_office_scope!

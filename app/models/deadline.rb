@@ -42,6 +42,12 @@ class Deadline < ApplicationRecord
 
   before_validation :apply_default_deadline_setting, on: :create
 
+  def cumprir!(protocolo_ref: nil)
+    attributes = { status: :completed, completed_at: completed_at || Time.current }
+    attributes[:protocolo_ref] = protocolo_ref if expediente.present? && protocolo_ref.present?
+    update!(attributes)
+  end
+
   private
 
   def awaiting_expediente_ciencia?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_21_020200) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_21_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,11 +145,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_020200) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "expediente_id"
+    t.string "protocolo_ref"
     t.index ["deadline_type"], name: "index_deadlines_on_deadline_type"
     t.index ["due_date"], name: "index_deadlines_on_due_date"
     t.index ["expediente_id"], name: "index_deadlines_on_expediente_id_unique", unique: true
     t.index ["extended_at"], name: "index_deadlines_on_extended_at"
     t.index ["legal_case_id"], name: "index_deadlines_on_legal_case_id"
+    t.index ["protocolo_ref"], name: "index_deadlines_on_protocolo_ref"
     t.index ["status"], name: "index_deadlines_on_status"
   end
 

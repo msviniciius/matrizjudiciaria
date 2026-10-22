@@ -110,6 +110,26 @@ class DeadlinesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to deadline_url(@deadline)
   end
 
+  test "nao permite editar vencimento de deadline juridico originado por expediente" do
+    expediente = @legal_case.expedientes.create!(
+      tipo: :intimacao,
+      descricao: "Intimação judicial",
+      data_disponibilizacao: Date.current,
+      quantidade_dias: 5,
+      contagem: :uteis,
+      prazo_em_dobro: false,
+      origem: :manual
+    )
+    deadline = expediente.deadline
+    deadline.update!(start_date: Date.current, due_date: Date.current + 5.days)
+
+    patch deadline_url(deadline), params: { deadline: { title: "Descrição atualizada", due_date: Date.current + 30.days } }
+
+    assert_redirected_to deadline_url(deadline)
+    assert_equal "Descrição atualizada", deadline.reload.title
+    assert_equal Date.current + 5.days, deadline.due_date
+  end
+
   test "should destroy deadline" do
     assert_difference("Deadline.count", -1) do
       delete deadline_url(@deadline)
