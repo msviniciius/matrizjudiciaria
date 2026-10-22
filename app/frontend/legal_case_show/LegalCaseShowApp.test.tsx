@@ -220,6 +220,7 @@ test("guides the legal deadline workflow with visible expediente fields and scie
 
   const newExpedienteButton = await screen.findByRole("button", { name: /Novo expediente/ })
   expect(newExpedienteButton).toBeVisible()
+  expect(newExpedienteButton.closest("nav")).toHaveAttribute("aria-label", "Atalhos do processo")
   await userEvent.click(newExpedienteButton)
   expect(await screen.findByRole("heading", { name: "Cadastrar expediente" })).toBeVisible()
   expect(screen.getByLabelText("Tipo")).toHaveValue("intimacao")
@@ -304,7 +305,7 @@ test("minimizes and maximizes the deadlines section without triggering the new e
   render(<LegalCaseShowApp />)
   const user = userEvent.setup()
   const toggle = await screen.findByTestId("legal-case-show-prazos")
-  const content = screen.getByRole("button", { name: /Novo expediente/ }).closest("section")?.querySelector(".react-legal-case-show__operational-content")
+  const content = toggle.closest("section")?.querySelector(".react-legal-case-show__operational-content")
 
   expect(content).not.toBeNull()
   expect(toggle).toHaveAttribute("aria-expanded", "true")
