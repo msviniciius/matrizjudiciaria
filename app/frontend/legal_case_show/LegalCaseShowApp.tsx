@@ -621,13 +621,13 @@ export function LegalCaseShowApp() {
               <input type="hidden" name="ciencia[expediente_id]" value={deadline.expediente.id} />
               <input type="hidden" name="ciencia[tipo]" value="expressa" />
               <label>Data da ciência<input name="ciencia[data_ciencia]" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></label>
-              <button type="submit">Registrar ciência</button>
+              <div className="form-actions"><button className="btn btn-primary" type="submit">Registrar ciência</button></div>
             </form>}
             {deadline.status !== "completed" && <form action={deadline.complete_path} method="post">
               <input type="hidden" name="_method" value="patch" />
               {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
               <label>Protocolo <span>(opcional)</span><input name="protocolo_ref" placeholder="Ex.: 2026-001" aria-label={`Protocolo ${deadline.title}`} /></label>
-              <button type="submit">Cumprir prazo</button>
+              <div className="form-actions"><button className="btn btn-secondary" type="submit">Cumprir prazo</button></div>
             </form>}
           </div>
         </article>)}
@@ -676,17 +676,30 @@ export function LegalCaseShowApp() {
     <nav className="react-legal-case-show__shortcuts" aria-label="Atalhos do processo">
       <details>
         <summary><span>Novo expediente</span><small>Transforme uma intimação em prazo controlado</small></summary>
-        <form action={snapshot.actions.new_expediente} method="post">
+        <form className="app-form aurora-form react-legal-case-show__expediente-form" action={snapshot.actions.new_expediente} method="post">
           {csrfToken && <input type="hidden" name="authenticity_token" value={csrfToken} />}
           <input type="hidden" name="expediente[legal_case_id]" value={snapshot.case.id} />
-          <p className="react-legal-case-show__form-help">Cadastre a publicação recebida. Depois registre a ciência para iniciar a contagem.</p>
-          <label>Descrição<input name="expediente[descricao]" placeholder="Ex.: Intimação para manifestação" required /></label>
-          <label>Tipo<select name="expediente[tipo]" defaultValue="intimacao">{expedienteTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label>
-          <label>Dias do prazo<input name="expediente[quantidade_dias]" type="number" min="1" placeholder="Ex.: 5" required /></label>
-          <label>Contagem<select name="expediente[contagem]" defaultValue="uteis">{expedienteCountOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Origem<select name="expediente[origem]" defaultValue="manual">{expedienteOriginOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <button type="submit">Criar prazo a partir do expediente</button>
+          <section className="form-section aurora-form__section">
+            <div className="dashboard-section__head">
+              <div>
+                <h3>Dados do expediente</h3>
+                <p>Cadastre a publicação recebida para iniciar o controle do prazo.</p>
+              </div>
+            </div>
+            <p className="form-hint">Os campos com <strong>*</strong> são obrigatórios.</p>
+            <div className="form-grid">
+              <div className="field-full"><label>Descrição<input name="expediente[descricao]" placeholder="Ex.: Intimação para manifestação" required /></label></div>
+              <div><label>Tipo<select name="expediente[tipo]" defaultValue="intimacao">{expedienteTypeOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+              <div><label>Origem<select name="expediente[origem]" defaultValue="manual">{expedienteOriginOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+              <div><label>Disponibilização<input name="expediente[data_disponibilizacao]" type="date" required /></label></div>
+              <div><label>Dias do prazo<input name="expediente[quantidade_dias]" type="number" min="1" placeholder="Ex.: 5" required /></label></div>
+              <div><label>Contagem<select name="expediente[contagem]" defaultValue="uteis">{expedienteCountOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+            </div>
+            <p className="field-help">Depois de criar, registre a ciência no prazo para iniciar a contagem conforme os dias úteis ou corridos selecionados.</p>
+            <div className="form-actions aurora-form__actions">
+              <button className="btn btn-primary" type="submit">Criar prazo a partir do expediente</button>
+            </div>
+          </section>
         </form>
       </details>
       {snapshot.permissions.can_record_outcome && snapshot.actions.record_outcome && <button className="react-legal-case-show__actions-button" type="button" onClick={openOutcomeModal} ref={outcomeButtonRef}>Registrar desfecho</button>}
