@@ -21,7 +21,7 @@ gem "stimulus-rails"
 gem "jbuilder"
 gem "prawn"
 # Rails 8.0 still relies on the JSON 2.x parser API.
-gem "json", ">= 2.21.2", "< 3"
+gem "json", ">= 2.21.2", "< 4"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
